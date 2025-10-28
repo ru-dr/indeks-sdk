@@ -1,0 +1,12 @@
+[install]
+# Configure package manager settings
+peer = true
+production = false
+
+[build]
+# Build configuration
+target = "browser"
+
+[test]
+# Test configuration  
+preload = ["./test/setup.ts"]
