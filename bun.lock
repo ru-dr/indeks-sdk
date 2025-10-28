@@ -15,7 +15,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@fingerprintjs/fingerprintjs": "^4.4.3",
-        "@indeks/shared": "workspace:*",
+        "@indeks/shared": "1.0.1",
       },
       "devDependencies": {
         "prettier": "^3.6.2",
@@ -27,8 +27,8 @@
       "name": "@indeks/react",
       "version": "1.0.0",
       "dependencies": {
-        "@indeks/core": "workspace:*",
-        "@indeks/shared": "workspace:*",
+        "@indeks/core": "1.0.1",
+        "@indeks/shared": "1.0.1",
       },
       "devDependencies": {
         "@types/react": "latest",

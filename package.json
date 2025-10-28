@@ -1,7 +1,7 @@
 {
   "name": "indeks",
   "version": "1.0.0",
-  "description": "Enterprise-grade browser analytics monorepo with React and Vue integrations",
+  "description": "A lightweight, modular web analytics SDK for tracking user behavior and events on your website.",
   "private": true,
   "workspaces": [
     "packages/*"
