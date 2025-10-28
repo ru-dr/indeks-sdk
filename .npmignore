@@ -1,0 +1,30 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+bunfig.toml
+.github/
+
+# Development files
+node_modules/
+.DS_Store
+*.log
+*.lock
+bun.lockb
+
+# Tests
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Documentation (except README)
+docs/
+.vscode/
+.idea/
+
+# CI/CD
+.github/
+.gitignore
