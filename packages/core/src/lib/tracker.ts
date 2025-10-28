@@ -1,6 +1,7 @@
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { IndeksConfig } from "../types/config";
-import {
+import { generateId, debounce, DEFAULT_CONFIG, Logger, LogLevel } from "@indeks/shared";
+import type { IndeksConfig } from "@/types";
+import type {
   IndeksEvent,
   BaseEvent,
   ClickEvent,
@@ -37,7 +38,7 @@ import {
   PageLoadEvent,
   // UI Interaction Events
   FullscreenChangeEvent,
-} from "../types/event";
+} from "@/types";
 
 class IndeksTracker {
   private config: IndeksConfig;
@@ -46,49 +47,19 @@ class IndeksTracker {
   private eventQueue: IndeksEvent[] = [];
   private isInitialized: boolean = false;
   private pageLoadTime: number = Date.now();
+  private logger: Logger;
 
   constructor(config: IndeksConfig) {
     this.config = {
-      enableConsoleLogging: true,
-      captureClicks: true,
-      captureScrolls: true,
-      capturePageViews: true,
-      captureFormSubmissions: true,
-      captureKeystrokes: true, // Disabled by default for privacy
-      captureMouseMovements: true, // Disabled by default for performance
-      captureResizes: true,
-      captureErrors: true,
-      // Navigation & Page Events
-      captureBeforeUnload: true,
-      captureVisibilityChange: true,
-      captureWindowFocus: true,
-      captureHashChange: true,
-      capturePopState: true,
-      // Mouse & Touch Events
-      captureMouseHover: true, // Disabled by default for performance
-      captureContextMenu: true,
-      captureDoubleClick: true,
-      captureMousePress: false, // Disabled by default for performance
-      captureMouseWheel: true,
-      captureTouchEvents: true,
-      captureDragDrop: true,
-      // Input & Form Events
-      captureInputChanges: true,
-      captureFieldFocus: true,
-      captureClipboard: true,
-      captureTextSelection: true, // Disabled by default for privacy
-      // Media Events
-      captureMediaEvents: true,
-      // Network & Performance
-      captureNetworkStatus: true,
-      capturePageLoad: true,
-      // UI Interaction Events
-      captureFullscreenChange: true,
-      debounceMs: 100,
+      ...DEFAULT_CONFIG,
       ...config,
     };
 
-    this.sessionId = this.generateSessionId();
+    this.sessionId = generateId('indeks');
+    this.logger = new Logger({
+      enableConsole: this.config.enableConsoleLogging !== false,
+      level: LogLevel.INFO,
+    });
     this.validateApiKey();
   }
 
@@ -99,20 +70,9 @@ class IndeksTracker {
       );
     }
 
-    if (this.config.enableConsoleLogging) {
-      console.log(
-        `🔧 Indeks initialized with API key: ${this.config.apiKey.substring(
-          0,
-          8
-        )}...`
-      );
-    }
-  }
-
-  private generateSessionId(): string {
-    return `indeks_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 15)}`;
+    this.logger.info(
+      `🔧 Initialized with API key: ${this.config.apiKey.substring(0, 8)}...`
+    );
   }
 
   private async initializeUserId(): Promise<void> {
@@ -122,14 +82,9 @@ class IndeksTracker {
       const result = await fp.get();
       this.userId = result.visitorId;
     } catch (error) {
-      console.warn(
-        "Indeks: Failed to generate fingerprint, using fallback userId:",
-        error
-      );
+      this.logger.warn("Failed to generate fingerprint, using fallback userId:", error);
       // Fallback to a random ID if FingerprintJS fails
-      this.userId = `fallback_${Date.now()}_${Math.random()
-        .toString(36)
-        .substring(2, 15)}`;
+      this.userId = generateId('fallback');
     }
   }
 
@@ -147,23 +102,7 @@ class IndeksTracker {
   private logEvent(event: IndeksEvent): void {
     this.eventQueue.push(event);
 
-    if (this.config.enableConsoleLogging) {
-      console.group(`📊 Indeks Event: ${event.type}`);
-      console.log("Event Data:", event);
-      console.log("Queue Length:", this.eventQueue.length);
-      console.groupEnd();
-    }
-  }
-
-  private debounce<T extends (...args: any[]) => void>(
-    func: T,
-    delay: number
-  ): (...args: Parameters<T>) => void {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: Parameters<T>) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func(...args), delay);
-    };
+    this.logger.info(`📊 Event: ${event.type}`, { event, queueLength: this.eventQueue.length });
   }
 
   private getElementInfo(element: Element) {
@@ -207,7 +146,7 @@ class IndeksTracker {
   private setupScrollTracking(): void {
     if (!this.config.captureScrolls) return;
 
-    const handleScroll = this.debounce(() => {
+    const handleScroll = debounce(() => {
       const scrollTop =
         window.pageYOffset || document.documentElement.scrollTop;
       const scrollLeft =
@@ -346,7 +285,7 @@ class IndeksTracker {
   private setupMouseMovementTracking(): void {
     if (!this.config.captureMouseMovements) return;
 
-    const handleMouseMove = this.debounce((e: MouseEvent) => {
+    const handleMouseMove = debounce((e: MouseEvent) => {
       const event: MouseMoveEvent = {
         ...this.createBaseEvent(),
         type: "mousemove",
@@ -368,7 +307,7 @@ class IndeksTracker {
   private setupResizeTracking(): void {
     if (!this.config.captureResizes) return;
 
-    const handleResize = this.debounce(() => {
+    const handleResize = debounce(() => {
       const event: ResizeEvent = {
         ...this.createBaseEvent(),
         type: "resize",
@@ -953,12 +892,12 @@ class IndeksTracker {
 
   public async init(): Promise<void> {
     if (this.isInitialized) {
-      console.warn("Indeks: Tracker already initialized");
+      this.logger.warn("Tracker already initialized");
       return;
     }
 
     if (typeof window === "undefined") {
-      console.warn("Indeks: Cannot initialize in non-browser environment");
+      this.logger.warn("Cannot initialize in non-browser environment");
       return;
     }
 
@@ -1011,11 +950,7 @@ class IndeksTracker {
 
     this.isInitialized = true;
 
-    if (this.config.enableConsoleLogging) {
-      console.log(
-        "🚀 Indeks tracker initialized successfully with all advanced events"
-      );
-    }
+    this.logger.info("🚀 Tracker initialized successfully with all advanced events");
   }
 
   public getEvents(): IndeksEvent[] {
@@ -1024,16 +959,13 @@ class IndeksTracker {
 
   public clearEvents(): void {
     this.eventQueue = [];
-    if (this.config.enableConsoleLogging) {
-      console.log("🧹 Indeks event queue cleared");
-    }
+    this.logger.info("🧹 Event queue cleared");
   }
 
   public updateConfig(newConfig: Partial<IndeksConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    if (this.config.enableConsoleLogging) {
-      console.log("⚙️ Indeks config updated", this.config);
-    }
+    this.logger.setConsoleEnabled(this.config.enableConsoleLogging !== false);
+    this.logger.info("⚙️ Config updated", this.config);
   }
 
   public getSessionId(): string {
@@ -1049,9 +981,7 @@ class IndeksTracker {
     // For now, just clear the queue and mark as not initialized
     this.clearEvents();
     this.isInitialized = false;
-    if (this.config.enableConsoleLogging) {
-      console.log("💀 Indeks tracker destroyed");
-    }
+    this.logger.info("💀 Tracker destroyed");
   }
 }
 

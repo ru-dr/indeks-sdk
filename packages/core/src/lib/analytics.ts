@@ -1,11 +1,5 @@
-import { IndeksEvent } from "../types/event";
-import { IndeksConfig } from "../types/config";
-
-export interface AnalyticsInterface {
-  send(events: IndeksEvent[]): Promise<void>;
-  batch(events: IndeksEvent[]): Promise<void>;
-  flush(): Promise<void>;
-}
+import { API_ENDPOINTS, BATCH_CONFIG } from "@indeks/shared";
+import type { IndeksEvent, IndeksConfig, AnalyticsInterface } from "@/types";
 
 export class IndeksAnalytics implements AnalyticsInterface {
   private config: IndeksConfig;
@@ -20,8 +14,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
     if (!events.length) return;
 
     try {
-      const endpoint =
-        this.config.endpoint || "https://api.indeks.com/v1/events";
+      const endpoint = this.config.endpoint || API_ENDPOINTS.DEFAULT;
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -54,7 +47,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
     this.batchQueue.push(...events);
 
     // Auto-flush when batch size reaches threshold
-    if (this.batchQueue.length >= 50) {
+    if (this.batchQueue.length >= BATCH_CONFIG.DEFAULT_BATCH_SIZE) {
       await this.flush();
     }
 
@@ -65,7 +58,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
 
     this.flushTimer = window.setTimeout(() => {
       this.flush().catch(console.error);
-    }, 5000); // Flush every 5 seconds
+    }, BATCH_CONFIG.AUTO_FLUSH_INTERVAL);
   }
 
   async flush(): Promise<void> {

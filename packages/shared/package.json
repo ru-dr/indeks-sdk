@@ -1,0 +1,43 @@
+{
+  "name": "@indeks/shared",
+  "version": "1.0.0",
+  "description": "Shared types, constants, and utilities for Indeks SDK",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
+    "clean": "rimraf dist",
+    "dev": "bun run build --watch"
+  },
+  "keywords": [
+    "indeks",
+    "shared",
+    "types",
+    "constants",
+    "utilities"
+  ],
+  "author": "Nishit Chaudhary",
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

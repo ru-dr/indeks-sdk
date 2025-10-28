@@ -35,9 +35,11 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "@fingerprintjs/fingerprintjs": "^4.4.3"
+    "@fingerprintjs/fingerprintjs": "^4.4.3",
+    "@indeks/shared": "workspace:*"
   },
   "devDependencies": {
+    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.2.2"
   },

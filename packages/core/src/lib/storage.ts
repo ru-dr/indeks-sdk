@@ -1,14 +1,8 @@
-import { IndeksEvent } from "../types/event";
-
-export interface StorageInterface {
-  store(events: IndeksEvent[]): Promise<void>;
-  retrieve(): Promise<IndeksEvent[]>;
-  clear(): Promise<void>;
-  size(): Promise<number>;
-}
+import { STORAGE_KEYS, safeJsonParse } from "@indeks/shared";
+import type { IndeksEvent, StorageInterface } from "@/types";
 
 export class LocalStorageAdapter implements StorageInterface {
-  private readonly key = "indeks_events";
+  private readonly key = STORAGE_KEYS.EVENTS;
 
   async store(events: IndeksEvent[]): Promise<void> {
     try {
@@ -23,7 +17,7 @@ export class LocalStorageAdapter implements StorageInterface {
   async retrieve(): Promise<IndeksEvent[]> {
     try {
       const stored = localStorage.getItem(this.key);
-      return stored ? JSON.parse(stored) : [];
+      return stored ? safeJsonParse<IndeksEvent[]>(stored, []) : [];
     } catch (error) {
       console.warn(
         "Indeks: Failed to retrieve events from localStorage:",
@@ -48,7 +42,7 @@ export class LocalStorageAdapter implements StorageInterface {
 }
 
 export class SessionStorageAdapter implements StorageInterface {
-  private readonly key = "indeks_events_session";
+  private readonly key = STORAGE_KEYS.SESSION_EVENTS;
 
   async store(events: IndeksEvent[]): Promise<void> {
     try {
@@ -63,7 +57,7 @@ export class SessionStorageAdapter implements StorageInterface {
   async retrieve(): Promise<IndeksEvent[]> {
     try {
       const stored = sessionStorage.getItem(this.key);
-      return stored ? JSON.parse(stored) : [];
+      return stored ? safeJsonParse<IndeksEvent[]>(stored, []) : [];
     } catch (error) {
       console.warn(
         "Indeks: Failed to retrieve events from sessionStorage:",
