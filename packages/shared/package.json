@@ -1,7 +1,7 @@
 {
-  "name": "@indeks/core",
+  "name": "@indeks/shared",
   "version": "1.0.0",
-  "description": "Core browser event tracking library with user behavior analytics",
+  "description": "Shared types, constants, and utilities for Indeks SDK",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
@@ -25,21 +25,15 @@
     "dev": "bun run build --watch"
   },
   "keywords": [
-    "analytics",
-    "event-tracking",
-    "user-behavior",
-    "browser",
-    "typescript",
-    "fingerprinting"
+    "indeks",
+    "shared",
+    "types",
+    "constants",
+    "utilities"
   ],
-  "author": "Your Name",
+  "author": "Nishit Chaudhary",
   "license": "MIT",
-  "dependencies": {
-    "@fingerprintjs/fingerprintjs": "^4.4.3",
-    "@indeks/shared": "workspace:*"
-  },
   "devDependencies": {
-    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.2.2"
   },

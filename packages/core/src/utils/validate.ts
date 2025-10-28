@@ -1,4 +1,5 @@
-import { IndeksConfig } from "../types/config";
+import type { IndeksConfig } from "@/types";
+import { isValidUrl, DEFAULT_CONFIG, VALIDATION } from "@indeks/shared";
 
 export function validateConfig(config: Partial<IndeksConfig>): string[] {
   const errors: string[] = [];
@@ -8,8 +9,8 @@ export function validateConfig(config: Partial<IndeksConfig>): string[] {
     errors.push("API key is required");
   } else if (typeof config.apiKey !== "string") {
     errors.push("API key must be a string");
-  } else if (config.apiKey.length < 10) {
-    errors.push("API key appears to be too short (minimum 10 characters)");
+  } else if (config.apiKey.length < VALIDATION.MIN_API_KEY_LENGTH) {
+    errors.push(`API key appears to be too short (minimum ${VALIDATION.MIN_API_KEY_LENGTH} characters)`);
   }
 
   // Optional fields validation
@@ -25,8 +26,8 @@ export function validateConfig(config: Partial<IndeksConfig>): string[] {
       errors.push("debounceMs must be a number");
     } else if (config.debounceMs < 0) {
       errors.push("debounceMs must be non-negative");
-    } else if (config.debounceMs > 10000) {
-      errors.push("debounceMs should not exceed 10 seconds");
+    } else if (config.debounceMs > VALIDATION.MAX_DEBOUNCE_MS) {
+      errors.push(`debounceMs should not exceed ${VALIDATION.MAX_DEBOUNCE_MS / 1000} seconds`);
     }
   }
 
@@ -41,51 +42,9 @@ export function validateConfig(config: Partial<IndeksConfig>): string[] {
   return errors;
 }
 
-export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export function sanitizeConfig(config: Partial<IndeksConfig>): IndeksConfig {
-  const defaults: Omit<IndeksConfig, "apiKey"> = {
-    enableConsoleLogging: false,
-    captureClicks: true,
-    captureScrolls: true,
-    capturePageViews: true,
-    captureFormSubmissions: true,
-    captureKeystrokes: false,
-    captureMouseMovements: false,
-    captureResizes: true,
-    captureErrors: true,
-    captureBeforeUnload: true,
-    captureVisibilityChange: true,
-    captureWindowFocus: true,
-    captureHashChange: true,
-    capturePopState: true,
-    captureMouseHover: false,
-    captureContextMenu: true,
-    captureDoubleClick: true,
-    captureMousePress: false,
-    captureMouseWheel: true,
-    captureTouchEvents: true,
-    captureDragDrop: true,
-    captureInputChanges: true,
-    captureFieldFocus: true,
-    captureClipboard: true,
-    captureTextSelection: false,
-    captureMediaEvents: true,
-    captureNetworkStatus: true,
-    capturePageLoad: true,
-    captureFullscreenChange: true,
-    debounceMs: 100,
-  };
-
   return {
-    ...defaults,
+    ...DEFAULT_CONFIG,
     ...config,
     apiKey: config.apiKey!, // Required field, should be validated before this
   };
@@ -102,6 +61,5 @@ export function validateEventData(event: any): boolean {
   return true;
 }
 
-export function generateId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-}
+// Re-export shared utilities for convenience
+export { isValidUrl, generateId } from "@indeks/shared";
