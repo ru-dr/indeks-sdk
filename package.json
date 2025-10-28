@@ -18,6 +18,10 @@
     "lint": "echo 'Linting - Coming Soon'",
     "test": "echo 'Testing - Coming Soon'"
   },
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/ru-dr/indeks-sdk"
+  },
   "files": [
     "dist",
     "src"
