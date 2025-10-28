@@ -21,7 +21,7 @@ export class LocalStorageAdapter implements StorageInterface {
     } catch (error) {
       console.warn(
         "Indeks: Failed to retrieve events from localStorage:",
-        error
+        error,
       );
       return [];
     }
@@ -61,7 +61,7 @@ export class SessionStorageAdapter implements StorageInterface {
     } catch (error) {
       console.warn(
         "Indeks: Failed to retrieve events from sessionStorage:",
-        error
+        error,
       );
       return [];
     }
@@ -73,7 +73,7 @@ export class SessionStorageAdapter implements StorageInterface {
     } catch (error) {
       console.warn(
         "Indeks: Failed to clear events from sessionStorage:",
-        error
+        error,
       );
     }
   }

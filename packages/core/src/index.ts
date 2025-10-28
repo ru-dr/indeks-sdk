@@ -5,7 +5,7 @@ import type { IndeksConfig } from "@/types";
 export function indeks(
   apiKey: string,
   printToConsole: boolean = false,
-  config: Partial<IndeksConfig> = {}
+  config: Partial<IndeksConfig> = {},
 ): IndeksTracker {
   if (!apiKey) {
     throw new Error("Indeks: API key is required");
@@ -24,7 +24,7 @@ export function indeks(
     // Wait for DOM to be ready
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () =>
-        tracker.init().catch(console.error)
+        tracker.init().catch(console.error),
       );
     } else {
       tracker.init().catch(console.error);
