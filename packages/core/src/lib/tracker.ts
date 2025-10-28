@@ -1,5 +1,11 @@
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { generateId, debounce, DEFAULT_CONFIG, Logger, LogLevel } from "@indeks/shared";
+import {
+  generateId,
+  debounce,
+  DEFAULT_CONFIG,
+  Logger,
+  LogLevel,
+} from "@indeks/shared";
 import type { IndeksConfig } from "@/types";
 import type {
   IndeksEvent,
@@ -55,7 +61,7 @@ class IndeksTracker {
       ...config,
     };
 
-    this.sessionId = generateId('indeks');
+    this.sessionId = generateId("indeks");
     this.logger = new Logger({
       enableConsole: this.config.enableConsoleLogging !== false,
       level: LogLevel.INFO,
@@ -66,12 +72,12 @@ class IndeksTracker {
   private validateApiKey(): void {
     if (!this.config.apiKey || this.config.apiKey.trim() === "") {
       throw new Error(
-        "Indeks: API key is required. Please provide a valid API key."
+        "Indeks: API key is required. Please provide a valid API key.",
       );
     }
 
     this.logger.info(
-      `🔧 Initialized with API key: ${this.config.apiKey.substring(0, 8)}...`
+      `🔧 Initialized with API key: ${this.config.apiKey.substring(0, 8)}...`,
     );
   }
 
@@ -82,9 +88,12 @@ class IndeksTracker {
       const result = await fp.get();
       this.userId = result.visitorId;
     } catch (error) {
-      this.logger.warn("Failed to generate fingerprint, using fallback userId:", error);
+      this.logger.warn(
+        "Failed to generate fingerprint, using fallback userId:",
+        error,
+      );
       // Fallback to a random ID if FingerprintJS fails
-      this.userId = generateId('fallback');
+      this.userId = generateId("fallback");
     }
   }
 
@@ -102,7 +111,10 @@ class IndeksTracker {
   private logEvent(event: IndeksEvent): void {
     this.eventQueue.push(event);
 
-    this.logger.info(`📊 Event: ${event.type}`, { event, queueLength: this.eventQueue.length });
+    this.logger.info(`📊 Event: ${event.type}`, {
+      event,
+      queueLength: this.eventQueue.length,
+    });
   }
 
   private getElementInfo(element: Element) {
@@ -139,7 +151,7 @@ class IndeksTracker {
         };
         this.logEvent(event);
       },
-      true
+      true,
     );
   }
 
@@ -156,11 +168,11 @@ class IndeksTracker {
         document.body.offsetHeight,
         document.documentElement.clientHeight,
         document.documentElement.scrollHeight,
-        document.documentElement.offsetHeight
+        document.documentElement.offsetHeight,
       );
       const viewportHeight = window.innerHeight;
       const scrollPercentage = Math.round(
-        (scrollTop / (documentHeight - viewportHeight)) * 100
+        (scrollTop / (documentHeight - viewportHeight)) * 100,
       );
 
       const event: ScrollEvent = {
@@ -255,7 +267,7 @@ class IndeksTracker {
       if (
         target.tagName === "INPUT" &&
         ["password", "hidden", "email"].includes(
-          (target as HTMLInputElement).type
+          (target as HTMLInputElement).type,
         )
       ) {
         return;
@@ -575,7 +587,7 @@ class IndeksTracker {
         };
         this.logEvent(event);
       },
-      { passive: true }
+      { passive: true },
     );
   }
 
@@ -583,7 +595,7 @@ class IndeksTracker {
     if (!this.config.captureTouchEvents) return;
 
     const handleTouchEvent = (
-      eventType: "touchstart" | "touchend" | "touchmove"
+      eventType: "touchstart" | "touchend" | "touchmove",
     ) => {
       return (e: globalThis.TouchEvent) => {
         const touches = Array.from(e.touches).map((touch) => ({
@@ -816,7 +828,7 @@ class IndeksTracker {
           };
           this.logEvent(event);
         },
-        true
+        true,
       );
     });
   }
@@ -846,7 +858,7 @@ class IndeksTracker {
 
     window.addEventListener("load", () => {
       const navigation = performance.getEntriesByType(
-        "navigation"
+        "navigation",
       )[0] as PerformanceNavigationTiming;
 
       const event: PageLoadEvent = {
@@ -950,7 +962,9 @@ class IndeksTracker {
 
     this.isInitialized = true;
 
-    this.logger.info("🚀 Tracker initialized successfully with all advanced events");
+    this.logger.info(
+      "🚀 Tracker initialized successfully with all advanced events",
+    );
   }
 
   public getEvents(): IndeksEvent[] {
