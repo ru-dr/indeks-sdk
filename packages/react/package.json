@@ -39,8 +39,8 @@
     "react-dom": "^19.2.0"
   },
   "dependencies": {
-    "@indeks/core": "workspace:*",
-    "@indeks/shared": "workspace:*"
+    "@indeks/core": "1.0.1",
+    "@indeks/shared": "1.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
