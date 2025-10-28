@@ -1,0 +1,45 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check if version was bumped
+        run: |
+          echo "Checking if package versions were updated..."
+          git fetch origin main
+          
+          # Check each package for version changes
+          for package_dir in packages/*/; do
+            if [ -f "$package_dir/package.json" ]; then
+              package_name=$(basename "$package_dir")
+              current_version=$(cat "$package_dir/package.json" | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+              
+              # Get version from main branch
+              git show origin/main:"$package_dir/package.json" > /tmp/old_package.json 2>/dev/null || echo '{"version":"0.0.0"}' > /tmp/old_package.json
+              old_version=$(cat /tmp/old_package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+              
+              echo "Package: $package_name"
+              echo "  Old version: $old_version"
+              echo "  New version: $current_version"
+              echo ""
+            fi
+          done
+          
+          echo "ℹ️  If you're adding new features or fixes, consider bumping the version before merging to main."

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build all packages
+        run: bun run build:all
+
+      - name: Run linter
+        run: bun run lint
+        continue-on-error: true  # Remove this when linting is implemented
+
+      - name: Run tests
+        run: bun run test
+        continue-on-error: true  # Remove this when tests are implemented
+
+      - name: Check package versions
+        run: |
+          echo "Checking package versions..."
+          cat packages/core/package.json | grep version
+          cat packages/react/package.json | grep version
+          cat packages/shared/package.json | grep version
