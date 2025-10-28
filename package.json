@@ -32,7 +32,7 @@
     "vue",
     "monorepo"
   ],
-  "author": "Nishit Chaudhary",
+  "author": "Team indeksModular",
   "license": "MIT",
   "devDependencies": {
     "@fingerprintjs/fingerprintjs": "^4.6.2",

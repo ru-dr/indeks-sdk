@@ -246,4 +246,4 @@ MIT
 
 ## Author
 
-Nishit Chaudhary
+Team indeksModular

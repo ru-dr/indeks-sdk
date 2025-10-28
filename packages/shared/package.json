@@ -31,7 +31,7 @@
     "constants",
     "utilities"
   ],
-  "author": "Nishit Chaudhary",
+  "author": "Team indeksModular",
   "license": "MIT",
   "devDependencies": {
     "rimraf": "^6.0.1",

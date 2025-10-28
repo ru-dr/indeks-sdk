@@ -32,7 +32,7 @@
     "tracking",
     "event-tracking"
   ],
-  "author": "Nishit Chaudhary",
+  "author": "Team indeksModular",
   "license": "MIT",
   "peerDependencies": {
     "react": "^19.2.0",
