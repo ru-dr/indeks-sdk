@@ -1,4 +1,4 @@
-import type { IndeksEvent } from './events';
+import type { IndeksEvent } from '@/types/events';
 
 /**
  * Interface for storage adapters that persist events
