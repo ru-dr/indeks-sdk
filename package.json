@@ -1,0 +1,47 @@
+{
+  "name": "indeks",
+  "version": "1.0.0",
+  "description": "Enterprise-grade browser analytics monorepo with React and Vue integrations",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run build:core",
+    "build:core": "cd packages/core && bun run build",
+    "build:react": "cd packages/react && bun run build",
+    "build:vue": "cd packages/vue && bun run build",
+    "build:all": "bun run build:core && bun run build:react && bun run build:vue",
+    "dev": "bun run dev:core",
+    "dev:core": "cd packages/core && bun run dev",
+    "clean": "rimraf packages/*/dist",
+    "lint": "echo 'Linting - Coming Soon'",
+    "test": "echo 'Testing - Coming Soon'"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "analytics",
+    "browser",
+    "tracking",
+    "events",
+    "typescript",
+    "react",
+    "vue",
+    "monorepo"
+  ],
+  "author": "Nishit Chaudhary",
+  "license": "MIT",
+  "devDependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.6.2",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "bun": ">=1.0.0"
+  }
+}

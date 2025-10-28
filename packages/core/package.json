@@ -1,0 +1,47 @@
+{
+  "name": "@indeks/core",
+  "version": "1.0.0",
+  "description": "Core browser event tracking library with user behavior analytics",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
+    "clean": "rimraf dist",
+    "dev": "bun run build --watch"
+  },
+  "keywords": [
+    "analytics",
+    "event-tracking",
+    "user-behavior",
+    "browser",
+    "typescript",
+    "fingerprinting"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.4.3"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
