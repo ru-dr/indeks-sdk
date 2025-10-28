@@ -6,7 +6,7 @@ import {
   Logger,
   LogLevel,
 } from "@indeks/shared";
-import type { IndeksConfig } from "@/types";
+import type { IndeksConfig } from "@indeks/shared";
 import type {
   IndeksEvent,
   BaseEvent,
@@ -44,7 +44,7 @@ import type {
   PageLoadEvent,
   // UI Interaction Events
   FullscreenChangeEvent,
-} from "@/types";
+} from "@indeks/shared";
 
 class IndeksTracker {
   private config: IndeksConfig;

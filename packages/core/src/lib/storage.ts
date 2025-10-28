@@ -1,5 +1,5 @@
 import { STORAGE_KEYS, safeJsonParse } from "@indeks/shared";
-import type { IndeksEvent, StorageInterface } from "@/types";
+import type { IndeksEvent, StorageInterface } from "@indeks/shared";
 
 export class LocalStorageAdapter implements StorageInterface {
   private readonly key = STORAGE_KEYS.EVENTS;

@@ -13,7 +13,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,21 +26,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install dependencies
         run: bun install
+
+      - name: Build shared package first
+        working-directory: ./packages/shared
+        run: bun run build
 
       - name: Build all packages
         run: bun run build:all
 
       - name: Run linter
         run: bun run lint
-        continue-on-error: true  # Remove this when linting is implemented
+        continue-on-error: true # Remove this when linting is implemented
 
       - name: Run tests
         run: bun run test
-        continue-on-error: true  # Remove this when tests are implemented
+        continue-on-error: true # Remove this when tests are implemented
 
       - name: Check package versions
         run: |

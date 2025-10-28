@@ -67,6 +67,7 @@ git push origin v1.0.1
 ### 5. Verify Publication
 
 Check that your packages are live on npm:
+
 - https://www.npmjs.com/package/@indeks/core
 - https://www.npmjs.com/package/@indeks/react
 - https://www.npmjs.com/package/@indeks/shared
@@ -103,11 +104,13 @@ echo "  git push origin v$NEW_VERSION"
 ```
 
 Make it executable:
+
 ```bash
 chmod +x release.sh
 ```
 
 Use it:
+
 ```bash
 ./release.sh patch   # for patch releases
 ./release.sh minor   # for minor releases
@@ -127,19 +130,23 @@ npm unpublish @indeks/shared@x.x.x
 ## Troubleshooting
 
 ### Authentication Error
+
 - Verify `NPM_TOKEN` is correctly set in GitHub Secrets
 - Ensure the token has publish permissions
 - Check token hasn't expired
 
 ### Build Failure
+
 - Run `bun run build:all` locally to verify builds work
 - Check for TypeScript errors
 - Ensure all dependencies are properly installed
 
 ### Version Already Published
+
 - You cannot republish the same version
 - Bump the version number and try again
 
 ### Package Not Found During Publish
+
 - Ensure package.json has correct "name" field
 - Verify you have access to publish to the `indeks` npm organization
