@@ -1,6 +1,6 @@
-import type { IndeksConfig } from '../types';
-import { isValidUrl } from './index';
-import { DEFAULT_CONFIG, VALIDATION } from '../constants';
+import type { IndeksConfig } from '@/types';
+import { isValidUrl } from '@/index';
+import { DEFAULT_CONFIG, VALIDATION } from '@/constants';
 
 /**
  * Validates IndeksConfig object and returns array of error messages

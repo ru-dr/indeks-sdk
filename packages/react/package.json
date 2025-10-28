@@ -1,0 +1,54 @@
+{
+  "name": "@indeks/react",
+  "version": "1.0.0",
+  "description": "React hooks and components for Indeks analytics SDK",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser --external react --external react-dom",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node --external react --external react-dom",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
+    "clean": "rimraf dist",
+    "dev": "bun run build --watch"
+  },
+  "keywords": [
+    "indeks",
+    "react",
+    "hooks",
+    "analytics",
+    "tracking",
+    "event-tracking"
+  ],
+  "author": "Nishit Chaudhary",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "dependencies": {
+    "@indeks/core": "workspace:*",
+    "@indeks/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
