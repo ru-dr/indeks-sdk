@@ -1,6 +1,6 @@
-[![INDEKS-dark.png](https://i.postimg.cc/V6gwJfqT/INDEKS-dark.png)](https://postimg.cc/jwDm9rkQ)
-
 <div align="center">
+
+[![INDEKS-dark.png](https://i.postimg.cc/V6gwJfqT/INDEKS-dark.png)](https://postimg.cc/jwDm9rkQ)
 
 A lightweight, modular web analytics SDK for tracking user behavior and events on your website.
 
@@ -10,8 +10,6 @@ A lightweight, modular web analytics SDK for tracking user behavior and events o
 
 </div>
 
----
-
 ## Installation
 
 ```bash
@@ -20,14 +18,16 @@ bun add @indeks/core @indeks/react
 
 ## Usage
 
+### Vanilla TypeScript
+
 ```typescript
-// Vanilla TypeScript
 import indeks from '@indeks/core';
 const tracker = indeks('api_key', true);
 ```
 
+### React
+
 ```tsx
-// React
 import { Indeks, useIndeks } from '@indeks/react';
 
 export default function App() {
@@ -39,7 +39,7 @@ export default function App() {
 }
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ```typescript
 import indeks from '@indeks/core';
@@ -96,7 +96,7 @@ bun run build:react
 bun run dev
 ```
 
-## 📊 Event Schema
+## Event Schema
 
 ```typescript
 interface ClickEvent {
@@ -113,7 +113,3 @@ interface ClickEvent {
 ## Privacy
 
 Auto-excludes passwords and sensitive data. Events stored client-side by default.
-
-## License
-
-MIT © [Nishit Chaudhary](https://github.com/ru-dr)
