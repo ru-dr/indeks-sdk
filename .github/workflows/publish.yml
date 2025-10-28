@@ -3,15 +3,15 @@ name: Publish to NPM
 on:
   push:
     tags:
-      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+      - "v*.*.*" # Triggers on version tags like v1.0.0, v1.2.3, etc.
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Required for npm provenance
-    
+      id-token: write # Required for npm provenance
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,11 +26,15 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: bun install
+
+      - name: Build shared package first
+        working-directory: ./packages/shared
+        run: bun run build
 
       - name: Build all packages
         run: bun run build:all

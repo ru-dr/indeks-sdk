@@ -21,14 +21,14 @@ bun add @indeks/core @indeks/react
 ### Vanilla TypeScript
 
 ```typescript
-import indeks from '@indeks/core';
-const tracker = indeks('api_key', true);
+import indeks from "@indeks/core";
+const tracker = indeks("api_key", true);
 ```
 
 ### React
 
 ```tsx
-import { Indeks, useIndeks } from '@indeks/react';
+import { Indeks, useIndeks } from "@indeks/react";
 
 export default function App() {
   return (
@@ -42,9 +42,9 @@ export default function App() {
 ## Configuration
 
 ```typescript
-import indeks from '@indeks/core';
+import indeks from "@indeks/core";
 
-const tracker = indeks('api_key', true, {
+const tracker = indeks("api_key", true, {
   // Event capture
   captureClicks: true,
   captureScrolls: true,
@@ -52,16 +52,16 @@ const tracker = indeks('api_key', true, {
   captureFormSubmissions: true,
   captureErrors: true,
   captureResizes: true,
-  
+
   // Privacy controls
   captureKeystrokes: false,
   captureMouseMovements: false,
-  
+
   // Performance
   debounceMs: 100,
-  
+
   // Development
-  enableConsoleLogging: true
+  enableConsoleLogging: true,
 });
 
 // Runtime controls
@@ -100,10 +100,10 @@ bun run dev
 
 ```typescript
 interface ClickEvent {
-  type: 'click';
+  type: "click";
   timestamp: number;
-  element: { tagName: string; id: string; className: string; };
-  coordinates: { x: number; y: number; };
+  element: { tagName: string; id: string; className: string };
+  coordinates: { x: number; y: number };
   sessionId: string;
 }
 

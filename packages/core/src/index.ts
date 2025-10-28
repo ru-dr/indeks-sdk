@@ -1,5 +1,5 @@
 import IndeksTracker from "@/lib/tracker";
-import type { IndeksConfig } from "@/types";
+import type { IndeksConfig } from "@indeks/shared";
 
 // Main initialization function
 export function indeks(
@@ -36,7 +36,7 @@ export function indeks(
 
 // Named exports
 export { IndeksTracker };
-export * from "@/types";
+export * from "@indeks/shared";
 export * from "@/lib";
 export * from "@/utils";
 

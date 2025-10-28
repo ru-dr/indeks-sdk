@@ -1,5 +1,9 @@
 import { API_ENDPOINTS, BATCH_CONFIG } from "@indeks/shared";
-import type { IndeksEvent, IndeksConfig, AnalyticsInterface } from "@/types";
+import type {
+  IndeksEvent,
+  IndeksConfig,
+  AnalyticsInterface,
+} from "@indeks/shared";
 
 export class IndeksAnalytics implements AnalyticsInterface {
   private config: IndeksConfig;

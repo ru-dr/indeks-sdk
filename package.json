@@ -8,10 +8,10 @@
   ],
   "scripts": {
     "build": "bun run build:core",
+    "build:shared": "cd packages/shared && bun run build",
     "build:core": "cd packages/core && bun run build",
     "build:react": "cd packages/react && bun run build",
-    "build:vue": "cd packages/vue && bun run build",
-    "build:all": "bun run build:core && bun run build:react && bun run build:vue",
+    "build:all": "bun run build:shared && bun run build:core && bun run build:react",
     "dev": "bun run dev:core",
     "dev:core": "cd packages/core && bun run dev",
     "clean": "rimraf packages/*/dist",
