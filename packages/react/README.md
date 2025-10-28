@@ -17,13 +17,13 @@ bun add @indeks/react
 ### 1. Wrap your app with IndeksProvider
 
 ```tsx
-import { IndeksProvider } from '@indeks/react';
+import { IndeksProvider } from "@indeks/react";
 
 function App() {
   return (
     <IndeksProvider
       apiKey="your-api-key"
-      enableConsoleLogging={process.env.NODE_ENV === 'development'}
+      enableConsoleLogging={process.env.NODE_ENV === "development"}
       config={{
         captureClicks: true,
         captureScrolls: true,
@@ -40,7 +40,7 @@ function App() {
 ### 2. Use hooks in your components
 
 ```tsx
-import { useIndeks } from '@indeks/react';
+import { useIndeks } from "@indeks/react";
 
 function MyComponent() {
   const { tracker, isInitialized, sessionId, userId } = useIndeks();
@@ -51,8 +51,8 @@ function MyComponent() {
 
   const handleClick = () => {
     // Access tracker directly for custom events
-    console.log('Current session:', sessionId);
-    console.log('User ID:', userId);
+    console.log("Current session:", sessionId);
+    console.log("User ID:", userId);
   };
 
   return (
@@ -74,6 +74,7 @@ function MyComponent() {
 Provider component that initializes the tracker and makes it available to child components.
 
 **Props:**
+
 - `apiKey` (string, required): Your Indeks API key
 - `config` (Partial<IndeksConfig>, optional): Configuration options
 - `enableConsoleLogging` (boolean, optional): Enable console logging for debugging
@@ -84,15 +85,19 @@ Provider component that initializes the tracker and makes it available to child 
 Debug component to visualize tracked events in development.
 
 **Props:**
+
 - `position` ('top-right' | 'top-left' | 'bottom-right' | 'bottom-left', optional): Position of debugger panel
 - `refreshInterval` (number, optional): Auto-refresh interval in milliseconds
 - `maxEvents` (number, optional): Maximum number of events to display
 
 **Example:**
+
 ```tsx
-{process.env.NODE_ENV === 'development' && (
-  <IndeksDebugger position="bottom-right" refreshInterval={1000} />
-)}
+{
+  process.env.NODE_ENV === "development" && (
+    <IndeksDebugger position="bottom-right" refreshInterval={1000} />
+  );
+}
 ```
 
 ### Hooks
@@ -102,12 +107,14 @@ Debug component to visualize tracked events in development.
 Main hook to access the Indeks tracker instance and state.
 
 **Returns:**
+
 - `tracker`: The IndeksTracker instance (use tracker methods directly)
 - `isInitialized`: Whether the tracker is initialized
 - `sessionId`: Current session ID
 - `userId`: Current user ID
 
 **Example:**
+
 ```tsx
 const { tracker, isInitialized, sessionId, userId } = useIndeks();
 
@@ -180,7 +187,7 @@ import type {
   IndeksEvent,
   ClickEvent,
   ScrollEvent,
-} from '@indeks/react';
+} from "@indeks/react";
 ```
 
 ## Examples
@@ -188,7 +195,7 @@ import type {
 ### Basic Usage
 
 ```tsx
-import { IndeksProvider, useIndeks } from '@indeks/react';
+import { IndeksProvider, useIndeks } from "@indeks/react";
 
 function App() {
   return (
@@ -221,12 +228,12 @@ function Dashboard() {
 ### With Debugger
 
 ```tsx
-import { IndeksProvider, IndeksDebugger } from '@indeks/react';
+import { IndeksProvider, IndeksDebugger } from "@indeks/react";
 
 function App() {
   return (
     <IndeksProvider apiKey="your-api-key">
-      {process.env.NODE_ENV === 'development' && <IndeksDebugger />}
+      {process.env.NODE_ENV === "development" && <IndeksDebugger />}
       <YourApp />
     </IndeksProvider>
   );

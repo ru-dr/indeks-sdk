@@ -1,2 +1,2 @@
-export { IndeksDebugger } from './IndeksDebugger';
-export type { IndeksDebuggerProps } from './IndeksDebugger';
+export { IndeksDebugger } from "./IndeksDebugger";
+export type { IndeksDebuggerProps } from "./IndeksDebugger";

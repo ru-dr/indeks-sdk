@@ -7,7 +7,7 @@ export function isValidUrl(url: string): boolean {
   }
 }
 
-export function generateId(prefix: string = ''): string {
+export function generateId(prefix: string = ""): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 15);
   return prefix ? `${prefix}_${timestamp}_${random}` : `${timestamp}_${random}`;
@@ -20,7 +20,7 @@ export function truncateText(text: string, maxLength: number): string {
 
 export function debounce<T extends (...args: any[]) => void>(
   func: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
@@ -31,7 +31,7 @@ export function debounce<T extends (...args: any[]) => void>(
 
 export function throttle<T extends (...args: any[]) => void>(
   func: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
   return (...args: Parameters<T>) => {
@@ -44,7 +44,7 @@ export function throttle<T extends (...args: any[]) => void>(
 }
 
 export function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof document !== 'undefined';
+  return typeof window !== "undefined" && typeof document !== "undefined";
 }
 
 export function safeJsonParse<T>(json: string, fallback: T): T {
@@ -55,7 +55,7 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
   }
 }
 
-export function safeJsonStringify(obj: any, fallback: string = '{}'): string {
+export function safeJsonStringify(obj: any, fallback: string = "{}"): string {
   try {
     return JSON.stringify(obj);
   } catch {
@@ -68,13 +68,13 @@ export function getTimestamp(): number {
 }
 
 export function formatBytes(bytes: number, decimals: number = 2): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
-export * from './logger';
-export * from './validate';
+export * from "./logger";
+export * from "./validate";

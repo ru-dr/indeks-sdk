@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useIndeks } from '../hooks/useIndeks';
-import type { IndeksEvent } from '@indeks/shared';
+import React, { useState, useEffect } from "react";
+import { useIndeks } from "../hooks/useIndeks";
+import type { IndeksEvent } from "@indeks/shared";
 
 export interface IndeksDebuggerProps {
   /** Position of the debugger panel */
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  position?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
   /** Auto-refresh interval in milliseconds */
   refreshInterval?: number;
   /** Maximum number of events to display */
@@ -14,7 +14,7 @@ export interface IndeksDebuggerProps {
 /**
  * Debug component to visualize tracked events in development
  * Shows real-time events, session info, and event statistics
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -30,7 +30,7 @@ export interface IndeksDebuggerProps {
  * ```
  */
 export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
-  position = 'bottom-right',
+  position = "bottom-right",
   refreshInterval = 1000,
   maxEvents = 50,
 }) => {
@@ -62,56 +62,56 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
   }, [tracker, isInitialized, refreshInterval]);
 
   const positionStyles: Record<string, React.CSSProperties> = {
-    'top-right': { top: '1rem', right: '1rem' },
-    'top-left': { top: '1rem', left: '1rem' },
-    'bottom-right': { bottom: '1rem', right: '1rem' },
-    'bottom-left': { bottom: '1rem', left: '1rem' },
+    "top-right": { top: "1rem", right: "1rem" },
+    "top-left": { top: "1rem", left: "1rem" },
+    "bottom-right": { bottom: "1rem", right: "1rem" },
+    "bottom-left": { bottom: "1rem", left: "1rem" },
   };
 
   const containerStyle: React.CSSProperties = {
-    position: 'fixed',
+    position: "fixed",
     ...positionStyles[position],
     zIndex: 9999,
-    fontFamily: 'monospace',
-    fontSize: '12px',
+    fontFamily: "monospace",
+    fontSize: "12px",
   };
 
   const buttonStyle: React.CSSProperties = {
-    padding: '8px 16px',
-    backgroundColor: '#1e293b',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontFamily: 'monospace',
-    fontSize: '12px',
+    padding: "8px 16px",
+    backgroundColor: "#1e293b",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontFamily: "monospace",
+    fontSize: "12px",
   };
 
   const panelStyle: React.CSSProperties = {
-    marginTop: '8px',
-    backgroundColor: '#1e293b',
-    color: '#e2e8f0',
-    borderRadius: '8px',
-    padding: '16px',
-    maxWidth: '500px',
-    maxHeight: '600px',
-    overflow: 'auto',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+    marginTop: "8px",
+    backgroundColor: "#1e293b",
+    color: "#e2e8f0",
+    borderRadius: "8px",
+    padding: "16px",
+    maxWidth: "500px",
+    maxHeight: "600px",
+    overflow: "auto",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
   };
 
   const eventItemStyle: React.CSSProperties = {
-    padding: '8px',
-    margin: '4px 0',
-    backgroundColor: '#334155',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '11px',
+    padding: "8px",
+    margin: "4px 0",
+    backgroundColor: "#334155",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "11px",
   };
 
   const headerStyle: React.CSSProperties = {
-    marginBottom: '12px',
-    paddingBottom: '12px',
-    borderBottom: '1px solid #475569',
+    marginBottom: "12px",
+    paddingBottom: "12px",
+    borderBottom: "1px solid #475569",
   };
 
   const count = events.length;
@@ -124,52 +124,56 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
 
   return (
     <div style={containerStyle}>
-      <button
-        style={buttonStyle}
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <button style={buttonStyle} onClick={() => setIsOpen(!isOpen)}>
         🔍 Indeks Debug ({count})
       </button>
 
       {isOpen && (
         <div style={panelStyle}>
           <div style={headerStyle}>
-            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+            <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
               📊 Indeks Analytics Debugger
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+            <div style={{ fontSize: "11px", color: "#94a3b8" }}>
               Session: {sessionId?.substring(0, 12)}...
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+            <div style={{ fontSize: "11px", color: "#94a3b8" }}>
               User: {userId?.substring(0, 12)}...
             </div>
-            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+            <div
+              style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}
+            >
               Event Types: {eventTypes.size} | Total: {count}
             </div>
           </div>
 
-          <div style={{ marginBottom: '12px', display: 'flex', gap: '8px' }}>
+          <div style={{ marginBottom: "12px", display: "flex", gap: "8px" }}>
             <button
-              style={{ ...buttonStyle, padding: '4px 8px', flex: 1 }}
+              style={{ ...buttonStyle, padding: "4px 8px", flex: 1 }}
               onClick={refresh}
             >
               🔄 Refresh
             </button>
             <button
-              style={{ ...buttonStyle, padding: '4px 8px', flex: 1, backgroundColor: '#dc2626' }}
+              style={{
+                ...buttonStyle,
+                padding: "4px 8px",
+                flex: 1,
+                backgroundColor: "#dc2626",
+              }}
               onClick={clearEvents}
             >
               🗑️ Clear
             </button>
           </div>
 
-          <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>
+          <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
             Recent Events:
           </div>
 
-          <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+          <div style={{ maxHeight: "400px", overflow: "auto" }}>
             {displayedEvents.length === 0 ? (
-              <div style={{ color: '#94a3b8', fontStyle: 'italic' }}>
+              <div style={{ color: "#94a3b8", fontStyle: "italic" }}>
                 No events tracked yet
               </div>
             ) : (
@@ -177,26 +181,32 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
                 <div
                   key={index}
                   style={eventItemStyle}
-                  onClick={() => setSelectedEvent(selectedEvent === event ? null : event)}
+                  onClick={() =>
+                    setSelectedEvent(selectedEvent === event ? null : event)
+                  }
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <span style={{ color: "#60a5fa", fontWeight: "bold" }}>
                       {event.type}
                     </span>
-                    <span style={{ color: '#94a3b8', fontSize: '10px' }}>
+                    <span style={{ color: "#94a3b8", fontSize: "10px" }}>
                       {new Date(event.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
                   {selectedEvent === event && (
-                    <pre style={{
-                      marginTop: '8px',
-                      padding: '8px',
-                      backgroundColor: '#0f172a',
-                      borderRadius: '4px',
-                      overflow: 'auto',
-                      maxHeight: '200px',
-                      fontSize: '10px'
-                    }}>
+                    <pre
+                      style={{
+                        marginTop: "8px",
+                        padding: "8px",
+                        backgroundColor: "#0f172a",
+                        borderRadius: "4px",
+                        overflow: "auto",
+                        maxHeight: "200px",
+                        fontSize: "10px",
+                      }}
+                    >
                       {JSON.stringify(event, null, 2)}
                     </pre>
                   )}

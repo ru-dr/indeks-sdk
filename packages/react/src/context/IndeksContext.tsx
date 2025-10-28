@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { IndeksTracker } from '@indeks/core';
-import type { IndeksConfig } from '@indeks/shared';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
+import { IndeksTracker } from "@indeks/core";
+import type { IndeksConfig } from "@indeks/shared";
 
 interface IndeksContextValue {
   tracker: IndeksTracker | null;
@@ -31,7 +37,7 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
 
   useEffect(() => {
     if (!apiKey) {
-      console.error('Indeks: API key is required');
+      console.error("Indeks: API key is required");
       return;
     }
 
@@ -52,7 +58,7 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
         setUserId(tracker.getUserId());
       })
       .catch((error: unknown) => {
-        console.error('Failed to initialize Indeks tracker:', error);
+        console.error("Failed to initialize Indeks tracker:", error);
       });
 
     return () => {
@@ -71,16 +77,14 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
   };
 
   return (
-    <IndeksContext.Provider value={value}>
-      {children}
-    </IndeksContext.Provider>
+    <IndeksContext.Provider value={value}>{children}</IndeksContext.Provider>
   );
 };
 
 export const useIndeksContext = (): IndeksContextValue => {
   const context = useContext(IndeksContext);
   if (!context) {
-    throw new Error('useIndeksContext must be used within an IndeksProvider');
+    throw new Error("useIndeksContext must be used within an IndeksProvider");
   }
   return context;
 };
