@@ -1,7 +1,7 @@
 // This file can contain common types shared across packages
-export * from '@/types/config';
-export * from '@/types/events';
-export * from '@/types/interfaces';
+export * from "@/types/config";
+export * from "@/types/events";
+export * from "@/types/interfaces";
 
 export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;

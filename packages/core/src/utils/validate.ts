@@ -5,4 +5,4 @@ export {
   validateEventData,
   isValidUrl,
   generateId,
-} from '@indeks/shared';
+} from "@indeks/shared";

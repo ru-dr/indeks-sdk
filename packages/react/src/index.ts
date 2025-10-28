@@ -1,12 +1,12 @@
 // Context and Provider
-export { IndeksProvider, useIndeksContext } from './context/IndeksContext';
-export type { IndeksProviderProps } from './context/IndeksContext';
+export { Indeks, useIndeksContext } from "./context/IndeksContext";
+export type { IndeksProviderProps } from "./context/IndeksContext";
 
 // Hooks
-export * from './hooks';
+export * from "./hooks";
 
 // Components
-export * from './components';
+export * from "./components";
 
 // Re-export core types
 export type {
@@ -20,6 +20,6 @@ export type {
   MouseMoveEvent,
   ResizeEvent,
   ErrorEvent,
-} from '@indeks/shared';
+} from "@indeks/shared";
 
-export { IndeksTracker } from '@indeks/core';
+export { IndeksTracker } from "@indeks/core";
