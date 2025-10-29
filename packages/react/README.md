@@ -5,11 +5,13 @@ React hooks and components for the Indeks analytics SDK. Provides easy-to-use Re
 ## Installation
 
 ### From GitHub Packages
+
 ```bash
 npm install @indeks/react@npm:@indeks/react@github:ru-dr/indeks-sdk
 ```
 
 ### From npm
+
 ```bash
 npm install @indeks/react
 # or
@@ -197,22 +199,26 @@ The `config` prop accepts all options from `@indeks/core`:
 The Indeks React SDK provides comprehensive automatic event tracking through the provider:
 
 ### Session Events
+
 - **Session Start**: Tracks when users begin their session
 - **Session End**: Captures session termination events
 
 ### User Interaction Events
+
 - **Click Events**: All user clicks with element details
 - **Scroll Events**: Scroll behavior and depth tracking
 - **Form Submissions**: Form interaction and submission tracking
 - **Input Changes**: Real-time input field monitoring
 
 ### Navigation Events
+
 - **Page Views**: Automatic page view tracking
 - **Before Unload**: Exit intent detection
 - **Visibility Changes**: Tab switching and focus events
 - **Hash Changes**: SPA navigation tracking
 
 ### Advanced Events
+
 - **Search Events**: Search query capture and analysis
 - **Rage Events**: Rapid clicking and frustration detection
 - **Download Events**: File download tracking
@@ -236,17 +242,13 @@ function MyComponent() {
         eventLabel: "advanced_filter",
         customData: {
           filterType: "date_range",
-          resultCount: 25
-        }
-      }
+          resultCount: 25,
+        },
+      },
     });
   };
 
-  return (
-    <button onClick={handleCustomAction}>
-      Apply Advanced Filter
-    </button>
-  );
+  return <button onClick={handleCustomAction}>Apply Advanced Filter</button>;
 }
 ```
 
@@ -267,7 +269,7 @@ import type {
   PrintEvent,
   ShareEvent,
   ManualTrackingEvent,
-  ManualTrackingSchema
+  ManualTrackingSchema,
 } from "@indeks/react";
 ```
 
