@@ -17,7 +17,7 @@
     "clean": "rimraf packages/*/dist",
     "lint": "echo 'Linting - Coming Soon'",
     "test": "echo 'Testing - Coming Soon'",
-    "release": "bun run build:all && git add . && git commit -m 'chore: bump version to 1.2.0' && git tag v1.2.0 && git push origin main --tags"
+    "release": "bun run build:all && git add . && git commit -m 'chore: bump version to 1.2.1' && git tag v1.2.1 && git push origin main --tags"
   },
   "repository": {
     "type": "git",
