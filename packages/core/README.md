@@ -5,11 +5,13 @@ The core analytics engine for the Indeks SDK. Provides comprehensive browser eve
 ## Installation
 
 ### From GitHub Packages
+
 ```bash
 npm install @indeks/core@npm:@indeks/core@github:ru-dr/indeks-sdk
 ```
 
 ### From npm
+
 ```bash
 npm install @indeks/core
 # or
@@ -44,8 +46,8 @@ tracker.track({
   properties: {
     buttonId: "signup-btn",
     page: "/landing",
-    userType: "new"
-  }
+    userType: "new",
+  },
 });
 
 // Access tracked events
@@ -63,22 +65,26 @@ tracker.destroy();
 The Indeks SDK provides comprehensive automatic event tracking:
 
 ### Session Events
+
 - **Session Start**: Tracks when users begin their session
 - **Session End**: Captures session termination events
 
 ### User Interaction Events
+
 - **Click Events**: All user clicks with element details
 - **Scroll Events**: Scroll behavior and depth tracking
 - **Form Submissions**: Form interaction and submission tracking
 - **Input Changes**: Real-time input field monitoring
 
 ### Navigation Events
+
 - **Page Views**: Automatic page view tracking
 - **Before Unload**: Exit intent detection
 - **Visibility Changes**: Tab switching and focus events
 - **Hash Changes**: SPA navigation tracking
 
 ### Advanced Events
+
 - **Search Events**: Search query capture and analysis
 - **Rage Events**: Rapid clicking and frustration detection
 - **Download Events**: File download tracking
@@ -100,9 +106,9 @@ tracker.track({
     customData: {
       planId: "premium-monthly",
       price: 29.99,
-      currency: "USD"
-    }
-  }
+      currency: "USD",
+    },
+  },
 });
 ```
 
@@ -171,6 +177,7 @@ interface IndeksConfig {
 Creates and initializes a new tracker instance.
 
 **Parameters:**
+
 - `apiKey` (string): Your Indeks API key
 - `enableLogging` (boolean, optional): Enable console logging
 - `config` (IndeksConfig, optional): Configuration options
@@ -187,7 +194,9 @@ Manually track a custom event.
 tracker.track({
   type: "manual",
   eventName: "custom_event",
-  properties: { /* your data */ }
+  properties: {
+    /* your data */
+  },
 });
 ```
 
@@ -239,7 +248,7 @@ import type {
 const tracker = indeks("api-key", false, {
   captureClicks: true,
   captureFormSubmissions: true,
-  captureSessionEvents: true
+  captureSessionEvents: true,
 });
 
 // Track product views
@@ -249,8 +258,8 @@ tracker.track({
   properties: {
     productId: "prod-123",
     productName: "Premium Widget",
-    category: "electronics"
-  }
+    category: "electronics",
+  },
 });
 
 // Track purchases
@@ -260,8 +269,8 @@ tracker.track({
   properties: {
     transactionId: "txn-456",
     revenue: 99.99,
-    items: ["prod-123", "prod-789"]
-  }
+    items: ["prod-123", "prod-789"],
+  },
 });
 ```
 
@@ -270,7 +279,7 @@ tracker.track({
 ```typescript
 // Automatic error capture
 const tracker = indeks("api-key", true, {
-  captureErrors: true
+  captureErrors: true,
 });
 
 // Manual error reporting
@@ -283,8 +292,8 @@ try {
     properties: {
       errorMessage: error.message,
       errorStack: error.stack,
-      userAgent: navigator.userAgent
-    }
+      userAgent: navigator.userAgent,
+    },
   });
 }
 ```
