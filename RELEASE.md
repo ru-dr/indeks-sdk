@@ -5,7 +5,7 @@ This document outlines the process for releasing new versions of the Indeks SDK 
 ## Prerequisites
 
 1. **GitHub Repository**: Ensure you have push access to the repository
-2. **GitHub Token**: The workflow uses `GITHUB_TOKEN` which is automatically available in GitHub Actions
+2. **GitHub Token**: The workflow uses `NPM_TOKEN` which is automatically available in GitHub Actions
 3. **Package Permissions**: Ensure packages are set to public in the repository settings:
    - Go to your GitHub repo → Settings → Packages
    - For each package (@indeks/core, @indeks/react, @indeks/shared), set visibility to "Public"
@@ -129,13 +129,13 @@ For critical issues, you may need to:
 
 ### Authentication Error
 
-- The workflow uses `GITHUB_TOKEN` automatically - no manual setup required
+- The workflow uses `NPM_TOKEN` automatically - no manual setup required
 - Ensure you have push access to the repository
 - Check that packages are set to public visibility in repository settings
 
 ### GitHub Release Action Fails (403)
 
-- Make sure your workflow uses `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`
+- Make sure your workflow uses `NPM_TOKEN: ${{ secrets.NPM_TOKEN }}`
 - Go to GitHub repo → Settings → Actions → General → Workflow permissions
 - Set to "Read and write permissions"
 
