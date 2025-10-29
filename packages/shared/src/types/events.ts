@@ -332,7 +332,14 @@ export interface SessionStartEvent extends BaseEvent {
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
-  trafficSource: "organic" | "direct" | "social" | "referral" | "paid" | "email" | "other";
+  trafficSource:
+    | "organic"
+    | "direct"
+    | "social"
+    | "referral"
+    | "paid"
+    | "email"
+    | "other";
   landingPage: string;
   isMobile: boolean;
   isTablet: boolean;
@@ -426,7 +433,15 @@ export interface PrintEvent extends BaseEvent {
 // Share Events
 export interface ShareEvent extends BaseEvent {
   type: "share";
-  shareMethod: "copy_link" | "email" | "facebook" | "twitter" | "linkedin" | "whatsapp" | "native_share" | "other";
+  shareMethod:
+    | "copy_link"
+    | "email"
+    | "facebook"
+    | "twitter"
+    | "linkedin"
+    | "whatsapp"
+    | "native_share"
+    | "other";
   contentShared: string; // URL, product ID, or content identifier
   shareLocation: "product_page" | "article" | "cart" | "checkout" | "other";
   shareText?: string;

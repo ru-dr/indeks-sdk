@@ -6,15 +6,15 @@ This document outlines the process for releasing new versions of the Indeks SDK 
 
 1. **NPM Account**: Ensure you have an npm account with publish access to the `indeks` organization
 2. **NPM Token**: Generate an automation token from npm:
-	- Go to https://www.npmjs.com/
-	- Log in and click your profile icon → Access Tokens (or https://www.npmjs.com/settings/indeks/tokens)
-	- Click "Generate New Token" and choose "Automation" type
-	- Copy the token (starts with `npm_...`)
+   - Go to https://www.npmjs.com/
+   - Log in and click your profile icon → Access Tokens (or https://www.npmjs.com/settings/indeks/tokens)
+   - Click "Generate New Token" and choose "Automation" type
+   - Copy the token (starts with `npm_...`)
 3. **GitHub Secret**: Add the npm token as a GitHub repository secret named `NPM_TOKEN`:
-	- Go to your GitHub repo → Settings → Secrets and variables → Actions
-	- Click "New repository secret"
-	- Name: `NPM_TOKEN`, Value: your npm token
-	- Click "Add secret"
+   - Go to your GitHub repo → Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `NPM_TOKEN`, Value: your npm token
+   - Click "Add secret"
 
 ## Setting up NPM_TOKEN in GitHub
 
