@@ -44,7 +44,7 @@ git push origin main
 ### 3. Trigger the Release Workflow
 
 1. Go to your GitHub repository → **Actions** tab
-2. Click **"Publish to GitHub Packages"** workflow
+2. Click **"Publish to NPM"** workflow
 3. Click **"Run workflow"** button
 4. Enter the version number (e.g., `1.2.1`) in the input field
 5. Click **"Run workflow"**
@@ -52,7 +52,7 @@ git push origin main
 ### 4. Monitor the GitHub Action
 
 1. Go to the **Actions** tab in your GitHub repository
-2. Watch the "Publish to GitHub Packages" workflow run
+2. Watch the "Publish to NPM" workflow run
 3. Verify all packages are published successfully
 
 ### 5. Verify Release
