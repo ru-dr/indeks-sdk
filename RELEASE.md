@@ -1,29 +1,14 @@
 # Release Process
 
-This document outlines the process for releasing new versions of the Indeks SDK packages.
+This document outlines the process for releasing new versions of the Indeks SDK packages to GitHub Packages.
 
 ## Prerequisites
 
-1. **NPM Account**: Ensure you have an npm account with publish access to the `indeks` organization
-2. **NPM Token**: Generate an automation token from npm:
-   - Go to https://www.npmjs.com/
-   - Log in and click your profile icon → Access Tokens (or https://www.npmjs.com/settings/indeks/tokens)
-   - Click "Generate New Token" and choose "Automation" type
-   - Copy the token (starts with `npm_...`)
-3. **GitHub Secret**: Add the npm token as a GitHub repository secret named `NPM_TOKEN`:
-   - Go to your GitHub repo → Settings → Secrets and variables → Actions
-   - Click "New repository secret"
-   - Name: `NPM_TOKEN`, Value: your npm token
-   - Click "Add secret"
-
-## Setting up NPM_TOKEN in GitHub
-
-1. Go to your repository on GitHub
-2. Navigate to **Settings** → **Secrets and variables** → **Actions**
-3. Click **New repository secret**
-4. Name: `NPM_TOKEN`
-5. Value: Your npm automation token (starts with `npm_`)
-6. Click **Add secret**
+1. **GitHub Repository**: Ensure you have push access to the repository
+2. **GitHub Token**: The workflow uses `GITHUB_TOKEN` which is automatically available in GitHub Actions
+3. **Package Permissions**: Ensure packages are set to public in the repository settings:
+   - Go to your GitHub repo → Settings → Packages
+   - For each package (@indeks/core, @indeks/react, @indeks/shared), set visibility to "Public"
 
 ## Release Steps
 
@@ -70,16 +55,20 @@ git push origin v1.0.1
 ### 4. Monitor the GitHub Action
 
 1. Go to the **Actions** tab in your GitHub repository
-2. Watch the "Publish to NPM" workflow run
+2. Watch the "Publish to GitHub Packages" workflow run
 3. Verify all packages are published successfully
 
-### 5. Verify Publication
+### 5. Verify Release
 
-Check that your packages are live on npm:
+After the workflow completes, check that:
 
-- https://www.npmjs.com/package/@indeks/core
-- https://www.npmjs.com/package/@indeks/react
-- https://www.npmjs.com/package/@indeks/shared
+1. **Packages are published** to GitHub Packages (repo → Packages tab)
+2. **GitHub Release is created** with automatically generated release notes (repo → Releases tab)
+3. **Release notes include**:
+   - Commits since the last release
+   - Contributors to the release
+   - Links to pull requests (if any)
+   - Categorization of changes (features, bug fixes, etc.)
 
 ## Quick Release Script
 
@@ -128,21 +117,25 @@ Use it:
 
 ## Rollback
 
-If you need to unpublish a version (within 72 hours):
+**Note:** GitHub Packages does not support unpublishing packages like npm does. If you need to rollback:
 
-```bash
-npm unpublish @indeks/core@x.x.x
-npm unpublish @indeks/react@x.x.x
-npm unpublish @indeks/shared@x.x.x
-```
+1. **Delete the GitHub Release** (repo → Releases → find the release → Delete)
+2. **Delete the Git tag** (if needed): `git tag -d v1.2.0 && git push origin :refs/tags/v1.2.0`
+3. **Bump version and republish** with fixes
+4. **Inform users** to update to the new version
+
+For critical issues, you may need to:
+- Mark the release as a draft (temporarily hides it)
+- Create a new release with fixes
+- Update documentation to point users to the corrected version
 
 ## Troubleshooting
 
 ### Authentication Error
 
-- Verify `NPM_TOKEN` is correctly set in GitHub Secrets
-- Ensure the token has publish permissions
-- Check token hasn't expired
+- The workflow uses `GITHUB_TOKEN` automatically - no manual setup required
+- Ensure you have push access to the repository
+- Check that packages are set to public visibility in repository settings
 
 ### GitHub Release Action Fails (403)
 
@@ -164,4 +157,5 @@ npm unpublish @indeks/shared@x.x.x
 ### Package Not Found During Publish
 
 - Ensure package.json has correct "name" field
-- Verify you have access to publish to the `indeks` npm organization
+- Verify publishConfig is set correctly in each package.json
+- Check that the GitHub Packages registry URL is correct in the workflow
