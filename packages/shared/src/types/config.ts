@@ -36,5 +36,17 @@ export interface IndeksConfig {
   capturePageLoad?: boolean;
   // UI Interaction Events
   captureFullscreenChange?: boolean;
+  // Session Events
+  captureSessionEvents?: boolean;
+  // Search Events
+  captureSearchEvents?: boolean;
+  // Rage/Frustration Events
+  captureRageEvents?: boolean;
+  // Download Events
+  captureDownloadEvents?: boolean;
+  // Print Events
+  capturePrintEvents?: boolean;
+  // Share Events
+  captureShareEvents?: boolean;
   debounceMs?: number;
 }

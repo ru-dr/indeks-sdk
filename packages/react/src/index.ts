@@ -9,17 +9,6 @@ export * from "./hooks";
 export * from "./components";
 
 // Re-export core types
-export type {
-  IndeksConfig,
-  IndeksEvent,
-  ClickEvent,
-  ScrollEvent,
-  PageViewEvent,
-  FormSubmitEvent,
-  KeystrokeEvent,
-  MouseMoveEvent,
-  ResizeEvent,
-  ErrorEvent,
-} from "@indeks/shared";
+export type * from "@indeks/shared";
 
-export { IndeksTracker } from "@indeks/core";
+export * from "@indeks/core";

@@ -1,6 +1,6 @@
 {
   "name": "@indeks/core",
-  "version": "1.0.1",
+  "version": "1.2.0",
   "description": "Core browser event tracking library with user behavior analytics",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -40,7 +40,7 @@
   "license": "MIT",
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^4.4.3",
-    "@indeks/shared": "1.0.1"
+    "@indeks/shared": "1.2.0"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
