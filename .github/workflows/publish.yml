@@ -1,9 +1,12 @@
 name: Publish to GitHub Packages
 
 on:
-  push:
-    tags:
-      - "v*.*.*" # Triggers on version tags like v1.0.0, v1.2.3, etc.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.2.0)'
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -64,8 +67,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Release ${{ github.ref_name }}"
-          tag_name: ${{ github.ref_name }}
+          name: "Release ${{ github.event.inputs.version }}"
+          tag_name: "v${{ github.event.inputs.version }}"
           generate_release_notes: true
           draft: false
           prerelease: false

@@ -41,16 +41,13 @@ git commit -m "chore: bump version to x.x.x"
 git push origin main
 ```
 
-### 3. Create and Push a Git Tag
+### 3. Trigger the Release Workflow
 
-```bash
-# Create a tag matching the new version
-git tag v1.0.1
-
-# Push the tag to trigger the publish workflow
-git push origin main
-git push origin v1.0.1
-```
+1. Go to your GitHub repository → **Actions** tab
+2. Click **"Publish to GitHub Packages"** workflow
+3. Click **"Run workflow"** button
+4. Enter the version number (e.g., `1.2.0`) in the input field
+5. Click **"Run workflow"**
 
 ### 4. Monitor the GitHub Action
 
@@ -94,11 +91,10 @@ echo "New version: $NEW_VERSION"
 
 git add .
 git commit -m "chore: bump version to $NEW_VERSION"
-git tag "v$NEW_VERSION"
 
-echo "Ready to push! Run:"
+echo "Ready to push and trigger workflow! Run:"
 echo "  git push origin main"
-echo "  git push origin v$NEW_VERSION"
+echo "  Then manually trigger the GitHub Actions workflow with version: $NEW_VERSION"
 ```
 
 Make it executable:
@@ -120,9 +116,8 @@ Use it:
 **Note:** GitHub Packages does not support unpublishing packages like npm does. If you need to rollback:
 
 1. **Delete the GitHub Release** (repo → Releases → find the release → Delete)
-2. **Delete the Git tag** (if needed): `git tag -d v1.2.0 && git push origin :refs/tags/v1.2.0`
-3. **Bump version and republish** with fixes
-4. **Inform users** to update to the new version
+2. **Bump version and republish** with fixes
+3. **Inform users** to update to the new version
 
 For critical issues, you may need to:
 - Mark the release as a draft (temporarily hides it)
