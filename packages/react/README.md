@@ -4,6 +4,12 @@ React hooks and components for the Indeks analytics SDK. Provides easy-to-use Re
 
 ## Installation
 
+### From GitHub Packages
+```bash
+npm install @indeks/react@npm:@indeks/react@github:ru-dr/indeks-sdk
+```
+
+### From npm
 ```bash
 npm install @indeks/react
 # or
@@ -131,49 +137,116 @@ The `config` prop accepts all options from `@indeks/core`:
 ```typescript
 {
   // Basic Events
-  captureClicks: boolean;
-  captureScrolls: boolean;
-  capturePageViews: boolean;
-  captureFormSubmissions: boolean;
-  captureKeystrokes: boolean;
-  captureMouseMovements: boolean;
-  captureResizes: boolean;
-  captureErrors: boolean;
+  captureClicks?: boolean;
+  captureScrolls?: boolean;
+  capturePageViews?: boolean;
+  captureFormSubmissions?: boolean;
+  captureKeystrokes?: boolean;
+  captureMouseMovements?: boolean;
+  captureResizes?: boolean;
+  captureErrors?: boolean;
 
-  // Navigation Events
-  captureBeforeUnload: boolean;
-  captureVisibilityChange: boolean;
-  captureWindowFocus: boolean;
-  captureHashChange: boolean;
-  capturePopState: boolean;
+  // Session & Navigation Events
+  captureSessionEvents?: boolean;
+  captureBeforeUnload?: boolean;
+  captureVisibilityChange?: boolean;
+  captureWindowFocus?: boolean;
+  captureHashChange?: boolean;
+  capturePopState?: boolean;
+
+  // Advanced Events (Complete Event Capture Strategy)
+  captureSearchEvents?: boolean;      // Search query tracking
+  captureRageEvents?: boolean;        // Rapid clicking detection
+  captureDownloadEvents?: boolean;    // File download tracking
+  capturePrintEvents?: boolean;       // Print action monitoring
+  captureShareEvents?: boolean;       // Social sharing tracking
 
   // Mouse & Touch Events
-  captureMouseHover: boolean;
-  captureContextMenu: boolean;
-  captureDoubleClick: boolean;
-  captureMousePress: boolean;
-  captureMouseWheel: boolean;
-  captureTouchEvents: boolean;
-  captureDragDrop: boolean;
+  captureMouseHover?: boolean;
+  captureContextMenu?: boolean;
+  captureDoubleClick?: boolean;
+  captureMousePress?: boolean;
+  captureMouseWheel?: boolean;
+  captureTouchEvents?: boolean;
+  captureDragDrop?: boolean;
 
   // Input & Form Events
-  captureInputChanges: boolean;
-  captureFieldFocus: boolean;
-  captureClipboard: boolean;
-  captureTextSelection: boolean;
+  captureInputChanges?: boolean;
+  captureFieldFocus?: boolean;
+  captureClipboard?: boolean;
+  captureTextSelection?: boolean;
 
   // Media Events
-  captureMediaEvents: boolean;
+  captureMediaEvents?: boolean;
 
   // Network & Performance
-  captureNetworkStatus: boolean;
-  capturePageLoad: boolean;
+  captureNetworkStatus?: boolean;
+  capturePageLoad?: boolean;
 
   // UI Interaction
-  captureFullscreenChange: boolean;
+  captureFullscreenChange?: boolean;
 
   // Performance
-  debounceMs: number;
+  debounceMs?: number;
+  enableConsoleLogging?: boolean;
+}
+```
+
+## Complete Event Capture Strategy
+
+The Indeks React SDK provides comprehensive automatic event tracking through the provider:
+
+### Session Events
+- **Session Start**: Tracks when users begin their session
+- **Session End**: Captures session termination events
+
+### User Interaction Events
+- **Click Events**: All user clicks with element details
+- **Scroll Events**: Scroll behavior and depth tracking
+- **Form Submissions**: Form interaction and submission tracking
+- **Input Changes**: Real-time input field monitoring
+
+### Navigation Events
+- **Page Views**: Automatic page view tracking
+- **Before Unload**: Exit intent detection
+- **Visibility Changes**: Tab switching and focus events
+- **Hash Changes**: SPA navigation tracking
+
+### Advanced Events
+- **Search Events**: Search query capture and analysis
+- **Rage Events**: Rapid clicking and frustration detection
+- **Download Events**: File download tracking
+- **Print Events**: Print action monitoring
+- **Share Events**: Social sharing and link sharing
+
+### Manual Event Tracking
+
+For custom events and schema-based tracking:
+
+```tsx
+function MyComponent() {
+  const { tracker } = useIndeks();
+
+  const handleCustomAction = () => {
+    tracker?.track({
+      type: "manual",
+      schema: {
+        eventCategory: "user_action",
+        eventAction: "feature_usage",
+        eventLabel: "advanced_filter",
+        customData: {
+          filterType: "date_range",
+          resultCount: 25
+        }
+      }
+    });
+  };
+
+  return (
+    <button onClick={handleCustomAction}>
+      Apply Advanced Filter
+    </button>
+  );
 }
 ```
 
@@ -187,6 +260,14 @@ import type {
   IndeksEvent,
   ClickEvent,
   ScrollEvent,
+  SessionStartEvent,
+  SearchEvent,
+  RageClickEvent,
+  FileDownloadEvent,
+  PrintEvent,
+  ShareEvent,
+  ManualTrackingEvent,
+  ManualTrackingSchema
 } from "@indeks/react";
 ```
 

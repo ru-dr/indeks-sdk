@@ -13,17 +13,20 @@ A lightweight, modular web analytics SDK for tracking user behavior and events o
 ## Installation
 
 ### From npm
+
 ```bash
 npm install @indeks/core @indeks/react
 ```
 
 ### From GitHub Packages
+
 ```bash
 npm install @indeks/core@npm:@indeks/core@github:ru-dr/indeks-sdk
 npm install @indeks/react@npm:@indeks/react@github:ru-dr/indeks-sdk
 ```
 
 Or using bun:
+
 ```bash
 bun add @indeks/core @indeks/react
 ```
