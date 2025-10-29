@@ -12,10 +12,10 @@
     },
     "packages/core": {
       "name": "@indeks/core",
-      "version": "1.2.1",
+      "version": "1.1.0",
       "dependencies": {
         "@fingerprintjs/fingerprintjs": "^5.0.1",
-        "@indeks/shared": "1.2.1",
+        "@indeks/shared": "1.1.0",
       },
       "devDependencies": {
         "prettier": "^3.6.2",
@@ -25,10 +25,10 @@
     },
     "packages/react": {
       "name": "@indeks/react",
-      "version": "1.2.1",
+      "version": "1.1.0",
       "dependencies": {
-        "@indeks/core": "1.2.1",
-        "@indeks/shared": "1.2.1",
+        "@indeks/core": "1.1.0",
+        "@indeks/shared": "1.1.0",
       },
       "devDependencies": {
         "@types/react": "^19.2.2",
@@ -43,7 +43,7 @@
     },
     "packages/shared": {
       "name": "@indeks/shared",
-      "version": "1.2.1",
+      "version": "1.1.0",
       "devDependencies": {
         "rimraf": "^6.0.1",
         "typescript": "^5.9.3",

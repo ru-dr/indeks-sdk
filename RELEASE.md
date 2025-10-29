@@ -46,7 +46,7 @@ git push origin main
 1. Go to your GitHub repository → **Actions** tab
 2. Click **"Publish to NPM"** workflow
 3. Click **"Run workflow"** button
-4. Enter the version number (e.g., `1.2.1`) in the input field
+4. Enter the version number (e.g., `1.1.0`) in the input field
 5. Click **"Run workflow"**
 
 ### 4. Monitor the GitHub Action
