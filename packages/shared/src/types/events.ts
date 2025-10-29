@@ -324,6 +324,125 @@ export interface FullscreenChangeEvent extends BaseEvent {
   };
 }
 
+// Session Events
+export interface SessionStartEvent extends BaseEvent {
+  type: "session_start";
+  referrer: string;
+  referrerDomain: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  trafficSource: "organic" | "direct" | "social" | "referral" | "paid" | "email" | "other";
+  landingPage: string;
+  isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
+  isNewUser: boolean;
+  isReturningUser: boolean;
+  daysSinceLastVisit?: number;
+}
+
+export interface SessionEndEvent extends BaseEvent {
+  type: "session_end";
+  sessionDuration: number;
+  activeTime: number;
+  idleTime: number;
+  pagesViewed: number;
+  totalClicks: number;
+  totalScrolls: number;
+  exitPage: string;
+  exitType: "navigation" | "tab_close" | "timeout" | "refresh";
+  converted: boolean;
+  bounce: boolean;
+}
+
+// Search Events
+export interface SearchEvent extends BaseEvent {
+  type: "search";
+  query: string;
+  resultsCount: number;
+  searchLocation: "header" | "sidebar" | "page" | "mobile" | "other";
+  filtersApplied?: Record<string, string>;
+  sortBy?: string;
+  resultsClicked: number;
+  resultPositionClicked?: number[];
+  timeToFirstClick?: number;
+  isRefinement: boolean;
+  previousQuery?: string;
+  searchSource?: "direct" | "autocomplete" | "suggestion" | "voice";
+}
+
+// Rage/Frustration Events
+export interface RageClickEvent extends BaseEvent {
+  type: "rage_click";
+  element: string; // CSS selector
+  clicksInTimeframe: number;
+  timeframe: number; // seconds
+  whyRage: "button_disabled" | "loading" | "no_response" | "error" | "other";
+  timeOnPage: number;
+  userGaveUp: boolean;
+  elementVisibleTime?: number;
+}
+
+export interface DeadClickEvent extends BaseEvent {
+  type: "dead_click";
+  element: string; // CSS selector
+  expectedBehavior: "navigate" | "submit" | "expand" | "close" | "other";
+  actualBehavior: "none" | "error" | "redirect" | "other";
+  elementVisibleTime: number;
+  previousClicksOnElement: number;
+}
+
+export interface ErrorClickEvent extends BaseEvent {
+  type: "error_click";
+  element: string; // CSS selector
+  errorMessage: string;
+  errorType: "validation" | "network" | "javascript" | "timeout" | "other";
+  userContinued: boolean;
+  timeToError: number;
+}
+
+// Download Events
+export interface FileDownloadEvent extends BaseEvent {
+  type: "file_download";
+  fileName: string;
+  fileType: string;
+  fileSize: number; // bytes
+  downloadSource: "link" | "button" | "auto" | "programmatic";
+  downloadUrl?: string;
+  timeOnPageBeforeDownload: number;
+  downloadSpeed?: number; // bytes per second
+}
+
+// Print Events
+export interface PrintEvent extends BaseEvent {
+  type: "print";
+  pagePrinted: string;
+  timeOnPageBeforePrint: number;
+  printTrigger: "menu" | "button" | "keyboard" | "programmatic";
+  pagesPrinted?: number;
+}
+
+// Share Events
+export interface ShareEvent extends BaseEvent {
+  type: "share";
+  shareMethod: "copy_link" | "email" | "facebook" | "twitter" | "linkedin" | "whatsapp" | "native_share" | "other";
+  contentShared: string; // URL, product ID, or content identifier
+  shareLocation: "product_page" | "article" | "cart" | "checkout" | "other";
+  shareText?: string;
+  shareUrl?: string;
+}
+
+// Manual/Custom Events
+export interface CustomEvent extends BaseEvent {
+  type: "custom";
+  eventName: string;
+  properties: Record<string, any>;
+  category?: string;
+  value?: number;
+  label?: string;
+}
+
 export type IndeksEvent =
   | ClickEvent
   | ScrollEvent
@@ -358,4 +477,21 @@ export type IndeksEvent =
   | NetworkStatusEvent
   | PageLoadEvent
   // UI Interaction Events
-  | FullscreenChangeEvent;
+  | FullscreenChangeEvent
+  // Session Events
+  | SessionStartEvent
+  | SessionEndEvent
+  // Search Events
+  | SearchEvent
+  // Rage/Frustration Events
+  | RageClickEvent
+  | DeadClickEvent
+  | ErrorClickEvent
+  // Download Events
+  | FileDownloadEvent
+  // Print Events
+  | PrintEvent
+  // Share Events
+  | ShareEvent
+  // Manual/Custom Events
+  | CustomEvent;

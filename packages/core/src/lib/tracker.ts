@@ -44,6 +44,25 @@ import type {
   PageLoadEvent,
   // UI Interaction Events
   FullscreenChangeEvent,
+  // Session Events
+  SessionStartEvent,
+  SessionEndEvent,
+  // Search Events
+  SearchEvent,
+  // Rage/Frustration Events
+  RageClickEvent,
+  DeadClickEvent,
+  ErrorClickEvent,
+  // Download Events
+  FileDownloadEvent,
+  // Print Events
+  PrintEvent,
+  // Share Events
+  ShareEvent,
+  // Manual/Custom Events
+  CustomEvent,
+  // Interfaces
+  ManualTrackingSchema,
 } from "@indeks/shared";
 
 class IndeksTracker {
@@ -54,6 +73,18 @@ class IndeksTracker {
   private isInitialized: boolean = false;
   private pageLoadTime: number = Date.now();
   private logger: Logger;
+
+  // Session tracking properties
+  private sessionStartTime: number = Date.now();
+  private lastActivityTime: number = Date.now();
+  private pageViews: number = 0;
+  private totalClicks: number = 0;
+  private totalScrolls: number = 0;
+  private sessionEnded: boolean = false;
+
+  // Rage click detection
+  private clickCounts: Map<string, { count: number; timestamp: number }> = new Map();
+  private elementVisibility: Map<string, number> = new Map();
 
   constructor(config: IndeksConfig) {
     this.config = {
@@ -196,6 +227,7 @@ class IndeksTracker {
     if (!this.config.capturePageViews) return;
 
     const trackPageView = () => {
+      this.pageViews++;
       const event: PageViewEvent = {
         ...this.createBaseEvent(),
         type: "pageview",
@@ -902,6 +934,726 @@ class IndeksTracker {
     });
   }
 
+  // Session Events
+  private setupSessionTracking(): void {
+    if (!this.config.captureSessionEvents) return;
+
+    // Track session start
+    this.trackSessionStart();
+
+    // Track activity to update lastActivityTime
+    const updateActivity = () => {
+      this.lastActivityTime = Date.now();
+    };
+
+    // Update activity on various events
+    document.addEventListener("click", updateActivity, true);
+    document.addEventListener("scroll", updateActivity, { passive: true });
+    document.addEventListener("keydown", updateActivity, true);
+    document.addEventListener("mousemove", updateActivity, { passive: true });
+
+    // Track session end on beforeunload
+    window.addEventListener("beforeunload", () => {
+      this.trackSessionEnd();
+    });
+
+    // Track session end on visibility change (tab close/minimize)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        // Check if this might be a tab close after a delay
+        setTimeout(() => {
+          if (document.visibilityState === "hidden") {
+            this.trackSessionEnd();
+          }
+        }, 1000);
+      }
+    });
+  }
+
+  private trackSessionStart(): void {
+    const event: SessionStartEvent = {
+      ...this.createBaseEvent(),
+      type: "session_start",
+      referrer: document.referrer,
+      referrerDomain: document.referrer ? new URL(document.referrer).hostname : "",
+      utmSource: this.getUtmParameter("utm_source"),
+      utmMedium: this.getUtmParameter("utm_medium"),
+      utmCampaign: this.getUtmParameter("utm_campaign"),
+      trafficSource: this.determineTrafficSource(),
+      landingPage: window.location.pathname + window.location.search,
+      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      isTablet: /iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(navigator.userAgent),
+      isDesktop: !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(navigator.userAgent),
+      isNewUser: !localStorage.getItem("indeks_last_visit"),
+      isReturningUser: !!localStorage.getItem("indeks_last_visit"),
+      daysSinceLastVisit: this.getDaysSinceLastVisit(),
+    };
+
+    localStorage.setItem("indeks_last_visit", Date.now().toString());
+    this.logEvent(event);
+  }
+
+  private trackSessionEnd(): void {
+    if (this.sessionEnded) return;
+    this.sessionEnded = true;
+
+    const sessionDuration = Date.now() - this.sessionStartTime;
+    const activeTime = this.calculateActiveTime();
+    const idleTime = sessionDuration - activeTime;
+
+    const event: SessionEndEvent = {
+      ...this.createBaseEvent(),
+      type: "session_end",
+      sessionDuration,
+      activeTime,
+      idleTime,
+      pagesViewed: this.pageViews,
+      totalClicks: this.totalClicks,
+      totalScrolls: this.totalScrolls,
+      exitPage: window.location.pathname + window.location.search,
+      exitType: document.visibilityState === "hidden" ? "tab_close" : "navigation",
+      converted: this.hasConversion(),
+      bounce: this.pageViews === 1,
+    };
+
+    this.logEvent(event);
+  }
+
+  private getUtmParameter(param: string): string | undefined {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param) || undefined;
+  }
+
+  private determineTrafficSource(): "organic" | "direct" | "social" | "referral" | "paid" | "email" | "other" {
+    const referrer = document.referrer;
+    const urlParams = new URLSearchParams(window.location.search);
+
+    if (!referrer && !urlParams.has("utm_source")) return "direct";
+
+    if (urlParams.has("utm_source")) {
+      const utmSource = urlParams.get("utm_source")?.toLowerCase();
+      if (utmSource?.includes("google") || utmSource?.includes("bing") || utmSource?.includes("yahoo")) return "paid";
+      if (utmSource?.includes("facebook") || utmSource?.includes("twitter") || utmSource?.includes("linkedin")) return "social";
+      if (utmSource?.includes("email")) return "email";
+      return "paid";
+    }
+
+    if (referrer) {
+      const referrerDomain = new URL(referrer).hostname.toLowerCase();
+      if (referrerDomain.includes("google.") || referrerDomain.includes("bing.") || referrerDomain.includes("yahoo.")) return "organic";
+      if (referrerDomain.includes("facebook.") || referrerDomain.includes("twitter.") || referrerDomain.includes("linkedin.") || referrerDomain.includes("instagram.")) return "social";
+      return "referral";
+    }
+
+    return "other";
+  }
+
+  private getDaysSinceLastVisit(): number | undefined {
+    const lastVisit = localStorage.getItem("indeks_last_visit");
+    if (!lastVisit) return undefined;
+
+    const lastVisitTime = parseInt(lastVisit);
+    const now = Date.now();
+    const diffMs = now - lastVisitTime;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  private calculateActiveTime(): number {
+    // Simple heuristic: assume user is active if there was activity in the last 30 seconds
+    // In a real implementation, you'd track active periods more precisely
+    return Math.min(Date.now() - this.sessionStartTime, 30 * 60 * 1000); // Cap at 30 minutes for demo
+  }
+
+  private hasConversion(): boolean {
+    // Check if any custom conversion events were tracked in this session
+    return this.eventQueue.some(event => event.type === "custom" && (event as any).eventName?.includes("convert"));
+  }
+
+  // Search Events
+  private setupSearchTracking(): void {
+    if (!this.config.captureSearchEvents) return;
+
+    // Track search form submissions
+    document.addEventListener("submit", (e) => {
+      const form = e.target as HTMLFormElement;
+      const searchInput = form.querySelector('input[type="search"], input[name*="search"], input[name*="query"]') as HTMLInputElement;
+
+      if (searchInput && searchInput.value.trim()) {
+        this.trackSearch(searchInput.value.trim());
+      }
+    });
+
+    // Track search button clicks
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const searchButton = target.matches('button[type="submit"]') ||
+                          target.matches('[data-action="search"]') ||
+                          target.closest('button[type="submit"]') ||
+                          target.closest('[data-action="search"]');
+
+      if (searchButton) {
+        const form = target.closest('form') as HTMLFormElement;
+        const searchInput = form?.querySelector('input[type="search"], input[name*="search"], input[name*="query"]') as HTMLInputElement;
+
+        if (searchInput && searchInput.value.trim()) {
+          this.trackSearch(searchInput.value.trim());
+        }
+      }
+    });
+  }
+
+  private trackSearch(query: string): void {
+    const event: SearchEvent = {
+      ...this.createBaseEvent(),
+      type: "search",
+      query,
+      resultsCount: this.getSearchResultsCount(),
+      searchLocation: this.determineSearchLocation(),
+      filtersApplied: this.getAppliedFilters(),
+      sortBy: this.getSortBy(),
+      resultsClicked: 0, // Would be tracked separately
+      resultPositionClicked: [],
+      timeToFirstClick: undefined,
+      isRefinement: this.isSearchRefinement(),
+      previousQuery: this.getPreviousQuery(),
+      searchSource: this.getSearchSource(),
+    };
+
+    // Store current query for refinement tracking
+    sessionStorage.setItem("indeks_last_search", query);
+    this.logEvent(event);
+  }
+
+  private getSearchResultsCount(): number {
+    // Try to find result count on search results pages
+    const countSelectors = [
+      '.results-count',
+      '.search-results-count',
+      '[data-results-count]',
+      '.total-results'
+    ];
+
+    for (const selector of countSelectors) {
+      const element = document.querySelector(selector);
+      if (element) {
+        const count = parseInt(element.textContent?.match(/\d+/)?.[0] || '0');
+        if (count > 0) return count;
+      }
+    }
+
+    // Count result items
+    const resultItems = document.querySelectorAll('.search-result, .result-item, .product-item, .item');
+    return resultItems.length;
+  }
+
+  private determineSearchLocation(): "header" | "sidebar" | "page" | "mobile" | "other" {
+    if (window.innerWidth < 768) return "mobile";
+
+    const searchForm = document.querySelector('form:has(input[type="search"]), form:has(input[name*="search"])');
+    if (!searchForm) return "other";
+
+    const rect = searchForm.getBoundingClientRect();
+    if (rect.top < 100) return "header";
+    if (rect.left < 100) return "sidebar";
+
+    return "page";
+  }
+
+  private getAppliedFilters(): Record<string, string> | undefined {
+    const filters: Record<string, string> = {};
+
+    // Look for active filter elements
+    document.querySelectorAll('[data-filter], .filter.active, .facet.active').forEach(el => {
+      const key = el.getAttribute('data-filter') || el.getAttribute('data-facet');
+      const value = el.getAttribute('data-value') || el.textContent?.trim();
+
+      if (key && value) {
+        filters[key] = value;
+      }
+    });
+
+    return Object.keys(filters).length > 0 ? filters : undefined;
+  }
+
+  private getSortBy(): string | undefined {
+    const sortSelectors = [
+      'select[name*="sort"]',
+      '[data-sort]',
+      '.sort-by'
+    ];
+
+    for (const selector of sortSelectors) {
+      const element = document.querySelector(selector) as HTMLSelectElement;
+      if (element) {
+        return element.value || element.getAttribute('data-sort') || element.textContent?.trim();
+      }
+    }
+
+    return undefined;
+  }
+
+  private isSearchRefinement(): boolean {
+    return !!sessionStorage.getItem("indeks_last_search");
+  }
+
+  private getPreviousQuery(): string | undefined {
+    return sessionStorage.getItem("indeks_last_search") || undefined;
+  }
+
+  private getSearchSource(): "direct" | "autocomplete" | "suggestion" | "voice" {
+    // Check if search was triggered by autocomplete
+    if (document.activeElement?.matches('[data-autocomplete]')) return "autocomplete";
+
+    // Check for voice search indicators
+    if (document.querySelector('[data-voice-search], .voice-search')) return "voice";
+
+    // Check for search suggestions
+    if (document.querySelector('.search-suggestions, .autocomplete')) return "suggestion";
+
+    return "direct";
+  }
+
+  // Rage/Frustration Events
+  private setupRageTracking(): void {
+    if (!this.config.captureRageEvents) return;
+
+    // Track rapid clicks (rage clicks)
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const selector = this.getElementSelector(target);
+
+      const now = Date.now();
+      const existing = this.clickCounts.get(selector);
+
+      if (existing && (now - existing.timestamp) < 2000) { // Within 2 seconds
+        existing.count++;
+        if (existing.count >= 3) { // 3+ clicks in 2 seconds
+          this.trackRageClick(target, existing.count);
+          existing.count = 0; // Reset to avoid duplicate events
+        }
+      } else {
+        this.clickCounts.set(selector, { count: 1, timestamp: now });
+      }
+
+      // Clean up old entries
+      for (const [key, value] of this.clickCounts.entries()) {
+        if (now - value.timestamp > 5000) {
+          this.clickCounts.delete(key);
+        }
+      }
+    });
+
+    // Track dead clicks (clicks with no response)
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const selector = this.getElementSelector(target);
+
+      // Check if element is interactive
+      const isInteractive = target.matches('button, a, input, select, textarea, [role="button"], [onclick], [data-action]') ||
+                           target.closest('button, a, input, select, textarea, [role="button"], [onclick], [data-action]');
+
+      if (!isInteractive) {
+        // Wait a bit to see if anything happens
+        setTimeout(() => {
+          if (!this.elementVisibility.has(selector)) {
+            this.trackDeadClick(target);
+          }
+        }, 500);
+      }
+    });
+
+    // Track error clicks (clicks that cause errors)
+    let errorTimeout: number;
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+
+      // Clear any existing timeout
+      if (errorTimeout) clearTimeout(errorTimeout);
+
+      // Set timeout to check for errors after click
+      errorTimeout = window.setTimeout(() => {
+        // Check if there are new error events in the queue
+        const recentErrors = this.eventQueue.filter(event =>
+          event.type === "error" &&
+          (Date.now() - event.timestamp) < 1000 // Within 1 second
+        );
+
+        if (recentErrors.length > 0) {
+          this.trackErrorClick(target, recentErrors[0] as any);
+        }
+      }, 100);
+    });
+  }
+
+  private trackRageClick(element: HTMLElement, clickCount: number): void {
+    const selector = this.getElementSelector(element);
+    const visibilityTime = this.elementVisibility.get(selector) || 0;
+
+    const event: RageClickEvent = {
+      ...this.createBaseEvent(),
+      type: "rage_click",
+      element: selector,
+      clicksInTimeframe: clickCount,
+      timeframe: 2,
+      whyRage: this.determineRageReason(element),
+      timeOnPage: Date.now() - this.pageLoadTime,
+      userGaveUp: this.checkIfUserGaveUp(),
+      elementVisibleTime: visibilityTime,
+    };
+
+    this.logEvent(event);
+  }
+
+  private trackDeadClick(element: HTMLElement): void {
+    const selector = this.getElementSelector(element);
+    const visibilityTime = this.elementVisibility.get(selector) || 0;
+
+    const event: DeadClickEvent = {
+      ...this.createBaseEvent(),
+      type: "dead_click",
+      element: selector,
+      expectedBehavior: this.determineExpectedBehavior(element),
+      actualBehavior: "none",
+      elementVisibleTime: visibilityTime,
+      previousClicksOnElement: this.getPreviousClicksOnElement(selector),
+    };
+
+    this.logEvent(event);
+  }
+
+  private trackErrorClick(element: HTMLElement, errorEvent: any): void {
+    const event: ErrorClickEvent = {
+      ...this.createBaseEvent(),
+      type: "error_click",
+      element: this.getElementSelector(element),
+      errorMessage: errorEvent.error.message,
+      errorType: this.categorizeError(errorEvent.error.message),
+      userContinued: this.checkIfUserContinued(),
+      timeToError: Date.now() - this.pageLoadTime,
+    };
+
+    this.logEvent(event);
+  }
+
+  private getElementSelector(element: HTMLElement): string {
+    // Create a unique selector for the element
+    const parts: string[] = [];
+
+    if (element.id) {
+      return `#${element.id}`;
+    }
+
+    if (element.className) {
+      parts.push(element.tagName.toLowerCase() + '.' + element.className.split(' ').join('.'));
+    } else {
+      parts.push(element.tagName.toLowerCase());
+    }
+
+    // Add nth-child if needed
+    const siblings = Array.from(element.parentElement?.children || []);
+    const index = siblings.indexOf(element);
+    if (index > 0) {
+      parts.push(`:nth-child(${index + 1})`);
+    }
+
+    return parts.join('');
+  }
+
+  private determineRageReason(element: HTMLElement): "button_disabled" | "loading" | "no_response" | "error" | "other" {
+    if ((element as HTMLButtonElement).disabled || element.getAttribute('aria-disabled') === 'true') {
+      return "button_disabled";
+    }
+
+    if (element.matches('.loading, [data-loading], .spinner') ||
+        element.querySelector('.loading, .spinner, [data-loading]')) {
+      return "loading";
+    }
+
+    if (element.matches('[aria-invalid="true"]') ||
+        element.closest('[aria-invalid="true"]')) {
+      return "error";
+    }
+
+    return "no_response";
+  }
+
+  private checkIfUserGaveUp(): boolean {
+    // Check if user left the page or stopped interacting
+    return document.visibilityState === "hidden";
+  }
+
+  private determineExpectedBehavior(element: HTMLElement): "navigate" | "submit" | "expand" | "close" | "other" {
+    if (element.matches('a, [role="link"]')) return "navigate";
+    if (element.matches('button[type="submit"], input[type="submit"], [data-action="submit"]')) return "submit";
+    if (element.matches('.accordion, .collapse, [data-toggle], [aria-expanded]')) return "expand";
+    if (element.matches('.close, [data-dismiss], [aria-label*="close"]')) return "close";
+
+    return "other";
+  }
+
+  private getPreviousClicksOnElement(selector: string): number {
+    const existing = this.clickCounts.get(selector);
+    return existing ? existing.count : 0;
+  }
+
+  private categorizeError(message: string): "validation" | "network" | "javascript" | "timeout" | "other" {
+    if (message.includes("validation") || message.includes("required") || message.includes("invalid")) {
+      return "validation";
+    }
+    if (message.includes("network") || message.includes("fetch") || message.includes("404") || message.includes("500")) {
+      return "network";
+    }
+    if (message.includes("timeout")) {
+      return "timeout";
+    }
+    if (message.includes("undefined") || message.includes("null") || message.includes("TypeError")) {
+      return "javascript";
+    }
+
+    return "other";
+  }
+
+  private checkIfUserContinued(): boolean {
+    // Check if user continued interacting after error
+    return this.lastActivityTime > (Date.now() - 5000); // Active in last 5 seconds
+  }
+
+  // Download Events
+  private setupDownloadTracking(): void {
+    if (!this.config.captureDownloadEvents) return;
+
+    // Track download links
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      const link = target.matches('a') ? target : target.closest('a');
+
+      if (link) {
+        const href = (link as HTMLAnchorElement).href;
+        const isDownload = link.hasAttribute('download') ||
+                          href.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|exe|dmg|pkg)$/i) ||
+                          href.includes('/download') ||
+                          href.includes('/file');
+
+        if (isDownload) {
+          this.trackFileDownload(link as HTMLAnchorElement);
+        }
+      }
+    });
+  }
+
+  private trackFileDownload(link: HTMLAnchorElement): void {
+    const url = new URL(link.href);
+    const fileName = link.download || url.pathname.split('/').pop() || 'unknown';
+    const fileType = this.getFileType(fileName);
+
+    const event: FileDownloadEvent = {
+      ...this.createBaseEvent(),
+      type: "file_download",
+      fileName,
+      fileType,
+      fileSize: 0, // Would need HEAD request to get size
+      downloadSource: this.determineDownloadSource(link),
+      downloadUrl: link.href,
+      timeOnPageBeforeDownload: Date.now() - this.pageLoadTime,
+      downloadSpeed: undefined,
+    };
+
+    this.logEvent(event);
+  }
+
+  private getFileType(fileName: string): string {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    const typeMap: Record<string, string> = {
+      'pdf': 'pdf',
+      'doc': 'word',
+      'docx': 'word',
+      'xls': 'excel',
+      'xlsx': 'excel',
+      'ppt': 'powerpoint',
+      'pptx': 'powerpoint',
+      'zip': 'archive',
+      'rar': 'archive',
+      'exe': 'executable',
+      'dmg': 'disk_image',
+      'pkg': 'installer',
+    };
+
+    return typeMap[ext || ''] || 'other';
+  }
+
+  private determineDownloadSource(link: HTMLAnchorElement): "link" | "button" | "auto" | "programmatic" {
+    if (link.closest('button')) return "button";
+    if (link.hasAttribute('download')) return "link";
+    if (link.href.includes('blob:') || link.href.includes('data:')) return "programmatic";
+
+    return "auto";
+  }
+
+  // Print Events
+  private setupPrintTracking(): void {
+    if (!this.config.capturePrintEvents) return;
+
+    // Track print attempts
+    window.addEventListener("beforeprint", () => {
+      const event: PrintEvent = {
+        ...this.createBaseEvent(),
+        type: "print",
+        pagePrinted: window.location.pathname,
+        timeOnPageBeforePrint: Date.now() - this.pageLoadTime,
+        printTrigger: "menu",
+        pagesPrinted: undefined,
+      };
+
+      this.logEvent(event);
+    });
+
+    // Also track print button clicks
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.matches('[onclick*="print"], [data-action="print"]') ||
+          target.textContent?.toLowerCase().includes('print')) {
+        const event: PrintEvent = {
+          ...this.createBaseEvent(),
+          type: "print",
+          pagePrinted: window.location.pathname,
+          timeOnPageBeforePrint: Date.now() - this.pageLoadTime,
+          printTrigger: "button",
+          pagesPrinted: undefined,
+        };
+
+        this.logEvent(event);
+      }
+    });
+  }
+
+  // Share Events
+  private setupShareTracking(): void {
+    if (!this.config.captureShareEvents) return;
+
+    // Track native share API
+    if (navigator.share) {
+      const originalShare = navigator.share;
+      navigator.share = async (data) => {
+        const event: ShareEvent = {
+          ...this.createBaseEvent(),
+          type: "share",
+          shareMethod: "native_share",
+          contentShared: data?.url || window.location.href,
+          shareLocation: this.determineShareLocation(),
+          shareText: data?.text,
+          shareUrl: data?.url,
+        };
+
+        this.logEvent(event);
+        return originalShare.call(navigator, data);
+      };
+    }
+
+    // Track social share buttons
+    const shareSelectors = [
+      '[data-share]',
+      '.share-button',
+      '.social-share',
+      '[href*="facebook.com/sharer"]',
+      '[href*="twitter.com/share"]',
+      '[href*="linkedin.com/sharing"]',
+      '[href*="whatsapp.com"]',
+      'a:contains("Share")',
+      'button:contains("Share")'
+    ];
+
+    shareSelectors.forEach(selector => {
+      document.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        if (target.matches(selector) || target.closest(selector)) {
+          this.trackShare(target);
+        }
+      });
+    });
+
+    // Track copy link actions
+    document.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement;
+      if (target.matches('[data-action="copy-link"], .copy-link') ||
+          target.textContent?.toLowerCase().includes('copy link')) {
+        const event: ShareEvent = {
+          ...this.createBaseEvent(),
+          type: "share",
+          shareMethod: "copy_link",
+          contentShared: window.location.href,
+          shareLocation: this.determineShareLocation(),
+        };
+
+        this.logEvent(event);
+      }
+    });
+  }
+
+  private trackShare(element: HTMLElement): void {
+    const shareMethod = this.determineShareMethod(element);
+    const contentShared = this.getSharedContent(element);
+
+    const event: ShareEvent = {
+      ...this.createBaseEvent(),
+      type: "share",
+      shareMethod,
+      contentShared,
+      shareLocation: this.determineShareLocation(),
+      shareText: this.getShareText(element),
+      shareUrl: this.getShareUrl(element),
+    };
+
+    this.logEvent(event);
+  }
+
+  private determineShareMethod(element: HTMLElement): "copy_link" | "email" | "facebook" | "twitter" | "linkedin" | "whatsapp" | "native_share" | "other" {
+    const href = (element as HTMLAnchorElement).href || '';
+    const className = element.className || '';
+    const text = element.textContent?.toLowerCase() || '';
+
+    if (href.includes('facebook.com') || className.includes('facebook') || text.includes('facebook')) return "facebook";
+    if (href.includes('twitter.com') || className.includes('twitter') || text.includes('twitter')) return "twitter";
+    if (href.includes('linkedin.com') || className.includes('linkedin') || text.includes('linkedin')) return "linkedin";
+    if (href.includes('whatsapp.com') || className.includes('whatsapp') || text.includes('whatsapp')) return "whatsapp";
+    if (href.includes('mailto:') || text.includes('email')) return "email";
+    if (text.includes('copy') || className.includes('copy')) return "copy_link";
+
+    return "other";
+  }
+
+  private getSharedContent(element: HTMLElement): string {
+    // Try to get content from data attributes or URL
+    const dataUrl = element.getAttribute('data-url') || element.getAttribute('data-share-url');
+    if (dataUrl) return dataUrl;
+
+    // Check if it's a product or article page
+    const productId = element.getAttribute('data-product-id') || element.getAttribute('data-product');
+    if (productId) return productId;
+
+    // Default to current page
+    return window.location.href;
+  }
+
+  private determineShareLocation(): "product_page" | "article" | "cart" | "checkout" | "other" {
+    const path = window.location.pathname.toLowerCase();
+
+    if (path.includes('/product') || path.includes('/item')) return "product_page";
+    if (path.includes('/article') || path.includes('/blog') || path.includes('/post')) return "article";
+    if (path.includes('/cart') || path.includes('/basket')) return "cart";
+    if (path.includes('/checkout')) return "checkout";
+
+    return "other";
+  }
+
+  private getShareText(element: HTMLElement): string | undefined {
+    return element.getAttribute('data-text') || element.getAttribute('data-share-text') || undefined;
+  }
+
+  private getShareUrl(element: HTMLElement): string | undefined {
+    return element.getAttribute('data-url') || (element as HTMLAnchorElement).href || undefined;
+  }
+
   public async init(): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("Tracker already initialized");
@@ -960,6 +1712,14 @@ class IndeksTracker {
     // UI Interaction Events
     this.setupFullscreenChangeTracking();
 
+    // New Advanced Events
+    this.setupSessionTracking();
+    this.setupSearchTracking();
+    this.setupRageTracking();
+    this.setupDownloadTracking();
+    this.setupPrintTracking();
+    this.setupShareTracking();
+
     this.isInitialized = true;
 
     this.logger.info(
@@ -991,11 +1751,48 @@ class IndeksTracker {
   }
 
   public destroy(): void {
-    // Remove all event listeners would require more complex cleanup
-    // For now, just clear the queue and mark as not initialized
     this.clearEvents();
     this.isInitialized = false;
     this.logger.info("💀 Tracker destroyed");
+  }
+
+  /**
+   * Manually track events based on a schema definition
+   * @param schema - Schema defining what elements to track and how
+   */
+  public track(schema: ManualTrackingSchema): void {
+    if (!this.isInitialized) {
+      this.logger.warn("Tracker not initialized. Call init() first.");
+      return;
+    }
+
+    // Set up event listeners for each selector
+    schema.selectors.forEach((selector: string) => {
+      const eventType = schema.eventType || 'click';
+      
+      document.addEventListener(eventType, (e) => {
+        const target = e.target as HTMLElement;
+        if (target.matches(selector) || target.closest(selector)) {
+          const event: CustomEvent = {
+            ...this.createBaseEvent(),
+            type: "custom",
+            eventName: schema.eventName || `manual_${eventType}`,
+            properties: {
+              ...schema.properties,
+              selector,
+              element: this.getElementInfo(target),
+            },
+            category: schema.category,
+            value: schema.value,
+            label: schema.label,
+          };
+
+          this.logEvent(event);
+        }
+      });
+    });
+
+    this.logger.info(`📋 Set up manual tracking for selectors: ${schema.selectors.join(', ')}`);
   }
 }
 
