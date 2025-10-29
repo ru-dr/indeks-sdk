@@ -83,7 +83,8 @@ class IndeksTracker {
   private sessionEnded: boolean = false;
 
   // Rage click detection
-  private clickCounts: Map<string, { count: number; timestamp: number }> = new Map();
+  private clickCounts: Map<string, { count: number; timestamp: number }> =
+    new Map();
   private elementVisibility: Map<string, number> = new Map();
 
   constructor(config: IndeksConfig) {
@@ -975,15 +976,25 @@ class IndeksTracker {
       ...this.createBaseEvent(),
       type: "session_start",
       referrer: document.referrer,
-      referrerDomain: document.referrer ? new URL(document.referrer).hostname : "",
+      referrerDomain: document.referrer
+        ? new URL(document.referrer).hostname
+        : "",
       utmSource: this.getUtmParameter("utm_source"),
       utmMedium: this.getUtmParameter("utm_medium"),
       utmCampaign: this.getUtmParameter("utm_campaign"),
       trafficSource: this.determineTrafficSource(),
       landingPage: window.location.pathname + window.location.search,
-      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
-      isTablet: /iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(navigator.userAgent),
-      isDesktop: !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(navigator.userAgent),
+      isMobile:
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        ),
+      isTablet: /iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(
+        navigator.userAgent,
+      ),
+      isDesktop:
+        !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|iPad|Android(?=.*\bMobile\b)|Tablet|PlayBook|Silk/i.test(
+          navigator.userAgent,
+        ),
       isNewUser: !localStorage.getItem("indeks_last_visit"),
       isReturningUser: !!localStorage.getItem("indeks_last_visit"),
       daysSinceLastVisit: this.getDaysSinceLastVisit(),
@@ -1011,7 +1022,8 @@ class IndeksTracker {
       totalClicks: this.totalClicks,
       totalScrolls: this.totalScrolls,
       exitPage: window.location.pathname + window.location.search,
-      exitType: document.visibilityState === "hidden" ? "tab_close" : "navigation",
+      exitType:
+        document.visibilityState === "hidden" ? "tab_close" : "navigation",
       converted: this.hasConversion(),
       bounce: this.pageViews === 1,
     };
@@ -1024,7 +1036,14 @@ class IndeksTracker {
     return urlParams.get(param) || undefined;
   }
 
-  private determineTrafficSource(): "organic" | "direct" | "social" | "referral" | "paid" | "email" | "other" {
+  private determineTrafficSource():
+    | "organic"
+    | "direct"
+    | "social"
+    | "referral"
+    | "paid"
+    | "email"
+    | "other" {
     const referrer = document.referrer;
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -1032,16 +1051,37 @@ class IndeksTracker {
 
     if (urlParams.has("utm_source")) {
       const utmSource = urlParams.get("utm_source")?.toLowerCase();
-      if (utmSource?.includes("google") || utmSource?.includes("bing") || utmSource?.includes("yahoo")) return "paid";
-      if (utmSource?.includes("facebook") || utmSource?.includes("twitter") || utmSource?.includes("linkedin")) return "social";
+      if (
+        utmSource?.includes("google") ||
+        utmSource?.includes("bing") ||
+        utmSource?.includes("yahoo")
+      )
+        return "paid";
+      if (
+        utmSource?.includes("facebook") ||
+        utmSource?.includes("twitter") ||
+        utmSource?.includes("linkedin")
+      )
+        return "social";
       if (utmSource?.includes("email")) return "email";
       return "paid";
     }
 
     if (referrer) {
       const referrerDomain = new URL(referrer).hostname.toLowerCase();
-      if (referrerDomain.includes("google.") || referrerDomain.includes("bing.") || referrerDomain.includes("yahoo.")) return "organic";
-      if (referrerDomain.includes("facebook.") || referrerDomain.includes("twitter.") || referrerDomain.includes("linkedin.") || referrerDomain.includes("instagram.")) return "social";
+      if (
+        referrerDomain.includes("google.") ||
+        referrerDomain.includes("bing.") ||
+        referrerDomain.includes("yahoo.")
+      )
+        return "organic";
+      if (
+        referrerDomain.includes("facebook.") ||
+        referrerDomain.includes("twitter.") ||
+        referrerDomain.includes("linkedin.") ||
+        referrerDomain.includes("instagram.")
+      )
+        return "social";
       return "referral";
     }
 
@@ -1067,7 +1107,11 @@ class IndeksTracker {
 
   private hasConversion(): boolean {
     // Check if any custom conversion events were tracked in this session
-    return this.eventQueue.some(event => event.type === "custom" && (event as any).eventName?.includes("convert"));
+    return this.eventQueue.some(
+      (event) =>
+        event.type === "custom" &&
+        (event as any).eventName?.includes("convert"),
+    );
   }
 
   // Search Events
@@ -1077,7 +1121,9 @@ class IndeksTracker {
     // Track search form submissions
     document.addEventListener("submit", (e) => {
       const form = e.target as HTMLFormElement;
-      const searchInput = form.querySelector('input[type="search"], input[name*="search"], input[name*="query"]') as HTMLInputElement;
+      const searchInput = form.querySelector(
+        'input[type="search"], input[name*="search"], input[name*="query"]',
+      ) as HTMLInputElement;
 
       if (searchInput && searchInput.value.trim()) {
         this.trackSearch(searchInput.value.trim());
@@ -1087,14 +1133,17 @@ class IndeksTracker {
     // Track search button clicks
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      const searchButton = target.matches('button[type="submit"]') ||
-                          target.matches('[data-action="search"]') ||
-                          target.closest('button[type="submit"]') ||
-                          target.closest('[data-action="search"]');
+      const searchButton =
+        target.matches('button[type="submit"]') ||
+        target.matches('[data-action="search"]') ||
+        target.closest('button[type="submit"]') ||
+        target.closest('[data-action="search"]');
 
       if (searchButton) {
-        const form = target.closest('form') as HTMLFormElement;
-        const searchInput = form?.querySelector('input[type="search"], input[name*="search"], input[name*="query"]') as HTMLInputElement;
+        const form = target.closest("form") as HTMLFormElement;
+        const searchInput = form?.querySelector(
+          'input[type="search"], input[name*="search"], input[name*="query"]',
+        ) as HTMLInputElement;
 
         if (searchInput && searchInput.value.trim()) {
           this.trackSearch(searchInput.value.trim());
@@ -1128,29 +1177,38 @@ class IndeksTracker {
   private getSearchResultsCount(): number {
     // Try to find result count on search results pages
     const countSelectors = [
-      '.results-count',
-      '.search-results-count',
-      '[data-results-count]',
-      '.total-results'
+      ".results-count",
+      ".search-results-count",
+      "[data-results-count]",
+      ".total-results",
     ];
 
     for (const selector of countSelectors) {
       const element = document.querySelector(selector);
       if (element) {
-        const count = parseInt(element.textContent?.match(/\d+/)?.[0] || '0');
+        const count = parseInt(element.textContent?.match(/\d+/)?.[0] || "0");
         if (count > 0) return count;
       }
     }
 
     // Count result items
-    const resultItems = document.querySelectorAll('.search-result, .result-item, .product-item, .item');
+    const resultItems = document.querySelectorAll(
+      ".search-result, .result-item, .product-item, .item",
+    );
     return resultItems.length;
   }
 
-  private determineSearchLocation(): "header" | "sidebar" | "page" | "mobile" | "other" {
+  private determineSearchLocation():
+    | "header"
+    | "sidebar"
+    | "page"
+    | "mobile"
+    | "other" {
     if (window.innerWidth < 768) return "mobile";
 
-    const searchForm = document.querySelector('form:has(input[type="search"]), form:has(input[name*="search"])');
+    const searchForm = document.querySelector(
+      'form:has(input[type="search"]), form:has(input[name*="search"])',
+    );
     if (!searchForm) return "other";
 
     const rect = searchForm.getBoundingClientRect();
@@ -1164,29 +1222,32 @@ class IndeksTracker {
     const filters: Record<string, string> = {};
 
     // Look for active filter elements
-    document.querySelectorAll('[data-filter], .filter.active, .facet.active').forEach(el => {
-      const key = el.getAttribute('data-filter') || el.getAttribute('data-facet');
-      const value = el.getAttribute('data-value') || el.textContent?.trim();
+    document
+      .querySelectorAll("[data-filter], .filter.active, .facet.active")
+      .forEach((el) => {
+        const key =
+          el.getAttribute("data-filter") || el.getAttribute("data-facet");
+        const value = el.getAttribute("data-value") || el.textContent?.trim();
 
-      if (key && value) {
-        filters[key] = value;
-      }
-    });
+        if (key && value) {
+          filters[key] = value;
+        }
+      });
 
     return Object.keys(filters).length > 0 ? filters : undefined;
   }
 
   private getSortBy(): string | undefined {
-    const sortSelectors = [
-      'select[name*="sort"]',
-      '[data-sort]',
-      '.sort-by'
-    ];
+    const sortSelectors = ['select[name*="sort"]', "[data-sort]", ".sort-by"];
 
     for (const selector of sortSelectors) {
       const element = document.querySelector(selector) as HTMLSelectElement;
       if (element) {
-        return element.value || element.getAttribute('data-sort') || element.textContent?.trim();
+        return (
+          element.value ||
+          element.getAttribute("data-sort") ||
+          element.textContent?.trim()
+        );
       }
     }
 
@@ -1201,15 +1262,22 @@ class IndeksTracker {
     return sessionStorage.getItem("indeks_last_search") || undefined;
   }
 
-  private getSearchSource(): "direct" | "autocomplete" | "suggestion" | "voice" {
+  private getSearchSource():
+    | "direct"
+    | "autocomplete"
+    | "suggestion"
+    | "voice" {
     // Check if search was triggered by autocomplete
-    if (document.activeElement?.matches('[data-autocomplete]')) return "autocomplete";
+    if (document.activeElement?.matches("[data-autocomplete]"))
+      return "autocomplete";
 
     // Check for voice search indicators
-    if (document.querySelector('[data-voice-search], .voice-search')) return "voice";
+    if (document.querySelector("[data-voice-search], .voice-search"))
+      return "voice";
 
     // Check for search suggestions
-    if (document.querySelector('.search-suggestions, .autocomplete')) return "suggestion";
+    if (document.querySelector(".search-suggestions, .autocomplete"))
+      return "suggestion";
 
     return "direct";
   }
@@ -1226,9 +1294,11 @@ class IndeksTracker {
       const now = Date.now();
       const existing = this.clickCounts.get(selector);
 
-      if (existing && (now - existing.timestamp) < 2000) { // Within 2 seconds
+      if (existing && now - existing.timestamp < 2000) {
+        // Within 2 seconds
         existing.count++;
-        if (existing.count >= 3) { // 3+ clicks in 2 seconds
+        if (existing.count >= 3) {
+          // 3+ clicks in 2 seconds
           this.trackRageClick(target, existing.count);
           existing.count = 0; // Reset to avoid duplicate events
         }
@@ -1250,8 +1320,13 @@ class IndeksTracker {
       const selector = this.getElementSelector(target);
 
       // Check if element is interactive
-      const isInteractive = target.matches('button, a, input, select, textarea, [role="button"], [onclick], [data-action]') ||
-                           target.closest('button, a, input, select, textarea, [role="button"], [onclick], [data-action]');
+      const isInteractive =
+        target.matches(
+          'button, a, input, select, textarea, [role="button"], [onclick], [data-action]',
+        ) ||
+        target.closest(
+          'button, a, input, select, textarea, [role="button"], [onclick], [data-action]',
+        );
 
       if (!isInteractive) {
         // Wait a bit to see if anything happens
@@ -1274,9 +1349,9 @@ class IndeksTracker {
       // Set timeout to check for errors after click
       errorTimeout = window.setTimeout(() => {
         // Check if there are new error events in the queue
-        const recentErrors = this.eventQueue.filter(event =>
-          event.type === "error" &&
-          (Date.now() - event.timestamp) < 1000 // Within 1 second
+        const recentErrors = this.eventQueue.filter(
+          (event) =>
+            event.type === "error" && Date.now() - event.timestamp < 1000, // Within 1 second
         );
 
         if (recentErrors.length > 0) {
@@ -1345,7 +1420,11 @@ class IndeksTracker {
     }
 
     if (element.className) {
-      parts.push(element.tagName.toLowerCase() + '.' + element.className.split(' ').join('.'));
+      parts.push(
+        element.tagName.toLowerCase() +
+          "." +
+          element.className.split(" ").join("."),
+      );
     } else {
       parts.push(element.tagName.toLowerCase());
     }
@@ -1357,21 +1436,30 @@ class IndeksTracker {
       parts.push(`:nth-child(${index + 1})`);
     }
 
-    return parts.join('');
+    return parts.join("");
   }
 
-  private determineRageReason(element: HTMLElement): "button_disabled" | "loading" | "no_response" | "error" | "other" {
-    if ((element as HTMLButtonElement).disabled || element.getAttribute('aria-disabled') === 'true') {
+  private determineRageReason(
+    element: HTMLElement,
+  ): "button_disabled" | "loading" | "no_response" | "error" | "other" {
+    if (
+      (element as HTMLButtonElement).disabled ||
+      element.getAttribute("aria-disabled") === "true"
+    ) {
       return "button_disabled";
     }
 
-    if (element.matches('.loading, [data-loading], .spinner') ||
-        element.querySelector('.loading, .spinner, [data-loading]')) {
+    if (
+      element.matches(".loading, [data-loading], .spinner") ||
+      element.querySelector(".loading, .spinner, [data-loading]")
+    ) {
       return "loading";
     }
 
-    if (element.matches('[aria-invalid="true"]') ||
-        element.closest('[aria-invalid="true"]')) {
+    if (
+      element.matches('[aria-invalid="true"]') ||
+      element.closest('[aria-invalid="true"]')
+    ) {
       return "error";
     }
 
@@ -1383,11 +1471,22 @@ class IndeksTracker {
     return document.visibilityState === "hidden";
   }
 
-  private determineExpectedBehavior(element: HTMLElement): "navigate" | "submit" | "expand" | "close" | "other" {
+  private determineExpectedBehavior(
+    element: HTMLElement,
+  ): "navigate" | "submit" | "expand" | "close" | "other" {
     if (element.matches('a, [role="link"]')) return "navigate";
-    if (element.matches('button[type="submit"], input[type="submit"], [data-action="submit"]')) return "submit";
-    if (element.matches('.accordion, .collapse, [data-toggle], [aria-expanded]')) return "expand";
-    if (element.matches('.close, [data-dismiss], [aria-label*="close"]')) return "close";
+    if (
+      element.matches(
+        'button[type="submit"], input[type="submit"], [data-action="submit"]',
+      )
+    )
+      return "submit";
+    if (
+      element.matches(".accordion, .collapse, [data-toggle], [aria-expanded]")
+    )
+      return "expand";
+    if (element.matches('.close, [data-dismiss], [aria-label*="close"]'))
+      return "close";
 
     return "other";
   }
@@ -1397,17 +1496,32 @@ class IndeksTracker {
     return existing ? existing.count : 0;
   }
 
-  private categorizeError(message: string): "validation" | "network" | "javascript" | "timeout" | "other" {
-    if (message.includes("validation") || message.includes("required") || message.includes("invalid")) {
+  private categorizeError(
+    message: string,
+  ): "validation" | "network" | "javascript" | "timeout" | "other" {
+    if (
+      message.includes("validation") ||
+      message.includes("required") ||
+      message.includes("invalid")
+    ) {
       return "validation";
     }
-    if (message.includes("network") || message.includes("fetch") || message.includes("404") || message.includes("500")) {
+    if (
+      message.includes("network") ||
+      message.includes("fetch") ||
+      message.includes("404") ||
+      message.includes("500")
+    ) {
       return "network";
     }
     if (message.includes("timeout")) {
       return "timeout";
     }
-    if (message.includes("undefined") || message.includes("null") || message.includes("TypeError")) {
+    if (
+      message.includes("undefined") ||
+      message.includes("null") ||
+      message.includes("TypeError")
+    ) {
       return "javascript";
     }
 
@@ -1416,7 +1530,7 @@ class IndeksTracker {
 
   private checkIfUserContinued(): boolean {
     // Check if user continued interacting after error
-    return this.lastActivityTime > (Date.now() - 5000); // Active in last 5 seconds
+    return this.lastActivityTime > Date.now() - 5000; // Active in last 5 seconds
   }
 
   // Download Events
@@ -1426,14 +1540,17 @@ class IndeksTracker {
     // Track download links
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      const link = target.matches('a') ? target : target.closest('a');
+      const link = target.matches("a") ? target : target.closest("a");
 
       if (link) {
         const href = (link as HTMLAnchorElement).href;
-        const isDownload = link.hasAttribute('download') ||
-                          href.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|exe|dmg|pkg)$/i) ||
-                          href.includes('/download') ||
-                          href.includes('/file');
+        const isDownload =
+          link.hasAttribute("download") ||
+          href.match(
+            /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|zip|rar|exe|dmg|pkg)$/i,
+          ) ||
+          href.includes("/download") ||
+          href.includes("/file");
 
         if (isDownload) {
           this.trackFileDownload(link as HTMLAnchorElement);
@@ -1444,7 +1561,8 @@ class IndeksTracker {
 
   private trackFileDownload(link: HTMLAnchorElement): void {
     const url = new URL(link.href);
-    const fileName = link.download || url.pathname.split('/').pop() || 'unknown';
+    const fileName =
+      link.download || url.pathname.split("/").pop() || "unknown";
     const fileType = this.getFileType(fileName);
 
     const event: FileDownloadEvent = {
@@ -1463,29 +1581,32 @@ class IndeksTracker {
   }
 
   private getFileType(fileName: string): string {
-    const ext = fileName.split('.').pop()?.toLowerCase();
+    const ext = fileName.split(".").pop()?.toLowerCase();
     const typeMap: Record<string, string> = {
-      'pdf': 'pdf',
-      'doc': 'word',
-      'docx': 'word',
-      'xls': 'excel',
-      'xlsx': 'excel',
-      'ppt': 'powerpoint',
-      'pptx': 'powerpoint',
-      'zip': 'archive',
-      'rar': 'archive',
-      'exe': 'executable',
-      'dmg': 'disk_image',
-      'pkg': 'installer',
+      pdf: "pdf",
+      doc: "word",
+      docx: "word",
+      xls: "excel",
+      xlsx: "excel",
+      ppt: "powerpoint",
+      pptx: "powerpoint",
+      zip: "archive",
+      rar: "archive",
+      exe: "executable",
+      dmg: "disk_image",
+      pkg: "installer",
     };
 
-    return typeMap[ext || ''] || 'other';
+    return typeMap[ext || ""] || "other";
   }
 
-  private determineDownloadSource(link: HTMLAnchorElement): "link" | "button" | "auto" | "programmatic" {
-    if (link.closest('button')) return "button";
-    if (link.hasAttribute('download')) return "link";
-    if (link.href.includes('blob:') || link.href.includes('data:')) return "programmatic";
+  private determineDownloadSource(
+    link: HTMLAnchorElement,
+  ): "link" | "button" | "auto" | "programmatic" {
+    if (link.closest("button")) return "button";
+    if (link.hasAttribute("download")) return "link";
+    if (link.href.includes("blob:") || link.href.includes("data:"))
+      return "programmatic";
 
     return "auto";
   }
@@ -1511,8 +1632,10 @@ class IndeksTracker {
     // Also track print button clicks
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (target.matches('[onclick*="print"], [data-action="print"]') ||
-          target.textContent?.toLowerCase().includes('print')) {
+      if (
+        target.matches('[onclick*="print"], [data-action="print"]') ||
+        target.textContent?.toLowerCase().includes("print")
+      ) {
         const event: PrintEvent = {
           ...this.createBaseEvent(),
           type: "print",
@@ -1552,18 +1675,18 @@ class IndeksTracker {
 
     // Track social share buttons
     const shareSelectors = [
-      '[data-share]',
-      '.share-button',
-      '.social-share',
+      "[data-share]",
+      ".share-button",
+      ".social-share",
       '[href*="facebook.com/sharer"]',
       '[href*="twitter.com/share"]',
       '[href*="linkedin.com/sharing"]',
       '[href*="whatsapp.com"]',
       'a:contains("Share")',
-      'button:contains("Share")'
+      'button:contains("Share")',
     ];
 
-    shareSelectors.forEach(selector => {
+    shareSelectors.forEach((selector) => {
       document.addEventListener("click", (e) => {
         const target = e.target as HTMLElement;
         if (target.matches(selector) || target.closest(selector)) {
@@ -1575,8 +1698,10 @@ class IndeksTracker {
     // Track copy link actions
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (target.matches('[data-action="copy-link"], .copy-link') ||
-          target.textContent?.toLowerCase().includes('copy link')) {
+      if (
+        target.matches('[data-action="copy-link"], .copy-link') ||
+        target.textContent?.toLowerCase().includes("copy link")
+      ) {
         const event: ShareEvent = {
           ...this.createBaseEvent(),
           type: "share",
@@ -1607,51 +1732,104 @@ class IndeksTracker {
     this.logEvent(event);
   }
 
-  private determineShareMethod(element: HTMLElement): "copy_link" | "email" | "facebook" | "twitter" | "linkedin" | "whatsapp" | "native_share" | "other" {
-    const href = (element as HTMLAnchorElement).href || '';
-    const className = element.className || '';
-    const text = element.textContent?.toLowerCase() || '';
+  private determineShareMethod(
+    element: HTMLElement,
+  ):
+    | "copy_link"
+    | "email"
+    | "facebook"
+    | "twitter"
+    | "linkedin"
+    | "whatsapp"
+    | "native_share"
+    | "other" {
+    const href = (element as HTMLAnchorElement).href || "";
+    const className = element.className || "";
+    const text = element.textContent?.toLowerCase() || "";
 
-    if (href.includes('facebook.com') || className.includes('facebook') || text.includes('facebook')) return "facebook";
-    if (href.includes('twitter.com') || className.includes('twitter') || text.includes('twitter')) return "twitter";
-    if (href.includes('linkedin.com') || className.includes('linkedin') || text.includes('linkedin')) return "linkedin";
-    if (href.includes('whatsapp.com') || className.includes('whatsapp') || text.includes('whatsapp')) return "whatsapp";
-    if (href.includes('mailto:') || text.includes('email')) return "email";
-    if (text.includes('copy') || className.includes('copy')) return "copy_link";
+    if (
+      href.includes("facebook.com") ||
+      className.includes("facebook") ||
+      text.includes("facebook")
+    )
+      return "facebook";
+    if (
+      href.includes("twitter.com") ||
+      className.includes("twitter") ||
+      text.includes("twitter")
+    )
+      return "twitter";
+    if (
+      href.includes("linkedin.com") ||
+      className.includes("linkedin") ||
+      text.includes("linkedin")
+    )
+      return "linkedin";
+    if (
+      href.includes("whatsapp.com") ||
+      className.includes("whatsapp") ||
+      text.includes("whatsapp")
+    )
+      return "whatsapp";
+    if (href.includes("mailto:") || text.includes("email")) return "email";
+    if (text.includes("copy") || className.includes("copy")) return "copy_link";
 
     return "other";
   }
 
   private getSharedContent(element: HTMLElement): string {
     // Try to get content from data attributes or URL
-    const dataUrl = element.getAttribute('data-url') || element.getAttribute('data-share-url');
+    const dataUrl =
+      element.getAttribute("data-url") ||
+      element.getAttribute("data-share-url");
     if (dataUrl) return dataUrl;
 
     // Check if it's a product or article page
-    const productId = element.getAttribute('data-product-id') || element.getAttribute('data-product');
+    const productId =
+      element.getAttribute("data-product-id") ||
+      element.getAttribute("data-product");
     if (productId) return productId;
 
     // Default to current page
     return window.location.href;
   }
 
-  private determineShareLocation(): "product_page" | "article" | "cart" | "checkout" | "other" {
+  private determineShareLocation():
+    | "product_page"
+    | "article"
+    | "cart"
+    | "checkout"
+    | "other" {
     const path = window.location.pathname.toLowerCase();
 
-    if (path.includes('/product') || path.includes('/item')) return "product_page";
-    if (path.includes('/article') || path.includes('/blog') || path.includes('/post')) return "article";
-    if (path.includes('/cart') || path.includes('/basket')) return "cart";
-    if (path.includes('/checkout')) return "checkout";
+    if (path.includes("/product") || path.includes("/item"))
+      return "product_page";
+    if (
+      path.includes("/article") ||
+      path.includes("/blog") ||
+      path.includes("/post")
+    )
+      return "article";
+    if (path.includes("/cart") || path.includes("/basket")) return "cart";
+    if (path.includes("/checkout")) return "checkout";
 
     return "other";
   }
 
   private getShareText(element: HTMLElement): string | undefined {
-    return element.getAttribute('data-text') || element.getAttribute('data-share-text') || undefined;
+    return (
+      element.getAttribute("data-text") ||
+      element.getAttribute("data-share-text") ||
+      undefined
+    );
   }
 
   private getShareUrl(element: HTMLElement): string | undefined {
-    return element.getAttribute('data-url') || (element as HTMLAnchorElement).href || undefined;
+    return (
+      element.getAttribute("data-url") ||
+      (element as HTMLAnchorElement).href ||
+      undefined
+    );
   }
 
   public async init(): Promise<void> {
@@ -1768,8 +1946,8 @@ class IndeksTracker {
 
     // Set up event listeners for each selector
     schema.selectors.forEach((selector: string) => {
-      const eventType = schema.eventType || 'click';
-      
+      const eventType = schema.eventType || "click";
+
       document.addEventListener(eventType, (e) => {
         const target = e.target as HTMLElement;
         if (target.matches(selector) || target.closest(selector)) {
@@ -1792,7 +1970,9 @@ class IndeksTracker {
       });
     });
 
-    this.logger.info(`📋 Set up manual tracking for selectors: ${schema.selectors.join(', ')}`);
+    this.logger.info(
+      `📋 Set up manual tracking for selectors: ${schema.selectors.join(", ")}`,
+    );
   }
 }
 
