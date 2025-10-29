@@ -5,11 +5,13 @@ Shared types, utilities, and constants for the Indeks SDK. Provides common inter
 ## Installation
 
 ### From GitHub Packages
+
 ```bash
 npm install @indeks/shared@npm:@indeks/shared@github:ru-dr/indeks-sdk
 ```
 
 ### From npm
+
 ```bash
 npm install @indeks/shared
 # or
@@ -40,17 +42,14 @@ import type {
   ScrollEvent,
   PageViewEvent,
   FormSubmitEvent,
-  ErrorEvent
+  ErrorEvent,
 } from "@indeks/shared";
 ```
 
 ### Session Events
 
 ```typescript
-import type {
-  SessionStartEvent,
-  SessionEndEvent
-} from "@indeks/shared";
+import type { SessionStartEvent, SessionEndEvent } from "@indeks/shared";
 
 interface SessionStartEvent {
   type: "session_start";
@@ -77,7 +76,7 @@ import type {
   FileDownloadEvent,
   PrintEvent,
   ShareEvent,
-  ManualTrackingEvent
+  ManualTrackingEvent,
 } from "@indeks/shared";
 ```
 
@@ -167,7 +166,7 @@ const isValidKey = validateApiKey("your-api-key");
 // Validate configuration object
 const validation = validateConfig({
   captureClicks: true,
-  debounceMs: 100
+  debounceMs: 100,
 });
 ```
 
@@ -181,7 +180,7 @@ const cleanEvent = sanitizeEventData({
   type: "click",
   password: "secret123", // This will be removed
   email: "user@example.com", // This will be removed
-  buttonId: "submit-btn" // This stays
+  buttonId: "submit-btn", // This stays
 });
 
 // Sanitize user input
@@ -195,7 +194,7 @@ import {
   IndeksError,
   ValidationError,
   ConfigurationError,
-  TrackingError
+  TrackingError,
 } from "@indeks/shared";
 
 // Custom error types for better error handling
@@ -217,7 +216,7 @@ import { createLogger, LogLevel } from "@indeks/shared";
 
 const logger = createLogger({
   level: LogLevel.DEBUG,
-  prefix: "[Indeks]"
+  prefix: "[Indeks]",
 });
 
 logger.debug("Debug message");
@@ -233,7 +232,7 @@ import {
   EVENT_TYPES,
   MAX_EVENT_QUEUE_SIZE,
   DEFAULT_DEBOUNCE_MS,
-  SENSITIVE_FIELD_NAMES
+  SENSITIVE_FIELD_NAMES,
 } from "@indeks/shared";
 
 // Event type constants
@@ -256,7 +255,7 @@ console.log(SENSITIVE_FIELD_NAMES); // ["password", "email", "ssn", ...]
 import type {
   IndeksEvent,
   ClickEvent,
-  SessionStartEvent
+  SessionStartEvent,
 } from "@indeks/shared";
 
 function handleEvent(event: IndeksEvent) {
@@ -282,7 +281,7 @@ import { validateConfig, IndeksConfig } from "@indeks/shared";
 const userConfig: Partial<IndeksConfig> = {
   captureClicks: true,
   debounceMs: 50,
-  enableConsoleLogging: true
+  enableConsoleLogging: true,
 };
 
 const validation = validateConfig(userConfig);
@@ -296,10 +295,7 @@ if (validation.isValid) {
 ### Custom Event Creation
 
 ```typescript
-import type {
-  ManualTrackingEvent,
-  ManualTrackingSchema
-} from "@indeks/shared";
+import type { ManualTrackingEvent, ManualTrackingSchema } from "@indeks/shared";
 
 const customEvent: ManualTrackingEvent = {
   type: "manual",
@@ -311,9 +307,9 @@ const customEvent: ManualTrackingEvent = {
     eventLabel: "download_cta",
     customData: {
       buttonText: "Download Now",
-      pageSection: "hero"
-    }
-  }
+      pageSection: "hero",
+    },
+  },
 };
 ```
 
@@ -350,7 +346,7 @@ import type {
   IndeksError,
   ValidationError,
   ConfigurationError,
-  TrackingError
+  TrackingError,
 } from "@indeks/shared";
 ```
 

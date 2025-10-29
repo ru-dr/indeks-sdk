@@ -120,6 +120,7 @@ Use it:
 3. **Inform users** to update to the new version
 
 For critical issues, you may need to:
+
 - Mark the release as a draft (temporarily hides it)
 - Create a new release with fixes
 - Update documentation to point users to the corrected version

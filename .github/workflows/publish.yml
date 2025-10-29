@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g., 1.2.0)'
+        description: "Version to publish (e.g., 1.2.0)"
         required: true
         type: string
 
@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          registry-url: "https://npm.pkg.github.com"
+          registry-url: "https://npm.pkg.github.com/@ru-dr"
           scope: "@indeks"
 
       - name: Install dependencies
