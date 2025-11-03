@@ -30,13 +30,18 @@ export const DEFAULT_CONFIG = {
   captureNetworkStatus: true,
   capturePageLoad: true,
   captureFullscreenChange: true,
+  captureSessionEvents: true,
+  captureSearchEvents: true,
+  captureRageEvents: true,
+  captureDownloadEvents: true,
+  capturePrintEvents: true,
+  captureShareEvents: true,
   debounceMs: 100,
 } as const;
 
 export const API_ENDPOINTS = {
-  DEFAULT: "https://api.indeks.com/v1/events",
-  STAGING: "https://staging-api.indeks.com/v1/events",
-  DEV: "http://localhost:3000/v1/events",
+  PRODUCTION: "https://indeks.bl0q.app/api/v1/collect",
+  LOCAL: "http://localhost:3000/api/v1/collect",
 } as const;
 
 export const STORAGE_KEYS = {
