@@ -6,6 +6,7 @@ import {
   Logger,
   LogLevel,
 } from "@indeks/shared";
+import { IndeksAnalytics } from "./analytics";
 import type { IndeksConfig } from "@indeks/shared";
 import type {
   IndeksEvent,
@@ -73,6 +74,8 @@ class IndeksTracker {
   private isInitialized: boolean = false;
   private pageLoadTime: number = Date.now();
   private logger: Logger;
+  private analytics: IndeksAnalytics;
+  private autoFlushInterval: number | null = null;
 
   // Session tracking properties
   private sessionStartTime: number = Date.now();
@@ -98,6 +101,7 @@ class IndeksTracker {
       enableConsole: this.config.enableConsoleLogging !== false,
       level: LogLevel.INFO,
     });
+    this.analytics = new IndeksAnalytics(this.config);
     this.validateApiKey();
   }
 
@@ -146,6 +150,11 @@ class IndeksTracker {
     this.logger.info(`📊 Event: ${event.type}`, {
       event,
       queueLength: this.eventQueue.length,
+    });
+
+    // Batch event for sending to analytics
+    this.analytics.batch([event]).catch((error) => {
+      this.logger.warn("Failed to queue event for sending:", error);
     });
   }
 
@@ -1900,6 +1909,13 @@ class IndeksTracker {
 
     this.isInitialized = true;
 
+    // Set up automatic batch flushing every 5 seconds
+    this.autoFlushInterval = window.setInterval(() => {
+      this.analytics.flush().catch((error) => {
+        this.logger.warn("Auto-flush failed:", error);
+      });
+    }, 5000);
+
     this.logger.info(
       "🚀 Tracker initialized successfully with all advanced events",
     );
@@ -1929,9 +1945,34 @@ class IndeksTracker {
   }
 
   public destroy(): void {
+    // Flush any remaining events before destroying
+    this.analytics.flush().catch(console.error);
+    
+    // Clear auto-flush interval
+    if (this.autoFlushInterval) {
+      clearInterval(this.autoFlushInterval);
+      this.autoFlushInterval = null;
+    }
+    
     this.clearEvents();
+    this.analytics.clearBatch();
     this.isInitialized = false;
     this.logger.info("💀 Tracker destroyed");
+  }
+
+  /**
+   * Manually flush all pending events to the analytics API
+   */
+  public async flush(): Promise<void> {
+    await this.analytics.flush();
+    this.logger.info("📤 Manually flushed events");
+  }
+
+  /**
+   * Get the current batch size (events waiting to be sent)
+   */
+  public getBatchSize(): number {
+    return this.analytics.getBatchSize();
   }
 
   /**

@@ -18,19 +18,21 @@ export class IndeksAnalytics implements AnalyticsInterface {
     if (!events.length) return;
 
     try {
-      const endpoint = this.config.endpoint || API_ENDPOINTS.DEFAULT;
+      // Use LOCAL for localhost, otherwise PRODUCTION
+      const defaultEndpoint = window.location.hostname === 'localhost' 
+        ? API_ENDPOINTS.LOCAL 
+        : API_ENDPOINTS.PRODUCTION;
+      const endpoint = this.config.endpoint || defaultEndpoint;
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.config.apiKey}`,
+          "x-api-key": this.config.apiKey,
           "User-Agent": "indeks-core/1.0.0",
         },
         body: JSON.stringify({
           events,
-          timestamp: Date.now(),
-          version: "1.0.0",
         }),
       });
 
