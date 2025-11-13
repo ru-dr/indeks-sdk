@@ -7,9 +7,41 @@ on:
         description: "Version to publish (e.g., 1.1.0)"
         required: true
         type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/*/package.json'
 
 jobs:
+  check-publish:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check if should publish
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.head_commit.message }}" == *"[publish]"* ]]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Extract version from package.json
+        id: extract
+        run: |
+          VERSION=$(cat packages/core/package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
   publish:
+    needs: check-publish
+    if: needs.check-publish.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -39,11 +71,15 @@ jobs:
 
       - name: Replace workspace protocol with actual versions
         run: |
+          VERSION="${{ needs.check-publish.outputs.version }}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          fi
           # Update core package.json to use actual version instead of workspace:*
-          sed -i 's/"@indeks\/shared": "workspace:\*"/"@indeks\/shared": "${{ github.event.inputs.version }}"/g' packages/core/package.json
+          sed -i "s/\"@indeks\/shared\": \"workspace:\*\"/\"@indeks\/shared\": \"$VERSION\"/g" packages/core/package.json
           # Update react package.json to use actual versions instead of workspace:*
-          sed -i 's/"@indeks\/core": "workspace:\*"/"@indeks\/core": "${{ github.event.inputs.version }}"/g' packages/react/package.json
-          sed -i 's/"@indeks\/shared": "workspace:\*"/"@indeks\/shared": "${{ github.event.inputs.version }}"/g' packages/react/package.json
+          sed -i "s/\"@indeks\/core\": \"workspace:\*\"/\"@indeks\/core\": \"$VERSION\"/g" packages/react/package.json
+          sed -i "s/\"@indeks\/shared\": \"workspace:\*\"/\"@indeks\/shared\": \"$VERSION\"/g" packages/react/package.json
 
       - name: Build shared package first
         working-directory: ./packages/shared
@@ -75,16 +111,20 @@ jobs:
 
       - name: Create and push git tag
         run: |
+          VERSION="${{ needs.check-publish.outputs.version }}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v${{ github.event.inputs.version }}
-          git push origin v${{ github.event.inputs.version }}
+          git tag v$VERSION
+          git push origin v$VERSION
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Release ${{ github.event.inputs.version }}"
-          tag_name: "v${{ github.event.inputs.version }}"
+          name: "Release ${{ needs.check-publish.outputs.version || github.event.inputs.version }}"
+          tag_name: "v${{ needs.check-publish.outputs.version || github.event.inputs.version }}"
           generate_release_notes: true
           draft: false
           prerelease: false
