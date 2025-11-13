@@ -62,7 +62,10 @@ export class IndeksAnalytics implements AnalyticsInterface {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `HTTP ${response.status}: ${errorData.message || response.statusText}`
+        );
       }
 
       if (this.config.enableConsoleLogging) {
