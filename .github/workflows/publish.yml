@@ -86,6 +86,13 @@ jobs:
           for pkg in shared core react; do
             echo "Validating packages/$pkg/package.json"
             node -e "JSON.parse(require('fs').readFileSync('packages/$pkg/package.json', 'utf8'))"
+            
+            # Check if README exists
+            if [ ! -f "packages/$pkg/README.md" ]; then
+              echo "ERROR: README.md missing in packages/$pkg"
+              exit 1
+            fi
+            echo "✓ README.md found in packages/$pkg"
           done
 
       - name: Build shared package
@@ -102,21 +109,33 @@ jobs:
 
       - name: Publish @indeks/shared
         working-directory: ./packages/shared
-        run: npm publish
+        run: |
+          echo "Publishing @indeks/shared..."
+          ls -la
+          npm publish --dry-run
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: false
 
       - name: Publish @indeks/core
         working-directory: ./packages/core
-        run: npm publish
+        run: |
+          echo "Publishing @indeks/core..."
+          ls -la
+          npm publish --dry-run
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: false
 
       - name: Publish @indeks/react
         working-directory: ./packages/react
-        run: npm publish
+        run: |
+          echo "Publishing @indeks/react..."
+          ls -la
+          npm publish --dry-run
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: false
