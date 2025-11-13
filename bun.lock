@@ -12,7 +12,7 @@
     },
     "packages/core": {
       "name": "@indeks/core",
-      "version": "1.1.1",
+      "version": "1.1.0",
       "dependencies": {
         "@fingerprintjs/fingerprintjs": "^5.0.1",
         "@indeks/shared": "workspace:*",
@@ -25,7 +25,7 @@
     },
     "packages/react": {
       "name": "@indeks/react",
-      "version": "1.1.1",
+      "version": "1.1.0",
       "dependencies": {
         "@indeks/core": "workspace:*",
         "@indeks/shared": "workspace:*",
@@ -43,7 +43,7 @@
     },
     "packages/shared": {
       "name": "@indeks/shared",
-      "version": "1.1.1",
+      "version": "1.1.0",
       "devDependencies": {
         "rimraf": "^6.0.1",
         "typescript": "^5.9.3",
