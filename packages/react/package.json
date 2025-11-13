@@ -22,8 +22,8 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser --external react --external react-dom",
-    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node --external react --external react-dom",
+    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser --external react --external react-dom --external lucide-react",
+    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node --external react --external react-dom --external lucide-react",
     "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
     "clean": "rimraf dist",
     "dev": "bun run build --watch"
@@ -40,7 +40,8 @@
   "license": "MIT",
   "peerDependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "lucide-react": "^0.400.0"
   },
   "dependencies": {
     "@indeks/core": "workspace:*",
