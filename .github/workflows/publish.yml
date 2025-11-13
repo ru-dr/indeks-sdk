@@ -12,10 +12,14 @@ on:
       - main
     paths:
       - 'packages/*/package.json'
+    tags-ignore:
+      - '**'
 
 jobs:
   check-publish:
     runs-on: ubuntu-latest
+    # Skip if commit is from github-actions bot
+    if: github.actor != 'github-actions[bot]'
     outputs:
       should_publish: ${{ steps.check.outputs.should_publish }}
       version: ${{ steps.extract.outputs.version }}
@@ -148,8 +152,14 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v$VERSION
-          git push origin v$VERSION
+          
+          # Check if tag already exists
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists, skipping tag creation"
+          else
+            git tag v$VERSION
+            git push origin v$VERSION
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
