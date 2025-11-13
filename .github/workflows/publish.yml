@@ -115,8 +115,6 @@ jobs:
         working-directory: ./packages/shared
         run: |
           echo "Publishing @indeks/shared..."
-          ls -la
-          npm publish --dry-run
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -126,8 +124,6 @@ jobs:
         working-directory: ./packages/core
         run: |
           echo "Publishing @indeks/core..."
-          ls -la
-          npm publish --dry-run
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -137,8 +133,6 @@ jobs:
         working-directory: ./packages/react
         run: |
           echo "Publishing @indeks/react..."
-          ls -la
-          npm publish --dry-run
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
