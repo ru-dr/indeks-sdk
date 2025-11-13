@@ -81,12 +81,24 @@ jobs:
           sed -i "s/\"@indeks\/core\": \"workspace:\*\"/\"@indeks\/core\": \"$VERSION\"/g" packages/react/package.json
           sed -i "s/\"@indeks\/shared\": \"workspace:\*\"/\"@indeks\/shared\": \"$VERSION\"/g" packages/react/package.json
 
-      - name: Build shared package first
+      - name: Validate package.json files
+        run: |
+          for pkg in shared core react; do
+            echo "Validating packages/$pkg/package.json"
+            node -e "JSON.parse(require('fs').readFileSync('packages/$pkg/package.json', 'utf8'))"
+          done
+
+      - name: Build shared package
         working-directory: ./packages/shared
         run: bun run build
 
-      - name: Build all packages
-        run: bun run build:all
+      - name: Build core package
+        working-directory: ./packages/core
+        run: bun run build
+
+      - name: Build react package
+        working-directory: ./packages/react
+        run: bun run build
 
       - name: Publish @indeks/shared
         working-directory: ./packages/shared
