@@ -60,25 +60,37 @@ if ($VersionType -eq "custom") {
     $packages = @("shared", "core", "react")
     foreach ($pkg in $packages) {
         $pkgPath = "packages\$pkg\package.json"
-        $pkgJson = Get-Content $pkgPath | ConvertFrom-Json
+        $pkgJson = Get-Content $pkgPath -Raw | ConvertFrom-Json
         $pkgJson.version = $CustomVersion
-        $pkgJson | ConvertTo-Json -Depth 100 | Set-Content $pkgPath
+        $pkgJson | ConvertTo-Json -Depth 100 | Set-Content $pkgPath -NoNewline
         Write-Success "Updated $pkg to $CustomVersion"
     }
     $newVersion = $CustomVersion
 } else {
-    # Use npm version command
-    Set-Location "packages\shared"
-    npm version $VersionType --no-git-tag-version | Out-Null
-    Set-Location "..\core"
-    npm version $VersionType --no-git-tag-version | Out-Null
-    Set-Location "..\react"
-    npm version $VersionType --no-git-tag-version | Out-Null
-    Set-Location "..\..\"
+    # Manually update versions to avoid npm workspace errors
+    $packages = @("shared", "core", "react")
     
-    $packageJson = Get-Content "packages\core\package.json" | ConvertFrom-Json
-    $newVersion = $packageJson.version
-    Write-Success "Bumped to v$newVersion ($VersionType)"
+    # Calculate new version
+    $parts = $currentVersion -split '\.'
+    
+    switch ($VersionType) {
+        'major' { $newVersion = "$(([int]$parts[0]) + 1).0.0" }
+        'minor' { $newVersion = "$($parts[0]).$(([int]$parts[1]) + 1).0" }
+        'patch' { $newVersion = "$($parts[0]).$($parts[1]).$(([int]$parts[2]) + 1)" }
+        default { 
+            Write-Error "Version type $VersionType not supported. Use 'major', 'minor', 'patch', or 'custom'"
+            exit 1
+        }
+    }
+    
+    # Update all package.json files
+    foreach ($pkg in $packages) {
+        $pkgPath = "packages\$pkg\package.json"
+        $pkgJson = Get-Content $pkgPath -Raw | ConvertFrom-Json
+        $pkgJson.version = $newVersion
+        $pkgJson | ConvertTo-Json -Depth 100 | Set-Content $pkgPath -NoNewline
+    }
+    Write-Success "Updated all packages to v$newVersion ($VersionType)"
 }
 
 # Dry run check
