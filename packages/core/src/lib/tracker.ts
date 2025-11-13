@@ -1692,8 +1692,6 @@ class IndeksTracker {
       '[href*="twitter.com/share"]',
       '[href*="linkedin.com/sharing"]',
       '[href*="whatsapp.com"]',
-      'a:contains("Share")',
-      'button:contains("Share")',
     ];
 
     shareSelectors.forEach((selector) => {
