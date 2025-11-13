@@ -141,6 +141,7 @@ class IndeksTracker {
       userAgent: navigator.userAgent,
       sessionId: this.sessionId,
       userId: this.userId || "initializing",
+      referrer: document.referrer || undefined,
     };
   }
 

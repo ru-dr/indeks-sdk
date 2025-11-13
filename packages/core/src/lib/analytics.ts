@@ -17,6 +17,31 @@ export class IndeksAnalytics implements AnalyticsInterface {
   async send(events: IndeksEvent[]): Promise<void> {
     if (!events.length) return;
 
+    // Transform SDK events to API format
+    const apiEvents = events.map(event => {
+      const { 
+        type, 
+        timestamp, 
+        url, 
+        userAgent, 
+        sessionId, 
+        userId, 
+        referrer,
+        ...properties
+      } = event;
+      
+      return {
+        type,
+        url,
+        sessionId,
+        userId,
+        userAgent,
+        referrer: referrer || document.referrer || undefined,
+        properties,
+        timestamp,
+      };
+    });
+
     try {
       // Use LOCAL for localhost, otherwise PRODUCTION
       const defaultEndpoint = window.location.hostname === 'localhost' 
@@ -32,7 +57,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
           "User-Agent": "indeks-core/1.0.0",
         },
         body: JSON.stringify({
-          events,
+          events: apiEvents,
         }),
       });
 

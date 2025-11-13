@@ -5,6 +5,7 @@ export interface BaseEvent {
   userAgent: string;
   sessionId: string;
   userId: string;
+  referrer?: string;
 }
 
 export interface ClickEvent extends BaseEvent {
