@@ -65,5 +65,5 @@ export interface IndeksConfig {
   capturePerformanceMetrics?: boolean;
   debounceMs?: number;
   idleTimeoutMs?: number;
-  scrollDepthThresholds?: number[];
+  scrollDepthThresholds?: number[] | readonly number[];
 }
