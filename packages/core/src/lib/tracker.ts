@@ -110,7 +110,6 @@ class IndeksTracker {
 
   // New tracking state for batching and advanced events
   private scrollDepthReached: Set<number> = new Set();
-  private hoveredElements: Map<string, { enterTime: number; count: number }> = new Map();
   private formInteractions: Map<string, {
     startTime: number;
     fields: Set<string>;
@@ -121,7 +120,6 @@ class IndeksTracker {
   private lastIdleCheck: number = Date.now();
   private isIdle: boolean = false;
   private tabBlurTime: number | null = null;
-  private performanceObserver: PerformanceObserver | null = null;
 
   constructor(config: IndeksConfig) {
     this.config = {
@@ -1968,7 +1966,7 @@ class IndeksTracker {
       const form = target.closest("form");
       if (!form) return;
       
-      const formId = form.id || this.getElementSelector(form);
+      const formId = form.id || this.getElementSelector(form as HTMLElement);
       
       if (!this.formInteractions.has(formId)) {
         this.formInteractions.set(formId, {
@@ -1985,7 +1983,7 @@ class IndeksTracker {
 
     document.addEventListener("submit", (e) => {
       const form = e.target as HTMLFormElement;
-      const formId = form.id || this.getElementSelector(form);
+      const formId = form.id || this.getElementSelector(form as HTMLElement);
       this.formInteractions.delete(formId);
     });
 
@@ -2021,7 +2019,9 @@ class IndeksTracker {
     document.addEventListener("invalid", (e) => {
       const target = e.target as HTMLInputElement;
       const form = target.closest("form");
-      const formId = form?.id || this.getElementSelector(form);
+      if (!form) return;
+      
+      const formId = form.id || this.getElementSelector(form as HTMLElement);
       
       const event: FormErrorEvent = {
         ...this.createBaseEvent(),
