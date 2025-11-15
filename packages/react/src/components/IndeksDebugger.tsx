@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { useIndeks } from "../hooks/useIndeks";
 import type { IndeksEvent } from "@indeks/shared";
@@ -10,24 +12,29 @@ import {
   ChevronRight,
   User,
   Hash,
-  Clock,
   MousePointerClick,
   FileText,
   Scroll,
   AlertCircle,
+  Clock,
+  BarChart3,
 } from "lucide-react";
 
+// Indeks Brand Colors (exact from your globals.css)
+const INDEKS_COLORS = {
+  blue: '#3B82F6',      // indeks-blue
+  yellow: '#FBBF24',    // indeks-yellow  
+  orange: '#FB923C',    // indeks-orange
+  green: '#4ADE80',     // indeks-green
+  black: '#0A0A0A',     // indeks-black
+  white: '#FAFAFA',     // indeks-white
+};
+
 export interface IndeksDebuggerProps {
-  /** Auto-refresh interval in milliseconds */
   refreshInterval?: number;
-  /** Maximum number of events to display */
   maxEvents?: number;
 }
 
-/**
- * Modern debug component to visualize tracked events in development
- * Shows real-time events, session info, and event statistics
- */
 export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
   refreshInterval = 1000,
   maxEvents = 50,
@@ -35,7 +42,8 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<IndeksEvent | null>(null);
   const [events, setEvents] = useState<IndeksEvent[]>([]);
-  const { tracker, sessionId, userId, isInitialized } = useIndeks();
+  const [buttonHover, setButtonHover] = useState(false);
+  const { tracker, sessionId, userId, isInitialized, config } = useIndeks();
 
   const refresh = () => {
     if (!tracker) return;
@@ -50,9 +58,7 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
 
   useEffect(() => {
     if (!tracker || !isInitialized) return;
-
     refresh();
-
     if (refreshInterval) {
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
@@ -64,209 +70,583 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
   const eventTypes = new Set(events.map((e: IndeksEvent) => e.type));
 
   const getEventIcon = (type: string) => {
-    const iconProps = { size: 14, className: "text-blue-400" };
+    const size = 16;
     switch (type) {
       case "click":
-        return <MousePointerClick {...iconProps} />;
+        return <MousePointerClick size={size} style={{ color: INDEKS_COLORS.blue }} />;
       case "pageview":
-        return <FileText {...iconProps} />;
+        return <FileText size={size} style={{ color: INDEKS_COLORS.green }} />;
       case "scroll":
-        return <Scroll {...iconProps} />;
+      case "scroll_depth":
+        return <Scroll size={size} style={{ color: INDEKS_COLORS.yellow }} />;
       case "error":
-        return <AlertCircle {...iconProps} className="text-red-400" />;
+        return <AlertCircle size={size} style={{ color: '#EF4444' }} />;
       default:
-        return <Activity {...iconProps} />;
+        return <Activity size={size} style={{ color: INDEKS_COLORS.orange }} />;
     }
   };
 
-  if (!isInitialized) {
-    return null;
-  }
-
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Trigger Button - Matches your app style */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-[9998] flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 font-medium text-sm"
+        onMouseEnter={() => setButtonHover(true)}
+        onMouseLeave={() => setButtonHover(false)}
         style={{
-          backdropFilter: "blur(8px)",
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 50,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '10px 16px',
+          borderRadius: '8px',
+          border: 'none',
+          background: INDEKS_COLORS.green,
+          color: INDEKS_COLORS.black,
+          fontSize: '14px',
+          fontWeight: '600',
+          boxShadow: buttonHover 
+            ? '0 8px 16px rgba(74, 222, 128, 0.3)'
+            : '0 4px 12px rgba(74, 222, 128, 0.25)',
+          cursor: 'pointer',
+          transition: 'all 0.2s',
+          transform: buttonHover ? 'translateY(-2px)' : 'translateY(0)',
         }}
       >
         <Activity size={18} />
         <span>Debug</span>
-        <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
+        <span style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2px 8px',
+          borderRadius: '4px',
+          background: 'rgba(0, 0, 0, 0.15)',
+          fontSize: '12px',
+          fontWeight: '700',
+        }}>
           {count}
         </span>
+        {!isInitialized && (
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>(Init...)</span>
+        )}
+        {config?.localOnly && (
+          <span style={{
+            display: 'inline-flex',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            background: 'rgba(251, 191, 36, 0.2)',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+            color: INDEKS_COLORS.yellow,
+            fontSize: '11px',
+            fontWeight: '700',
+          }}>
+            LOCAL
+          </span>
+        )}
       </button>
 
-      {/* Modal Backdrop */}
+      {/* Dialog Modal - Matches your auth card design */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
-          onClick={() => setIsOpen(false)}
-          style={{
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {/* Modal Panel */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col"
+        <>
+          {/* Backdrop */}
+          <div 
+            onClick={() => setIsOpen(false)}
             style={{
-              backdropFilter: "blur(16px)",
-              backgroundColor: "rgba(24, 24, 27, 0.95)",
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9998,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
             }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Activity size={20} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    Indeks Analytics Debugger
-                  </h2>
-                  <p className="text-xs text-zinc-400">
-                    Real-time event monitoring
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-              >
-                <X size={20} className="text-zinc-400" />
-              </button>
-            </div>
+          />
 
-            {/* Info Cards */}
-            <div className="grid grid-cols-3 gap-4 px-6 py-4 border-b border-zinc-800">
-              <div className="bg-zinc-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                  <Hash size={12} />
-                  <span>Session ID</span>
-                </div>
-                <p className="text-white text-sm font-mono truncate">
-                  {sessionId?.substring(0, 16)}...
-                </p>
+          {/* Modal Content */}
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'relative',
+                width: '100%',
+                maxWidth: '1200px',
+                maxHeight: '85vh',
+                background: '#1A1A1A',  // Same as auth card
+                border: '1px solid #2A2A2A',  // Same as auth card
+                borderRadius: '16px',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              {/* Colored Top Border - Same as auth card */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                height: '4px',
+                zIndex: 10,
+              }}>
+                <div style={{ flex: 1, background: INDEKS_COLORS.blue }} />
+                <div style={{ flex: 1, background: INDEKS_COLORS.yellow }} />
+                <div style={{ flex: 1, background: INDEKS_COLORS.orange }} />
+                <div style={{ flex: 1, background: INDEKS_COLORS.green }} />
               </div>
-              <div className="bg-zinc-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                  <User size={12} />
-                  <span>User ID</span>
-                </div>
-                <p className="text-white text-sm font-mono truncate">
-                  {userId?.substring(0, 16)}...
-                </p>
-              </div>
-              <div className="bg-zinc-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-                  <Activity size={12} />
-                  <span>Statistics</span>
-                </div>
-                <p className="text-white text-sm font-medium">
-                  {eventTypes.size} types · {count} total
-                </p>
-              </div>
-            </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-2 px-6 py-3 border-b border-zinc-800">
-              <button
-                onClick={refresh}
-                className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors text-sm"
-              >
-                <RefreshCw size={14} />
-                Refresh
-              </button>
-              <button
-                onClick={clearEvents}
-                className="flex items-center gap-2 px-3 py-2 bg-red-900/50 hover:bg-red-900/70 text-red-200 rounded-lg transition-colors text-sm"
-              >
-                <Trash2 size={14} />
-                Clear All
-              </button>
-              <div className="ml-auto text-xs text-zinc-500">
-                Auto-refresh: {refreshInterval}ms
-              </div>
-            </div>
-
-            {/* Events List */}
-            <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto px-6 py-4">
-                {displayedEvents.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-zinc-500">
-                    <Activity size={48} className="mb-3 opacity-20" />
-                    <p className="text-sm">No events tracked yet</p>
-                    <p className="text-xs mt-1">
-                      Interact with the page to see events
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {[...displayedEvents].reverse().map((event, index) => (
-                      <div
-                        key={index}
-                        className={`rounded-lg border transition-all cursor-pointer ${
-                          selectedEvent === event
-                            ? "bg-zinc-800 border-blue-500/50"
-                            : "bg-zinc-800/30 border-zinc-700/50 hover:bg-zinc-800/50 hover:border-zinc-600"
-                        }`}
-                        onClick={() =>
-                          setSelectedEvent(selectedEvent === event ? null : event)
-                        }
-                      >
-                        <div className="flex items-center justify-between p-3">
-                          <div className="flex items-center gap-3 flex-1">
-                            {getEventIcon(event.type)}
-                            <span className="text-sm font-medium text-white">
-                              {event.type}
-                            </span>
-                            <span className="text-xs text-zinc-500 font-mono">
-                              {event.url?.substring(0, 40)}
-                              {(event.url?.length || 0) > 40 ? "..." : ""}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1 text-xs text-zinc-500">
-                              <Clock size={12} />
-                              {new Date(event.timestamp).toLocaleTimeString()}
-                            </div>
-                            {selectedEvent === event ? (
-                              <ChevronDown size={16} className="text-zinc-400" />
-                            ) : (
-                              <ChevronRight size={16} className="text-zinc-400" />
-                            )}
-                          </div>
-                        </div>
-
-                        {selectedEvent === event && (
-                          <div className="px-3 pb-3 pt-0">
-                            <div className="bg-zinc-950 rounded-lg p-3 border border-zinc-700/50">
-                              <pre className="text-xs text-zinc-300 overflow-auto max-h-64 font-mono">
-                                {JSON.stringify(event, null, 2)}
-                              </pre>
-                            </div>
-                          </div>
+              {/* Content */}
+              <div style={{ padding: '24px', paddingTop: '32px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflow: 'hidden' }}>
+                
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: `${INDEKS_COLORS.blue}15`,
+                    }}>
+                      <Activity size={24} style={{ color: INDEKS_COLORS.blue }} />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <h2 style={{
+                          fontSize: '24px',
+                          fontWeight: '700',
+                          color: '#FAFAFA',
+                          margin: 0,
+                        }}>
+                          Indeks Analytics Debugger
+                        </h2>
+                        {config?.localOnly && (
+                          <span style={{
+                            display: 'inline-flex',
+                            padding: '4px 12px',
+                            borderRadius: '6px',
+                            background: 'rgba(251, 191, 36, 0.15)',
+                            border: '1px solid rgba(251, 191, 36, 0.25)',
+                            color: INDEKS_COLORS.yellow,
+                            fontSize: '12px',
+                            fontWeight: '700',
+                          }}>
+                            LOCAL ONLY MODE
+                          </span>
                         )}
                       </div>
-                    ))}
+                      <p style={{
+                        fontSize: '14px',
+                        color: '#9CA3AF',
+                        marginTop: '4px',
+                        margin: 0,
+                      }}>
+                        {config?.localOnly
+                          ? "Events tracked locally only (not sent to API)"
+                          : "Real-time event monitoring"}
+                      </p>
+                    </div>
                   </div>
-                )}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#9CA3AF',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#2A2A2A';
+                      e.currentTarget.style.color = '#FAFAFA';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#9CA3AF';
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Stats Cards */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '16px',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid #2A2A2A',
+                    background: '#0D0D0D',
+                    padding: '16px',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: '#9CA3AF',
+                    }}>
+                      <Hash size={14} />
+                      <span>Session ID</span>
+                    </div>
+                    <p style={{
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      fontWeight: '600',
+                      color: '#FAFAFA',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {sessionId ? `${sessionId.substring(0, 16)}...` : 'Not initialized'}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid #2A2A2A',
+                    background: '#0D0D0D',
+                    padding: '16px',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: '#9CA3AF',
+                    }}>
+                      <User size={14} />
+                      <span>User ID</span>
+                    </div>
+                    <p style={{
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      fontWeight: '600',
+                      color: '#FAFAFA',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {userId ? `${userId.substring(0, 16)}...` : 'Not initialized'}
+                    </p>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    borderRadius: '12px',
+                    border: '1px solid #2A2A2A',
+                    background: '#0D0D0D',
+                    padding: '16px',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: '#9CA3AF',
+                    }}>
+                      <BarChart3 size={14} />
+                      <span>Statistics</span>
+                    </div>
+                    <p style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#FAFAFA',
+                      margin: 0,
+                    }}>
+                      {eventTypes.size} types · {count} total
+                    </p>
+                  </div>
+                </div>
+
+                {/* Controls */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button
+                    onClick={refresh}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      height: '36px',
+                      padding: '0 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #2A2A2A',
+                      background: '#0D0D0D',
+                      color: '#FAFAFA',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#2A2A2A';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#0D0D0D';
+                    }}
+                  >
+                    <RefreshCw size={14} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={clearEvents}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      height: '36px',
+                      padding: '0 16px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      color: '#FCA5A5',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Clear All
+                  </button>
+                  <div style={{
+                    marginLeft: 'auto',
+                    fontSize: '12px',
+                    color: '#6B7280',
+                  }}>
+                    Auto-refresh: {refreshInterval}ms
+                  </div>
+                </div>
+
+                {/* Events List Container */}
+                <div style={{
+                  flex: 1,
+                  borderRadius: '12px',
+                  border: '1px solid #2A2A2A',
+                  background: '#0D0D0D',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
+                  <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    padding: '16px',
+                  }}>
+                    {!isInitialized ? (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '400px',
+                        color: '#6B7280',
+                      }}>
+                        <Activity size={48} style={{ opacity: 0.2, marginBottom: 12 }} className="animate-pulse" />
+                        <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                          Initializing tracker...
+                        </p>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginTop: 4 }}>
+                          Please wait while the SDK initializes
+                        </p>
+                      </div>
+                    ) : displayedEvents.length === 0 ? (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '400px',
+                        color: '#6B7280',
+                      }}>
+                        <Activity size={48} style={{ opacity: 0.2, marginBottom: 12 }} />
+                        <p style={{ fontSize: '14px', fontWeight: '500', margin: 0 }}>
+                          No events tracked yet
+                        </p>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginTop: 4 }}>
+                          Interact with the page to see events
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {[...displayedEvents].reverse().map((event, index) => {
+                          const isSelected = selectedEvent === event;
+                          return (
+                            <div
+                              key={index}
+                              onClick={() => setSelectedEvent(isSelected ? null : event)}
+                              style={{
+                                borderRadius: '10px',
+                                border: isSelected 
+                                  ? `1px solid ${INDEKS_COLORS.blue}` 
+                                  : '1px solid rgba(42, 42, 42, 0.8)',
+                                background: isSelected ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) {
+                                  e.currentTarget.style.background = 'rgba(42, 42, 42, 0.5)';
+                                  e.currentTarget.style.borderColor = '#2A2A2A';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.borderColor = 'rgba(42, 42, 42, 0.8)';
+                                }
+                              }}
+                            >
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '14px',
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}>
+                                  {getEventIcon(event.type)}
+                                  <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    color: '#FAFAFA',
+                                  }}>
+                                    {event.type}
+                                  </span>
+                                  <span style={{
+                                    fontSize: '12px',
+                                    fontFamily: 'monospace',
+                                    color: '#6B7280',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}>
+                                    {event.url?.substring(0, 60)}
+                                    {(event.url?.length || 0) > 60 ? "..." : ""}
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    fontSize: '12px',
+                                    color: '#6B7280',
+                                  }}>
+                                    <Clock size={12} />
+                                    {new Date(event.timestamp).toLocaleTimeString()}
+                                  </div>
+                                  {isSelected ? (
+                                    <ChevronDown size={16} style={{ color: '#9CA3AF' }} />
+                                  ) : (
+                                    <ChevronRight size={16} style={{ color: '#9CA3AF' }} />
+                                  )}
+                                </div>
+                              </div>
+
+                              {isSelected && (
+                                <div style={{ padding: '0 14px 14px' }}>
+                                  <div style={{
+                                    borderRadius: '8px',
+                                    background: '#000000',
+                                    border: '1px solid rgba(42, 42, 42, 0.8)',
+                                    padding: '12px',
+                                  }}>
+                                    <pre style={{
+                                      fontSize: '12px',
+                                      fontFamily: 'monospace',
+                                      color: '#D1D5DB',
+                                      margin: 0,
+                                      overflow: 'auto',
+                                      maxHeight: '300px',
+                                    }}>
+                                      {JSON.stringify(event, null, 2)}
+                                    </pre>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: '16px',
+                  borderTop: '1px solid rgba(42, 42, 42, 0.8)',
+                  fontSize: '12px',
+                  color: '#6B7280',
+                }}>
+                  <span>Indeks SDK v1.4.1</span>
+                  <span>Showing {displayedEvents.length} of {count} events</span>
+                </div>
               </div>
             </div>
-
-            {/* Footer */}
-            <div className="px-6 py-3 border-t border-zinc-800 text-xs text-zinc-500 flex items-center justify-between">
-              <span>Indeks SDK v1.3.4</span>
-              <span>Showing {displayedEvents.length} of {count} events</span>
-            </div>
           </div>
-        </div>
+        </>
       )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.4; }
+        }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
     </>
   );
 };

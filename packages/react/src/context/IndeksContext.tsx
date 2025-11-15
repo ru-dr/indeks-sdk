@@ -13,6 +13,7 @@ interface IndeksContextValue {
   isInitialized: boolean;
   sessionId: string | null;
   userId: string | null;
+  config: Partial<IndeksConfig> | null;
 }
 
 const IndeksContext = createContext<IndeksContextValue | undefined>(undefined);
@@ -34,6 +35,7 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const trackerRef = useRef<IndeksTracker | null>(null);
+  const configRef = useRef<Partial<IndeksConfig>>(config);
 
   useEffect(() => {
     if (!apiKey) {
@@ -46,6 +48,9 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
       enableConsoleLogging,
       ...config,
     };
+
+    // Update config ref
+    configRef.current = fullConfig;
 
     const tracker = new IndeksTracker(fullConfig);
     trackerRef.current = tracker;
@@ -74,6 +79,7 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
     isInitialized,
     sessionId,
     userId,
+    config: configRef.current,
   };
 
   return (

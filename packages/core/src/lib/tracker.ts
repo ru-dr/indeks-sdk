@@ -20,11 +20,13 @@ import type {
   ResizeEvent,
   ErrorEvent,
   // Navigation & Page Events
+  PageLeaveEvent,
   BeforeUnloadEvent,
   VisibilityChangeEvent,
   WindowFocusEvent,
   HashChangeEvent,
   PopStateEvent,
+  PageLifecycleEvent,
   // Mouse & Touch Events
   MouseHoverEvent,
   ContextMenuEvent,
@@ -38,16 +40,25 @@ import type {
   FieldFocusEvent,
   ClipboardEvent,
   TextSelectionEvent,
+  FormAbandonEvent,
+  FormErrorEvent,
+  // Scroll Events
+  ScrollDepthEvent,
   // Media Events
   MediaEvent,
+  MediaProgressEvent,
   // Network & Performance Events
   NetworkStatusEvent,
+  NetworkChangeEvent,
   PageLoadEvent,
+  PerformanceEvent,
   // UI Interaction Events
   FullscreenChangeEvent,
   // Session Events
   SessionStartEvent,
   SessionEndEvent,
+  IdleEvent,
+  TabFocusEvent,
   // Search Events
   SearchEvent,
   // Rage/Frustration Events
@@ -60,6 +71,12 @@ import type {
   PrintEvent,
   // Share Events
   ShareEvent,
+  // Link Events
+  OutboundLinkEvent,
+  // Error Events
+  ResourceErrorEvent,
+  // Device Events
+  OrientationChangeEvent,
   // Manual/Custom Events
   CustomEvent,
   // Interfaces
@@ -84,11 +101,27 @@ class IndeksTracker {
   private totalClicks: number = 0;
   private totalScrolls: number = 0;
   private sessionEnded: boolean = false;
+  private previousUrl: string | null = null;  // Track previous page for SPA navigation
 
   // Rage click detection
   private clickCounts: Map<string, { count: number; timestamp: number }> =
     new Map();
   private elementVisibility: Map<string, number> = new Map();
+
+  // New tracking state for batching and advanced events
+  private scrollDepthReached: Set<number> = new Set();
+  private hoveredElements: Map<string, { enterTime: number; count: number }> = new Map();
+  private formInteractions: Map<string, {
+    startTime: number;
+    fields: Set<string>;
+    lastInteraction: number;
+  }> = new Map();
+  private mediaProgress: Map<string, Set<number>> = new Map();
+  private idleTimer: number | null = null;
+  private lastIdleCheck: number = Date.now();
+  private isIdle: boolean = false;
+  private tabBlurTime: number | null = null;
+  private performanceObserver: PerformanceObserver | null = null;
 
   constructor(config: IndeksConfig) {
     this.config = {
@@ -109,6 +142,12 @@ class IndeksTracker {
     if (!this.config.apiKey || this.config.apiKey.trim() === "") {
       throw new Error(
         "Indeks: API key is required. Please provide a valid API key.",
+      );
+    }
+
+    if (this.config.localOnly) {
+      this.logger.info(
+        `🏠 LOCAL ONLY MODE: Events tracked locally, not sent to API`,
       );
     }
 
@@ -134,6 +173,15 @@ class IndeksTracker {
   }
 
   private createBaseEvent(): BaseEvent {
+    // Check for referrer tracking parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Industry standard: utm_source for marketing campaigns
+    const utmSource = urlParams.get('utm_source');
+    
+    // Custom ref parameter for simple tracking (ref, referrer, source)
+    const customRef = urlParams.get('ref') || urlParams.get('referrer') || urlParams.get('source');
+    
     return {
       type: "",
       timestamp: Date.now(),
@@ -141,7 +189,8 @@ class IndeksTracker {
       userAgent: navigator.userAgent,
       sessionId: this.sessionId,
       userId: this.userId || "initializing",
-      referrer: document.referrer || undefined,
+      // Priority: utm_source (industry standard) > custom ref > previous page > document.referrer
+      referrer: utmSource || customRef || this.previousUrl || document.referrer || undefined,
     };
   }
 
@@ -243,9 +292,12 @@ class IndeksTracker {
         ...this.createBaseEvent(),
         type: "pageview",
         title: document.title,
-        referrer: document.referrer,
+        referrer: this.previousUrl || document.referrer,  // Use tracked previous URL
       };
       this.logEvent(event);
+      
+      // Store current URL as previous for next navigation
+      this.previousUrl = window.location.href;
     };
 
     // Track initial page view
@@ -1840,6 +1892,480 @@ class IndeksTracker {
     );
   }
 
+  // NEW TRACKING METHODS
+  private setupPageLeaveTracking(): void {
+    if (!this.config.capturePageLeave) return;
+
+    const trackPageLeave = () => {
+      const timeOnPage = Date.now() - this.pageLoadTime;
+      const maxScrollDepth = Math.max(...Array.from(this.scrollDepthReached), 0);
+      
+      const event: PageLeaveEvent = {
+        ...this.createBaseEvent(),
+        type: "pageleave",
+        timeOnPage,
+        scrollDepth: maxScrollDepth,
+        clickCount: this.totalClicks,
+        engaged: timeOnPage > 10000 && this.totalClicks > 2,
+      };
+      
+      this.logEvent(event);
+    };
+
+    window.addEventListener("beforeunload", trackPageLeave);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        trackPageLeave();
+      }
+    });
+  }
+
+  private setupScrollDepthTracking(): void {
+    if (!this.config.captureScrollDepth) return;
+
+    const thresholds = this.config.scrollDepthThresholds || [25, 50, 75, 100];
+
+    const checkScrollDepth = debounce(() => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const documentHeight = Math.max(
+        document.body.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.clientHeight,
+        document.documentElement.scrollHeight,
+        document.documentElement.offsetHeight,
+      );
+      const viewportHeight = window.innerHeight;
+      const scrollPercentage = Math.round(
+        (scrollTop / (documentHeight - viewportHeight)) * 100,
+      );
+
+      for (const threshold of thresholds) {
+        if (scrollPercentage >= threshold && !this.scrollDepthReached.has(threshold)) {
+          this.scrollDepthReached.add(threshold);
+          
+          const event: ScrollDepthEvent = {
+            ...this.createBaseEvent(),
+            type: "scroll_depth",
+            depth: threshold as 25 | 50 | 75 | 100,
+            timeToDepth: Date.now() - this.pageLoadTime,
+          };
+          
+          this.logEvent(event);
+        }
+      }
+    }, this.config.debounceMs || 100);
+
+    window.addEventListener("scroll", checkScrollDepth, { passive: true });
+  }
+
+  private setupFormAbandonTracking(): void {
+    if (!this.config.captureFormAbandon) return;
+
+    document.addEventListener("focusin", (e) => {
+      const target = e.target as HTMLElement;
+      if (!["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
+      
+      const form = target.closest("form");
+      if (!form) return;
+      
+      const formId = form.id || this.getElementSelector(form);
+      
+      if (!this.formInteractions.has(formId)) {
+        this.formInteractions.set(formId, {
+          startTime: Date.now(),
+          fields: new Set(),
+          lastInteraction: Date.now(),
+        });
+      }
+      
+      const formData = this.formInteractions.get(formId)!;
+      formData.fields.add((target as HTMLInputElement).name || target.id);
+      formData.lastInteraction = Date.now();
+    });
+
+    document.addEventListener("submit", (e) => {
+      const form = e.target as HTMLFormElement;
+      const formId = form.id || this.getElementSelector(form);
+      this.formInteractions.delete(formId);
+    });
+
+    window.addEventListener("beforeunload", () => {
+      for (const [formId, data] of this.formInteractions.entries()) {
+        const timeSinceLastInteraction = Date.now() - data.lastInteraction;
+        
+        if (timeSinceLastInteraction > 5000 && data.fields.size > 0) {
+          const form = document.getElementById(formId) || 
+                        document.querySelector(`[data-form-id="${formId}"]`);
+          
+          const totalFields = form?.querySelectorAll("input, textarea, select").length || 0;
+          
+          const event: FormAbandonEvent = {
+            ...this.createBaseEvent(),
+            type: "form_abandon",
+            formId,
+            fieldsCompleted: data.fields.size,
+            totalFields,
+            timeSpent: Date.now() - data.startTime,
+            lastField: Array.from(data.fields).pop() || "unknown",
+          };
+          
+          this.logEvent(event);
+        }
+      }
+    });
+  }
+
+  private setupFormErrorTracking(): void {
+    if (!this.config.captureFormErrors) return;
+
+    document.addEventListener("invalid", (e) => {
+      const target = e.target as HTMLInputElement;
+      const form = target.closest("form");
+      const formId = form?.id || this.getElementSelector(form);
+      
+      const event: FormErrorEvent = {
+        ...this.createBaseEvent(),
+        type: "form_error",
+        formId,
+        field: target.name || target.id,
+        errorType: target.validity.valueMissing ? "required" : 
+                  target.validity.typeMismatch ? "format" : "validation",
+        errorMessage: target.validationMessage,
+      };
+      
+      this.logEvent(event);
+    }, true);
+  }
+
+  private setupIdleDetection(): void {
+    if (!this.config.captureIdleEvents) return;
+
+    const idleTimeout = this.config.idleTimeoutMs || 30000;
+
+    const resetIdleTimer = () => {
+      if (this.isIdle) {
+        const event: IdleEvent = {
+          ...this.createBaseEvent(),
+          type: "idle_end",
+          idleDuration: Date.now() - this.lastIdleCheck,
+        };
+        this.logEvent(event);
+        this.isIdle = false;
+      }
+      
+      this.lastIdleCheck = Date.now();
+      
+      if (this.idleTimer) {
+        clearTimeout(this.idleTimer);
+      }
+      
+      this.idleTimer = window.setTimeout(() => {
+        if (!this.isIdle) {
+          const event: IdleEvent = {
+            ...this.createBaseEvent(),
+            type: "idle_start",
+          };
+          this.logEvent(event);
+          this.isIdle = true;
+        }
+      }, idleTimeout);
+    };
+
+    ["mousedown", "mousemove", "keypress", "scroll", "touchstart", "click"].forEach((eventType) => {
+      document.addEventListener(eventType, resetIdleTimer, { passive: true });
+    });
+
+    resetIdleTimer();
+  }
+
+  private setupTabFocusTracking(): void {
+    if (!this.config.captureTabFocus) return;
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        this.tabBlurTime = Date.now();
+        const event: TabFocusEvent = {
+          ...this.createBaseEvent(),
+          type: "tab_blur",
+        };
+        this.logEvent(event);
+      } else {
+        const timeAway = this.tabBlurTime ? Date.now() - this.tabBlurTime : 0;
+        const event: TabFocusEvent = {
+          ...this.createBaseEvent(),
+          type: "tab_focus",
+          timeAway,
+        };
+        this.logEvent(event);
+        this.tabBlurTime = null;
+      }
+    });
+  }
+
+  private setupPageLifecycleTracking(): void {
+    if (!this.config.capturePageLifecycle) return;
+
+    if ("onfreeze" in document) {
+      document.addEventListener("freeze", () => {
+        const event: PageLifecycleEvent = {
+          ...this.createBaseEvent(),
+          type: "page_freeze",
+        };
+        this.logEvent(event);
+      });
+
+      document.addEventListener("resume", () => {
+        const event: PageLifecycleEvent = {
+          ...this.createBaseEvent(),
+          type: "page_resume",
+        };
+        this.logEvent(event);
+      });
+    }
+  }
+
+  private setupOutboundLinkTracking(): void {
+    if (!this.config.captureOutboundLinks) return;
+
+    document.addEventListener("click", (e) => {
+      const link = (e.target as HTMLElement).closest("a") as HTMLAnchorElement;
+      if (!link || !link.href) return;
+
+      try {
+        const linkUrl = new URL(link.href);
+        const currentUrl = new URL(window.location.href);
+
+        if (linkUrl.hostname !== currentUrl.hostname) {
+          const event: OutboundLinkEvent = {
+            ...this.createBaseEvent(),
+            type: "outbound_link",
+            url: link.href,
+            domain: linkUrl.hostname,
+            linkText: link.textContent?.trim() || "",
+            openInNewTab: link.target === "_blank",
+          };
+          this.logEvent(event);
+        }
+      } catch (error) {
+        // Invalid URL, skip
+      }
+    }, true);
+  }
+
+  private setupResourceErrorTracking(): void {
+    if (!this.config.captureResourceErrors) return;
+
+    window.addEventListener("error", (e) => {
+      if (e.target !== window && e.target) {
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toLowerCase();
+        
+        let resourceType: "img" | "script" | "style" | "font" | "other" = "other";
+        let resourceUrl = "";
+        
+        if (tagName === "img") {
+          resourceType = "img";
+          resourceUrl = (target as HTMLImageElement).src;
+        } else if (tagName === "script") {
+          resourceType = "script";
+          resourceUrl = (target as HTMLScriptElement).src;
+        } else if (tagName === "link") {
+          const link = target as HTMLLinkElement;
+          if (link.rel === "stylesheet") {
+            resourceType = "style";
+            resourceUrl = link.href;
+          }
+        }
+        
+        if (resourceUrl) {
+          const event: ResourceErrorEvent = {
+            ...this.createBaseEvent(),
+            type: "resource_error",
+            resourceType,
+            resourceUrl,
+            errorMessage: `Failed to load ${resourceType}: ${resourceUrl}`,
+          };
+          this.logEvent(event);
+        }
+      }
+    }, true);
+  }
+
+  private setupMediaProgressTracking(): void {
+    if (!this.config.captureMediaProgress) return;
+
+    const thresholds = [25, 50, 75, 100];
+
+    const trackProgress = (media: HTMLMediaElement, type: "video_progress" | "audio_progress") => {
+      const mediaId = media.src || media.currentSrc;
+      if (!this.mediaProgress.has(mediaId)) {
+        this.mediaProgress.set(mediaId, new Set());
+      }
+      
+      const progress = this.mediaProgress.get(mediaId)!;
+      const currentProgress = Math.round((media.currentTime / media.duration) * 100);
+      
+      for (const threshold of thresholds) {
+        if (currentProgress >= threshold && !progress.has(threshold)) {
+          progress.add(threshold);
+          
+          const event: MediaProgressEvent = {
+            ...this.createBaseEvent(),
+            type,
+            progress: threshold as 25 | 50 | 75 | 100,
+            currentTime: media.currentTime,
+            duration: media.duration,
+            mediaUrl: mediaId,
+          };
+          
+          this.logEvent(event);
+        }
+      }
+    };
+
+    document.addEventListener("timeupdate", (e) => {
+      const target = e.target as HTMLMediaElement;
+      if (target.tagName === "VIDEO") {
+        trackProgress(target, "video_progress");
+      } else if (target.tagName === "AUDIO") {
+        trackProgress(target, "audio_progress");
+      }
+    }, true);
+  }
+
+  private setupOrientationChangeTracking(): void {
+    if (!this.config.captureOrientationChange) return;
+
+    window.addEventListener("orientationchange", () => {
+      const orientation = window.innerWidth > window.innerHeight ? "landscape" : "portrait";
+      const angle = window.orientation || 0;
+      
+      const event: OrientationChangeEvent = {
+        ...this.createBaseEvent(),
+        type: "orientation_change",
+        orientation,
+        angle,
+      };
+      
+      this.logEvent(event);
+    });
+  }
+
+  private setupNetworkChangeTracking(): void {
+    if (!this.config.captureNetworkChange) return;
+
+    if ("connection" in navigator) {
+      const connection = (navigator as any).connection;
+      
+      connection.addEventListener("change", () => {
+        const event: NetworkChangeEvent = {
+          ...this.createBaseEvent(),
+          type: "network_change",
+          effectiveType: connection.effectiveType || "unknown",
+          downlink: connection.downlink,
+          rtt: connection.rtt,
+        };
+        
+        this.logEvent(event);
+      });
+    }
+  }
+
+  private setupPerformanceTracking(): void {
+    if (!this.config.capturePerformanceMetrics) return;
+
+    try {
+      const fcpObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.name === "first-contentful-paint") {
+            const event: PerformanceEvent = {
+              ...this.createBaseEvent(),
+              type: "first_contentful_paint",
+              value: entry.startTime,
+              rating: entry.startTime < 1800 ? "good" : 
+                     entry.startTime < 3000 ? "needs-improvement" : "poor",
+            };
+            this.logEvent(event);
+            fcpObserver.disconnect();
+          }
+        }
+      });
+      fcpObserver.observe({ type: "paint", buffered: true });
+
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        const lastEntry = entries[entries.length - 1];
+        
+        const event: PerformanceEvent = {
+          ...this.createBaseEvent(),
+          type: "largest_contentful_paint",
+          value: lastEntry.startTime,
+          rating: lastEntry.startTime < 2500 ? "good" : 
+                 lastEntry.startTime < 4000 ? "needs-improvement" : "poor",
+        };
+        this.logEvent(event);
+      });
+      lcpObserver.observe({ type: "largest-contentful-paint", buffered: true });
+
+      const fidObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const fidEntry = entry as any;
+          const event: PerformanceEvent = {
+            ...this.createBaseEvent(),
+            type: "first_input_delay",
+            value: fidEntry.processingStart - fidEntry.startTime,
+            rating: fidEntry.processingStart - fidEntry.startTime < 100 ? "good" : 
+                   fidEntry.processingStart - fidEntry.startTime < 300 ? "needs-improvement" : "poor",
+          };
+          this.logEvent(event);
+          fidObserver.disconnect();
+        }
+      });
+      fidObserver.observe({ type: "first-input", buffered: true });
+
+      let clsValue = 0;
+      const clsObserver = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          const layoutShift = entry as any;
+          if (!layoutShift.hadRecentInput) {
+            clsValue += layoutShift.value;
+          }
+        }
+      });
+      clsObserver.observe({ type: "layout-shift", buffered: true });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          const event: PerformanceEvent = {
+            ...this.createBaseEvent(),
+            type: "cumulative_layout_shift",
+            value: clsValue,
+            rating: clsValue < 0.1 ? "good" : 
+                   clsValue < 0.25 ? "needs-improvement" : "poor",
+          };
+          this.logEvent(event);
+        }
+      });
+
+      window.addEventListener("load", () => {
+        const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+        if (navigation) {
+          const ttfb = navigation.responseStart - navigation.requestStart;
+          const event: PerformanceEvent = {
+            ...this.createBaseEvent(),
+            type: "time_to_first_byte",
+            value: ttfb,
+            rating: ttfb < 800 ? "good" : 
+                   ttfb < 1800 ? "needs-improvement" : "poor",
+          };
+          this.logEvent(event);
+        }
+      });
+    } catch (error) {
+      this.logger.warn("Performance tracking not supported:", error);
+    }
+  }
+
   public async init(): Promise<void> {
     if (this.isInitialized) {
       this.logger.warn("Tracker already initialized");
@@ -1905,6 +2431,21 @@ class IndeksTracker {
     this.setupDownloadTracking();
     this.setupPrintTracking();
     this.setupShareTracking();
+
+    // NEW: Additional Advanced Events
+    this.setupPageLeaveTracking();
+    this.setupScrollDepthTracking();
+    this.setupFormAbandonTracking();
+    this.setupFormErrorTracking();
+    this.setupIdleDetection();
+    this.setupTabFocusTracking();
+    this.setupPageLifecycleTracking();
+    this.setupOutboundLinkTracking();
+    this.setupResourceErrorTracking();
+    this.setupMediaProgressTracking();
+    this.setupOrientationChangeTracking();
+    this.setupNetworkChangeTracking();
+    this.setupPerformanceTracking();
 
     this.isInitialized = true;
 

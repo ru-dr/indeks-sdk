@@ -17,6 +17,14 @@ export class IndeksAnalytics implements AnalyticsInterface {
   async send(events: IndeksEvent[]): Promise<void> {
     if (!events.length) return;
 
+    // Skip sending if in local-only mode
+    if (this.config.localOnly) {
+      if (this.config.enableConsoleLogging) {
+        console.log(`🏠 LOCAL ONLY: Skipped sending ${events.length} events (visible in debugger)`);
+      }
+      return;
+    }
+
     // Transform SDK events to API format
     const apiEvents = events.map(event => {
       const { 
