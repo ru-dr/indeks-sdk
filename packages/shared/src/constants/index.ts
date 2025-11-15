@@ -1,4 +1,4 @@
-export const INDEKS_VERSION = "1.0.0";
+export const INDEKS_VERSION = "1.4.0";
 
 export const DEFAULT_CONFIG = {
   enableConsoleLogging: false,
@@ -36,7 +36,22 @@ export const DEFAULT_CONFIG = {
   captureDownloadEvents: true,
   capturePrintEvents: true,
   captureShareEvents: true,
+  capturePageLeave: true,
+  captureScrollDepth: true,
+  captureFormAbandon: true,
+  captureFormErrors: true,
+  captureIdleEvents: true,
+  captureTabFocus: true,
+  capturePageLifecycle: true,
+  captureOutboundLinks: true,
+  captureResourceErrors: true,
+  captureMediaProgress: true,
+  captureOrientationChange: true,
+  captureNetworkChange: true,
+  capturePerformanceMetrics: true,
   debounceMs: 100,
+  idleTimeoutMs: 30000,
+  scrollDepthThresholds: [25, 50, 75, 100],
 } as const;
 
 export const API_ENDPOINTS = {
@@ -52,7 +67,6 @@ export const STORAGE_KEYS = {
 } as const;
 
 export const EVENT_TYPES = {
-  // Basic events
   CLICK: "click",
   SCROLL: "scroll",
   PAGEVIEW: "pageview",

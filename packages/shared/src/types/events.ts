@@ -449,6 +449,110 @@ export interface ShareEvent extends BaseEvent {
   shareUrl?: string;
 }
 
+// Page Leave Event
+export interface PageLeaveEvent extends BaseEvent {
+  type: "pageleave";
+  timeOnPage: number;
+  scrollDepth: number;
+  clickCount: number;
+  engaged: boolean;
+}
+
+// Scroll Depth Event
+export interface ScrollDepthEvent extends BaseEvent {
+  type: "scroll_depth";
+  depth: 25 | 50 | 75 | 100;
+  timeToDepth: number;
+}
+
+// Form Events
+export interface FormAbandonEvent extends BaseEvent {
+  type: "form_abandon";
+  formId: string;
+  fieldsCompleted: number;
+  totalFields: number;
+  timeSpent: number;
+  lastField: string;
+}
+
+export interface FormErrorEvent extends BaseEvent {
+  type: "form_error";
+  formId: string;
+  field: string;
+  errorType: "validation" | "required" | "format" | "other";
+  errorMessage: string;
+}
+
+// Idle Events
+export interface IdleEvent extends BaseEvent {
+  type: "idle_start" | "idle_end";
+  idleDuration?: number;
+}
+
+// Tab Focus Events
+export interface TabFocusEvent extends BaseEvent {
+  type: "tab_focus" | "tab_blur";
+  timeAway?: number;
+}
+
+// Page Lifecycle Events
+export interface PageLifecycleEvent extends BaseEvent {
+  type: "page_freeze" | "page_resume";
+}
+
+// Outbound Link Event
+export interface OutboundLinkEvent extends BaseEvent {
+  type: "outbound_link";
+  url: string;
+  domain: string;
+  linkText: string;
+  openInNewTab: boolean;
+}
+
+// Resource Error Event
+export interface ResourceErrorEvent extends BaseEvent {
+  type: "resource_error";
+  resourceType: "img" | "script" | "style" | "font" | "other";
+  resourceUrl: string;
+  errorMessage: string;
+}
+
+// Media Progress Events
+export interface MediaProgressEvent extends BaseEvent {
+  type: "video_progress" | "audio_progress";
+  progress: 25 | 50 | 75 | 100;
+  currentTime: number;
+  duration: number;
+  mediaUrl: string;
+}
+
+// Device Events
+export interface OrientationChangeEvent extends BaseEvent {
+  type: "orientation_change";
+  orientation: "portrait" | "landscape";
+  angle: number;
+}
+
+export interface NetworkChangeEvent extends BaseEvent {
+  type: "network_change";
+  effectiveType: "slow-2g" | "2g" | "3g" | "4g" | "unknown";
+  downlink?: number;
+  rtt?: number;
+}
+
+// Performance Events
+export interface PerformanceEvent extends BaseEvent {
+  type:
+    | "first_contentful_paint"
+    | "largest_contentful_paint"
+    | "first_input_delay"
+    | "cumulative_layout_shift"
+    | "time_to_interactive"
+    | "time_to_first_byte";
+  value: number;
+  rating?: "good" | "needs-improvement" | "poor";
+}
+
 // Manual/Custom Events
 export interface CustomEvent extends BaseEvent {
   type: "custom";
@@ -469,11 +573,13 @@ export type IndeksEvent =
   | ResizeEvent
   | ErrorEvent
   // Navigation & Page Events
+  | PageLeaveEvent
   | BeforeUnloadEvent
   | VisibilityChangeEvent
   | WindowFocusEvent
   | HashChangeEvent
   | PopStateEvent
+  | PageLifecycleEvent
   // Mouse & Touch Events
   | MouseHoverEvent
   | ContextMenuEvent
@@ -487,16 +593,25 @@ export type IndeksEvent =
   | FieldFocusEvent
   | ClipboardEvent
   | TextSelectionEvent
+  | FormAbandonEvent
+  | FormErrorEvent
+  // Scroll Events
+  | ScrollDepthEvent
   // Media Events
   | MediaEvent
+  | MediaProgressEvent
   // Network & Performance Events
   | NetworkStatusEvent
+  | NetworkChangeEvent
   | PageLoadEvent
+  | PerformanceEvent
   // UI Interaction Events
   | FullscreenChangeEvent
   // Session Events
   | SessionStartEvent
   | SessionEndEvent
+  | IdleEvent
+  | TabFocusEvent
   // Search Events
   | SearchEvent
   // Rage/Frustration Events
@@ -509,5 +624,11 @@ export type IndeksEvent =
   | PrintEvent
   // Share Events
   | ShareEvent
+  // Link Events
+  | OutboundLinkEvent
+  // Error Events
+  | ResourceErrorEvent
+  // Device Events
+  | OrientationChangeEvent
   // Manual/Custom Events
   | CustomEvent;

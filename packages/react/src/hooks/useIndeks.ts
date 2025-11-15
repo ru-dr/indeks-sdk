@@ -1,5 +1,5 @@
-import { useIndeksContext } from "../context/IndeksContext";
-import type { IndeksTracker } from "@indeks/core";
+import { useIndeksContext } from "@/context/IndeksContext";
+import type { IndeksTracker, IndeksConfig } from "@indeks/core";
 
 /**
  * Main hook to access Indeks tracker functionality
@@ -23,15 +23,17 @@ export interface UseIndeksReturn {
   isInitialized: boolean;
   sessionId: string | null;
   userId: string | null;
+  config: Partial<IndeksConfig> | null;
 }
 
 export const useIndeks = (): UseIndeksReturn => {
-  const { tracker, isInitialized, sessionId, userId } = useIndeksContext();
+  const { tracker, isInitialized, sessionId, userId, config } = useIndeksContext();
 
   return {
     tracker,
     isInitialized,
     sessionId,
     userId,
+    config,
   };
 };

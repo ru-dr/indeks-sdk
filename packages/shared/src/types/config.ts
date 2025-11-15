@@ -2,6 +2,7 @@ export interface IndeksConfig {
   apiKey: string;
   enableConsoleLogging?: boolean;
   endpoint?: string;
+  localOnly?: boolean;  // Skip sending to API, only track locally
   captureClicks?: boolean;
   captureScrolls?: boolean;
   capturePageViews?: boolean;
@@ -48,5 +49,21 @@ export interface IndeksConfig {
   capturePrintEvents?: boolean;
   // Share Events
   captureShareEvents?: boolean;
+  // New Events
+  capturePageLeave?: boolean;
+  captureScrollDepth?: boolean;
+  captureFormAbandon?: boolean;
+  captureFormErrors?: boolean;
+  captureIdleEvents?: boolean;
+  captureTabFocus?: boolean;
+  capturePageLifecycle?: boolean;
+  captureOutboundLinks?: boolean;
+  captureResourceErrors?: boolean;
+  captureMediaProgress?: boolean;
+  captureOrientationChange?: boolean;
+  captureNetworkChange?: boolean;
+  capturePerformanceMetrics?: boolean;
   debounceMs?: number;
+  idleTimeoutMs?: number;
+  scrollDepthThresholds?: number[];
 }
