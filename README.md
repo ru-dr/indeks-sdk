@@ -1,6 +1,6 @@
 <div align="center">
 
-[![INDEKS-dark.png](https://i.postimg.cc/V6gwJfqT/INDEKS-dark.png)](https://postimg.cc/jwDm9rkQ)
+[![INDEKS-dark.png](https://ucarecdn.com/c5a29e25-d71b-45c0-89e0-7653eea0b7cf/INDEKSdark.svg)](https://ucarecdn.com/c5a29e25-d71b-45c0-89e0-7653eea0b7cf/INDEKSdark.svg)
 
 A lightweight, modular web analytics SDK for tracking user behavior and events on your website.
 
