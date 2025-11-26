@@ -5,18 +5,18 @@
     "": {
       "name": "indeks-analytics",
       "dependencies": {
-        "lucide-react": "latest",
+        "lucide-react": "^0.553.0",
       },
       "devDependencies": {
-        "@fingerprintjs/fingerprintjs": "latest",
-        "@types/node": "latest",
-        "rimraf": "latest",
-        "typescript": "latest",
+        "@fingerprintjs/fingerprintjs": "^5.0.1",
+        "@types/node": "^24.10.1",
+        "rimraf": "^6.1.0",
+        "typescript": "^5.9.3",
       },
     },
     "packages/core": {
       "name": "@indeks/core",
-      "version": "1.4.1",
+      "version": "1.4.3",
       "dependencies": {
         "@fingerprintjs/fingerprintjs": "^5.0.1",
         "@indeks/shared": "workspace:*",
@@ -29,7 +29,7 @@
     },
     "packages/react": {
       "name": "@indeks/react",
-      "version": "1.4.1",
+      "version": "1.4.3",
       "dependencies": {
         "@indeks/core": "workspace:*",
         "@indeks/shared": "workspace:*",
@@ -48,7 +48,7 @@
     },
     "packages/shared": {
       "name": "@indeks/shared",
-      "version": "1.4.1",
+      "version": "1.4.3",
       "devDependencies": {
         "rimraf": "^6.0.1",
         "typescript": "^5.9.3",

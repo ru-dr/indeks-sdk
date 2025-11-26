@@ -83,6 +83,13 @@ import type {
   ManualTrackingSchema,
 } from "@indeks/shared";
 
+function getClassName(element: Element): string {
+  if (typeof element.className === 'string') {
+    return element.className;
+  }
+  return (element.className as unknown as SVGAnimatedString)?.baseVal || '';
+}
+
 class IndeksTracker {
   private config: IndeksConfig;
   private sessionId: string;
@@ -214,7 +221,7 @@ class IndeksTracker {
 
     return {
       tagName: element.tagName.toLowerCase(),
-      className: element.className || "",
+      className: getClassName(element),
       id: element.id || "",
       textContent: element.textContent?.substring(0, 100) || "",
       attributes,
@@ -343,7 +350,7 @@ class IndeksTracker {
         formMethod: form.method,
         element: {
           tagName: form.tagName.toLowerCase(),
-          className: form.className || "",
+          className: getClassName(form),
           id: form.id || "",
         },
       };
@@ -377,7 +384,7 @@ class IndeksTracker {
         metaKey: e.metaKey,
         target: {
           tagName: target.tagName.toLowerCase(),
-          className: target.className || "",
+          className: getClassName(target),
           id: target.id || "",
           type: (target as HTMLInputElement).type,
           name: (target as HTMLInputElement).name,
@@ -547,13 +554,14 @@ class IndeksTracker {
     if (!this.config.captureMouseHover) return;
 
     const handleMouseEnter = (e: MouseEvent) => {
+      const target = e.target as Element;
       const event: MouseHoverEvent = {
         ...this.createBaseEvent(),
         type: "mouseenter",
         element: {
-          tagName: (e.target as Element).tagName.toLowerCase(),
-          className: (e.target as Element).className || "",
-          id: (e.target as Element).id || "",
+          tagName: target.tagName.toLowerCase(),
+          className: getClassName(target),
+          id: target.id || "",
         },
         coordinates: {
           x: e.pageX,
@@ -564,13 +572,14 @@ class IndeksTracker {
     };
 
     const handleMouseLeave = (e: MouseEvent) => {
+      const target = e.target as Element;
       const event: MouseHoverEvent = {
         ...this.createBaseEvent(),
         type: "mouseleave",
         element: {
-          tagName: (e.target as Element).tagName.toLowerCase(),
-          className: (e.target as Element).className || "",
-          id: (e.target as Element).id || "",
+          tagName: target.tagName.toLowerCase(),
+          className: getClassName(target),
+          id: target.id || "",
         },
         coordinates: {
           x: e.pageX,
@@ -622,15 +631,16 @@ class IndeksTracker {
     if (!this.config.captureMousePress) return;
 
     document.addEventListener("mousedown", (e) => {
+      const target = e.target as Element;
       const event: MousePressEvent = {
         ...this.createBaseEvent(),
         type: "mousedown",
         button: e.button,
         buttons: e.buttons,
         element: {
-          tagName: (e.target as Element).tagName.toLowerCase(),
-          className: (e.target as Element).className || "",
-          id: (e.target as Element).id || "",
+          tagName: target.tagName.toLowerCase(),
+          className: getClassName(target),
+          id: target.id || "",
         },
         coordinates: {
           x: e.pageX,
@@ -641,15 +651,16 @@ class IndeksTracker {
     });
 
     document.addEventListener("mouseup", (e) => {
+      const target = e.target as Element;
       const event: MousePressEvent = {
         ...this.createBaseEvent(),
         type: "mouseup",
         button: e.button,
         buttons: e.buttons,
         element: {
-          tagName: (e.target as Element).tagName.toLowerCase(),
-          className: (e.target as Element).className || "",
-          id: (e.target as Element).id || "",
+          tagName: target.tagName.toLowerCase(),
+          className: getClassName(target),
+          id: target.id || "",
         },
         coordinates: {
           x: e.pageX,
@@ -698,14 +709,15 @@ class IndeksTracker {
           force: touch.force,
         }));
 
+        const target = e.target as Element;
         const event: TouchEvent = {
           ...this.createBaseEvent(),
           type: eventType,
           touches,
           element: {
-            tagName: (e.target as Element).tagName.toLowerCase(),
-            className: (e.target as Element).className || "",
-            id: (e.target as Element).id || "",
+            tagName: target.tagName.toLowerCase(),
+            className: getClassName(target),
+            id: target.id || "",
           },
         };
         this.logEvent(event);
@@ -728,6 +740,7 @@ class IndeksTracker {
 
     const handleDragEvent = (eventType: "dragstart" | "dragend" | "drop") => {
       return (e: DragEvent) => {
+        const target = e.target as Element;
         const event: DragDropEvent = {
           ...this.createBaseEvent(),
           type: eventType,
@@ -739,9 +752,9 @@ class IndeksTracker {
               }
             : undefined,
           element: {
-            tagName: (e.target as Element).tagName.toLowerCase(),
-            className: (e.target as Element).className || "",
-            id: (e.target as Element).id || "",
+            tagName: target.tagName.toLowerCase(),
+            className: getClassName(target),
+            id: target.id || "",
           },
           coordinates: {
             x: e.pageX,
@@ -778,7 +791,7 @@ class IndeksTracker {
           type: eventType,
           element: {
             tagName: target.tagName.toLowerCase(),
-            className: target.className || "",
+            className: getClassName(target),
             id: target.id || "",
             type: target.type,
             name: target.name,
@@ -810,7 +823,7 @@ class IndeksTracker {
           type: eventType,
           element: {
             tagName: target.tagName.toLowerCase(),
-            className: target.className || "",
+            className: getClassName(target),
             id: target.id || "",
             type: (target as HTMLInputElement).type || "",
             name: (target as HTMLInputElement).name || "",
@@ -836,7 +849,7 @@ class IndeksTracker {
           type: eventType,
           element: {
             tagName: target.tagName.toLowerCase(),
-            className: target.className || "",
+            className: getClassName(target),
             id: target.id || "",
             type: (target as HTMLInputElement).type,
             name: (target as HTMLInputElement).name,
@@ -862,21 +875,20 @@ class IndeksTracker {
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) return;
 
+      const parentElement = selection.anchorNode?.parentElement;
       const event: TextSelectionEvent = {
         ...this.createBaseEvent(),
         type: "selectionchange",
         selectedText: selection.toString().substring(0, 200),
         selectionStart: selection.anchorOffset,
         selectionEnd: selection.focusOffset,
-        element: selection.anchorNode?.parentElement
+        element: parentElement
           ? {
-              tagName: selection.anchorNode.parentElement.tagName.toLowerCase(),
-              className: selection.anchorNode.parentElement.className || "",
-              id: selection.anchorNode.parentElement.id || "",
-              type: (selection.anchorNode.parentElement as HTMLInputElement)
-                .type,
-              name: (selection.anchorNode.parentElement as HTMLInputElement)
-                .name,
+              tagName: parentElement.tagName.toLowerCase(),
+              className: getClassName(parentElement),
+              id: parentElement.id || "",
+              type: (parentElement as HTMLInputElement).type,
+              name: (parentElement as HTMLInputElement).name,
             }
           : undefined,
       };
@@ -910,7 +922,7 @@ class IndeksTracker {
             type: eventType as any,
             element: {
               tagName: target.tagName.toLowerCase(),
-              className: target.className || "",
+              className: getClassName(target),
               id: target.id || "",
               src: target.src || target.currentSrc,
               currentTime: target.currentTime,
@@ -986,7 +998,7 @@ class IndeksTracker {
         element: document.fullscreenElement
           ? {
               tagName: document.fullscreenElement.tagName.toLowerCase(),
-              className: document.fullscreenElement.className || "",
+              className: getClassName(document.fullscreenElement),
               id: document.fullscreenElement.id || "",
             }
           : undefined,
@@ -1479,11 +1491,13 @@ class IndeksTracker {
       return `#${element.id}`;
     }
 
-    if (element.className) {
+    const className = getClassName(element);
+
+    if (className) {
       parts.push(
         element.tagName.toLowerCase() +
           "." +
-          element.className.split(" ").join("."),
+          className.split(" ").filter(Boolean).join("."),
       );
     } else {
       parts.push(element.tagName.toLowerCase());
@@ -1802,7 +1816,7 @@ class IndeksTracker {
     | "native_share"
     | "other" {
     const href = (element as HTMLAnchorElement).href || "";
-    const className = element.className || "";
+    const className = getClassName(element);
     const text = element.textContent?.toLowerCase() || "";
 
     if (

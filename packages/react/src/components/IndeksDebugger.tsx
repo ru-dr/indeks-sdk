@@ -30,6 +30,22 @@ const INDEKS_COLORS = {
   white: '#FAFAFA',     // indeks-white
 };
 
+// Indeks Logo Icon Component
+const IndeksIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
+  <svg 
+    width={size} 
+    height={size * (68/60)} 
+    viewBox="0 0 60 68" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect y="0.559998" width="3" height="67" fill="#00A8E8"/>
+    <rect x="8" y="0.559998" width="6" height="67" fill="#FFD60A"/>
+    <rect x="19" y="0.559998" width="12" height="67" fill="#FF6B35"/>
+    <rect x="36" y="0.559998" width="24" height="67" fill="#06FFA5"/>
+  </svg>
+);
+
 export interface IndeksDebuggerProps {
   refreshInterval?: number;
   maxEvents?: number;
@@ -88,7 +104,7 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
 
   return (
     <>
-      {/* Floating Trigger Button - Matches your app style */}
+      {/* Floating Trigger Button - Transparent outline style, icon only */}
       <button
         onClick={() => setIsOpen(true)}
         onMouseEnter={() => setButtonHover(true)}
@@ -100,51 +116,39 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
           zIndex: 50,
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '10px 16px',
-          borderRadius: '8px',
-          border: 'none',
-          background: INDEKS_COLORS.green,
-          color: INDEKS_COLORS.black,
-          fontSize: '14px',
-          fontWeight: '600',
-          boxShadow: buttonHover 
-            ? '0 8px 16px rgba(74, 222, 128, 0.3)'
-            : '0 4px 12px rgba(74, 222, 128, 0.25)',
+          justifyContent: 'center',
+          width: '44px',
+          height: '44px',
+          borderRadius: '10px',
+          border: `1.5px solid ${buttonHover ? INDEKS_COLORS.green : 'rgba(74, 222, 128, 0.5)'}`,
+          background: buttonHover ? 'rgba(74, 222, 128, 0.1)' : 'transparent',
+          color: INDEKS_COLORS.green,
           cursor: 'pointer',
           transition: 'all 0.2s',
           transform: buttonHover ? 'translateY(-2px)' : 'translateY(0)',
+          backdropFilter: 'blur(8px)',
         }}
+        title={`Indeks Debug${count > 0 ? ` (${count} events)` : ''}${config?.localOnly ? ' - LOCAL' : ''}`}
       >
-        <Activity size={18} />
-        <span>Debug</span>
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          background: 'rgba(0, 0, 0, 0.15)',
-          fontSize: '12px',
-          fontWeight: '700',
-        }}>
-          {count}
-        </span>
-        {!isInitialized && (
-          <span style={{ fontSize: '12px', opacity: 0.7 }}>(Init...)</span>
-        )}
-        {config?.localOnly && (
+        <IndeksIcon size={20} />
+        {count > 0 && (
           <span style={{
+            position: 'absolute',
+            top: '-6px',
+            right: '-6px',
             display: 'inline-flex',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            background: 'rgba(251, 191, 36, 0.2)',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
-            color: INDEKS_COLORS.yellow,
-            fontSize: '11px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: '18px',
+            height: '18px',
+            padding: '0 5px',
+            borderRadius: '9px',
+            background: INDEKS_COLORS.green,
+            color: INDEKS_COLORS.black,
+            fontSize: '10px',
             fontWeight: '700',
           }}>
-            LOCAL
+            {count > 99 ? '99+' : count}
           </span>
         )}
       </button>
