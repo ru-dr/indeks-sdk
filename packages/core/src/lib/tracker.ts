@@ -215,15 +215,88 @@ class IndeksTracker {
 
   private getElementInfo(element: Element) {
     const attributes: Record<string, string> = {};
+    
+    // Capture all attributes from the element
     Array.from(element.attributes).forEach((attr) => {
       attributes[attr.name] = attr.value;
     });
+
+    // Also capture some useful computed/derived properties as special attributes
+    // These won't conflict with actual attributes since we prefix them with __
+    
+    // Get the href if it's a link (even if nested)
+    const linkElement = element.closest('a') as HTMLAnchorElement;
+    if (linkElement?.href) {
+      attributes['__href'] = linkElement.href;
+      attributes['__linkText'] = linkElement.textContent?.trim().substring(0, 100) || '';
+    }
+
+    // Get the form action if inside a form
+    const formElement = element.closest('form') as HTMLFormElement;
+    if (formElement) {
+      attributes['__formAction'] = formElement.action || '';
+      attributes['__formMethod'] = formElement.method || '';
+      attributes['__formId'] = formElement.id || '';
+    }
+
+    // Get button type and value
+    if (element.tagName === 'BUTTON' || (element.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes((element as HTMLInputElement).type))) {
+      attributes['__buttonType'] = (element as HTMLButtonElement).type || '';
+      attributes['__buttonValue'] = (element as HTMLButtonElement).value || '';
+    }
+
+    // Get image src and alt
+    if (element.tagName === 'IMG') {
+      const img = element as HTMLImageElement;
+      attributes['__imgSrc'] = img.src || '';
+      attributes['__imgAlt'] = img.alt || '';
+    }
+
+    // Get closest clickable parent's info if the element itself isn't the main target
+    const clickableParent = element.closest('button, a, [role="button"], [onclick]');
+    if (clickableParent && clickableParent !== element) {
+      attributes['__parentTagName'] = clickableParent.tagName.toLowerCase();
+      attributes['__parentId'] = clickableParent.id || '';
+      attributes['__parentClassName'] = getClassName(clickableParent);
+    }
+
+    // Capture aria-label if present (useful for icon buttons)
+    const ariaLabel = element.getAttribute('aria-label') || element.closest('[aria-label]')?.getAttribute('aria-label');
+    if (ariaLabel) {
+      attributes['__ariaLabel'] = ariaLabel;
+    }
+
+    // Capture data-testid or data-cy (useful for testing/debugging)
+    const testId = element.getAttribute('data-testid') || element.getAttribute('data-cy') || element.getAttribute('data-test');
+    if (testId) {
+      attributes['__testId'] = testId;
+    }
+
+    // Get the element's own text content
+    let textContent = element.textContent?.trim().substring(0, 100) || "";
+
+    // If element has no/minimal text, try to get text from meaningful parent
+    if (textContent.length < 3) {
+      const textParent = element.closest('p, h1, h2, h3, h4, h5, h6, li, td, th, label, span, div, button, a');
+      if (textParent && textParent !== element) {
+        const parentText = textParent.textContent?.trim().substring(0, 100) || '';
+        if (parentText) {
+          attributes['__parentText'] = parentText;
+        }
+      }
+    }
+
+    // Also capture innerText which excludes hidden elements (more accurate for visible text)
+    const innerText = (element as HTMLElement).innerText?.trim().substring(0, 100) || '';
+    if (innerText && innerText !== textContent) {
+      attributes['__innerText'] = innerText;
+    }
 
     return {
       tagName: element.tagName.toLowerCase(),
       className: getClassName(element),
       id: element.id || "",
-      textContent: element.textContent?.substring(0, 100) || "",
+      textContent,
       attributes,
     };
   }
@@ -1387,27 +1460,67 @@ class IndeksTracker {
     });
 
     // Track dead clicks (clicks with no response)
+    // We need to detect if a click actually caused any DOM changes or navigation
+    let lastDomState: string = '';
+    let pendingDeadClickCheck: { target: HTMLElement; selector: string; timestamp: number } | null = null;
+
+    // Capture DOM state before click
+    document.addEventListener("mousedown", () => {
+      lastDomState = document.body.innerHTML.length.toString() + '-' + window.location.href;
+    }, true);
+
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
       const selector = this.getElementSelector(target);
 
-      // Check if element is interactive
+      // More comprehensive check for interactive elements
       const isInteractive =
         target.matches(
-          'button, a, input, select, textarea, [role="button"], [onclick], [data-action]',
+          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex], [contenteditable="true"]',
         ) ||
         target.closest(
-          'button, a, input, select, textarea, [role="button"], [onclick], [data-action]',
-        );
+          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex], [contenteditable="true"]',
+        ) ||
+        // Check for common framework patterns
+        target.hasAttribute('onClick') ||
+        target.hasAttribute('ng-click') ||
+        target.hasAttribute('@click') ||
+        target.hasAttribute('v-on:click') ||
+        // Check computed styles for cursor pointer (indicates clickable)
+        window.getComputedStyle(target).cursor === 'pointer';
 
-      if (!isInteractive) {
-        // Wait a bit to see if anything happens
-        setTimeout(() => {
-          if (!this.elementVisibility.has(selector)) {
-            this.trackDeadClick(target);
-          }
-        }, 500);
+      // Skip if clearly interactive
+      if (isInteractive) {
+        pendingDeadClickCheck = null;
+        return;
       }
+
+      // Store pending dead click check with current timestamp
+      const clickTimestamp = Date.now();
+      pendingDeadClickCheck = { target, selector, timestamp: clickTimestamp };
+
+      // Wait and check if anything changed
+      setTimeout(() => {
+        // If this check is stale (newer click happened), skip
+        if (!pendingDeadClickCheck || pendingDeadClickCheck.timestamp !== clickTimestamp) {
+          return;
+        }
+
+        const currentDomState = document.body.innerHTML.length.toString() + '-' + window.location.href;
+        
+        // Only track as dead click if:
+        // 1. DOM didn't change significantly
+        // 2. URL didn't change
+        // 3. No modals/popups appeared
+        const domChanged = currentDomState !== lastDomState;
+        const hasNewOverlay = document.querySelector('[role="dialog"], [role="alertdialog"], .modal, .popup, .overlay, [aria-modal="true"]');
+        
+        if (!domChanged && !hasNewOverlay) {
+          this.trackDeadClick(pendingDeadClickCheck.target);
+        }
+        
+        pendingDeadClickCheck = null;
+      }, 500);
     });
 
     // Track error clicks (clicks that cause errors)
