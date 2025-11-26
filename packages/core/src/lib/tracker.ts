@@ -272,24 +272,58 @@ class IndeksTracker {
       attributes['__testId'] = testId;
     }
 
-    // Get the element's own text content
-    let textContent = element.textContent?.trim().substring(0, 100) || "";
+    // Get readable text content - prefer innerText (respects visual formatting)
+    // or use aria-label, or get only direct text nodes
+    let textContent = '';
+    
+    // Priority 1: aria-label (most intentional/readable)
+    if (ariaLabel) {
+      textContent = ariaLabel;
+    }
+    // Priority 2: innerText (respects CSS, adds spaces between block elements)
+    else if ((element as HTMLElement).innerText) {
+      textContent = (element as HTMLElement).innerText
+        .replace(/\s+/g, ' ')  // Normalize whitespace
+        .trim()
+        .substring(0, 100);
+    }
+    // Priority 3: Only direct text nodes (not nested element text)
+    else {
+      const directText = Array.from(element.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE)
+        .map(node => node.textContent?.trim())
+        .filter(Boolean)
+        .join(' ');
+      textContent = directText.substring(0, 100);
+    }
 
     // If element has no/minimal text, try to get text from meaningful parent
     if (textContent.length < 3) {
       const textParent = element.closest('p, h1, h2, h3, h4, h5, h6, li, td, th, label, span, div, button, a');
       if (textParent && textParent !== element) {
-        const parentText = textParent.textContent?.trim().substring(0, 100) || '';
-        if (parentText) {
-          attributes['__parentText'] = parentText;
+        const parentInnerText = (textParent as HTMLElement).innerText;
+        if (parentInnerText) {
+          const parentText = parentInnerText
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 100);
+          if (parentText) {
+            attributes['__parentText'] = parentText;
+          }
         }
       }
     }
 
     // Also capture innerText which excludes hidden elements (more accurate for visible text)
-    const innerText = (element as HTMLElement).innerText?.trim().substring(0, 100) || '';
-    if (innerText && innerText !== textContent) {
-      attributes['__innerText'] = innerText;
+    const innerText = (element as HTMLElement).innerText;
+    if (innerText) {
+      const formattedInnerText = innerText
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 100);
+      if (formattedInnerText && formattedInnerText !== textContent) {
+        attributes['__innerText'] = formattedInnerText;
+      }
     }
 
     return {
@@ -1460,67 +1494,48 @@ class IndeksTracker {
     });
 
     // Track dead clicks (clicks with no response)
-    // We need to detect if a click actually caused any DOM changes or navigation
-    let lastDomState: string = '';
-    let pendingDeadClickCheck: { target: HTMLElement; selector: string; timestamp: number } | null = null;
-
-    // Capture DOM state before click
-    document.addEventListener("mousedown", () => {
-      lastDomState = document.body.innerHTML.length.toString() + '-' + window.location.href;
-    }, true);
-
+    // Dead clicks are clicks on elements that LOOK clickable but aren't actually interactive
+    // We specifically look for "clickable-looking" non-interactive elements
     document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      const selector = this.getElementSelector(target);
-
-      // More comprehensive check for interactive elements
+      
+      // First, check if this is a truly interactive element - if so, never track as dead click
       const isInteractive =
         target.matches(
-          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex], [contenteditable="true"]',
+          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex]:not([tabindex="-1"]), [contenteditable="true"], summary, details',
         ) ||
         target.closest(
-          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex], [contenteditable="true"]',
+          'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="menuitem"], [role="tab"], [role="checkbox"], [role="radio"], [onclick], [data-action], [tabindex]:not([tabindex="-1"]), [contenteditable="true"], summary, details',
         ) ||
         // Check for common framework patterns
         target.hasAttribute('onClick') ||
         target.hasAttribute('ng-click') ||
         target.hasAttribute('@click') ||
         target.hasAttribute('v-on:click') ||
-        // Check computed styles for cursor pointer (indicates clickable)
-        window.getComputedStyle(target).cursor === 'pointer';
+        target.hasAttribute('data-bs-toggle') ||
+        target.hasAttribute('data-toggle');
 
-      // Skip if clearly interactive
+      // If it's interactive, definitely not a dead click
       if (isInteractive) {
-        pendingDeadClickCheck = null;
         return;
       }
 
-      // Store pending dead click check with current timestamp
-      const clickTimestamp = Date.now();
-      pendingDeadClickCheck = { target, selector, timestamp: clickTimestamp };
+      // Now check if the element LOOKS clickable (misleading UX = dead click candidate)
+      const computedStyle = window.getComputedStyle(target);
+      const looksClickable = 
+        computedStyle.cursor === 'pointer' ||
+        target.matches('.btn, .button, .clickable, .card, .link') ||
+        target.closest('.btn, .button, .clickable');
 
-      // Wait and check if anything changed
-      setTimeout(() => {
-        // If this check is stale (newer click happened), skip
-        if (!pendingDeadClickCheck || pendingDeadClickCheck.timestamp !== clickTimestamp) {
-          return;
-        }
-
-        const currentDomState = document.body.innerHTML.length.toString() + '-' + window.location.href;
-        
-        // Only track as dead click if:
-        // 1. DOM didn't change significantly
-        // 2. URL didn't change
-        // 3. No modals/popups appeared
-        const domChanged = currentDomState !== lastDomState;
-        const hasNewOverlay = document.querySelector('[role="dialog"], [role="alertdialog"], .modal, .popup, .overlay, [aria-modal="true"]');
-        
-        if (!domChanged && !hasNewOverlay) {
-          this.trackDeadClick(pendingDeadClickCheck.target);
-        }
-        
-        pendingDeadClickCheck = null;
-      }, 500);
+      // Only track dead clicks on elements that look clickable but aren't actually interactive
+      // This catches UX issues like non-functional buttons, cards without links, etc.
+      if (looksClickable) {
+        this.trackDeadClick(target);
+      }
+      
+      // Note: We intentionally do NOT track dead clicks on regular text, images, or other
+      // non-interactive content that doesn't look clickable. Users clicking on regular
+      // content is normal behavior, not a UX issue.
     });
 
     // Track error clicks (clicks that cause errors)
