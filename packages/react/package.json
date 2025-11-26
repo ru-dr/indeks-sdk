@@ -1,6 +1,6 @@
 {
   "name": "@indeks/react",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "React hooks and components for Indeks analytics SDK",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
