@@ -51,8 +51,14 @@ export class IndeksAnalytics implements AnalyticsInterface {
     });
 
     try {
-      // Use LOCAL for localhost, otherwise PRODUCTION
-      const defaultEndpoint = window.location.hostname === 'localhost' 
+      // Use LOCAL for localhost or local network IPs, otherwise PRODUCTION
+      const hostname = window.location.hostname;
+      const isLocal = hostname === 'localhost' || 
+                      hostname === '127.0.0.1' ||
+                      hostname.startsWith('192.168.') ||
+                      hostname.startsWith('10.') ||
+                      hostname.startsWith('172.');
+      const defaultEndpoint = isLocal 
         ? API_ENDPOINTS.LOCAL 
         : API_ENDPOINTS.PRODUCTION;
       const endpoint = this.config.endpoint || defaultEndpoint;
