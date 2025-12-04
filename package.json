@@ -42,7 +42,7 @@
     "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
-    "rimraf": "^6.1.0"
+    "rimraf": "^6.1.2"
   },
   "engines": {
     "node": ">=16.0.0",
