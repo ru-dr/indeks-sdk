@@ -1,3 +1,56 @@
+export interface DeviceData {
+  // Browser
+  browserName: string;
+  browserVersion: string;
+  browserEngine: string;
+  browserEngineVersion: string;
+
+  // OS
+  osName: string;
+  osVersion: string;
+
+  // Device
+  deviceType: "mobile" | "tablet" | "desktop";
+  deviceVendor: string;
+  deviceModel: string;
+
+  // Screen
+  screenWidth: number;
+  screenHeight: number;
+  screenColorDepth: number;
+  pixelRatio: number;
+  viewportWidth: number;
+  viewportHeight: number;
+
+  // Locale & Time
+  timezone: string;
+  timezoneOffset: number;
+  language: string;
+  languages: string[];
+
+  // Hardware
+  deviceMemory: number | null;
+  hardwareConcurrency: number | null;
+  maxTouchPoints: number;
+  touchSupport: boolean;
+
+  // Connection
+  connectionType: string | null;
+  connectionEffectiveType: string | null;
+  connectionDownlink: number | null;
+  connectionRtt: number | null;
+
+  // Platform
+  platform: string;
+  vendor: string;
+  cookiesEnabled: boolean;
+  doNotTrack: boolean;
+  online: boolean;
+
+  // Bot detection
+  isBot: boolean;
+}
+
 export interface BaseEvent {
   type: string;
   timestamp: number;
@@ -6,6 +59,7 @@ export interface BaseEvent {
   sessionId: string;
   userId: string;
   referrer?: string;
+  device: DeviceData;
 }
 
 export interface ClickEvent extends BaseEvent {

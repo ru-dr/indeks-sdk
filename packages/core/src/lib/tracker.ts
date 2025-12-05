@@ -5,7 +5,10 @@ import {
   DEFAULT_CONFIG,
   Logger,
   LogLevel,
+  getDeviceInfo,
+  type DeviceInfo,
 } from "@indeks/shared";
+import type { DeviceData } from "@indeks/shared";
 import { IndeksAnalytics } from "./analytics";
 import type { IndeksConfig } from "@indeks/shared";
 import type {
@@ -128,6 +131,9 @@ class IndeksTracker {
   private isIdle: boolean = false;
   private tabBlurTime: number | null = null;
 
+  // Device info - cached on init
+  private deviceInfo: DeviceData | null = null;
+
   constructor(config: IndeksConfig) {
     this.config = {
       ...DEFAULT_CONFIG,
@@ -177,6 +183,59 @@ class IndeksTracker {
     }
   }
 
+  private initializeDeviceInfo(): void {
+    try {
+      this.deviceInfo = getDeviceInfo();
+      this.logger.info("📱 Device info captured", {
+        browser: `${this.deviceInfo.browserName} ${this.deviceInfo.browserVersion}`,
+        os: `${this.deviceInfo.osName} ${this.deviceInfo.osVersion}`,
+        device: this.deviceInfo.deviceType,
+      });
+    } catch (error) {
+      this.logger.warn("Failed to get device info:", error);
+      // Fallback device info
+      this.deviceInfo = this.getFallbackDeviceInfo();
+    }
+  }
+
+  private getFallbackDeviceInfo(): DeviceData {
+    return {
+      browserName: "Unknown",
+      browserVersion: "",
+      browserEngine: "Unknown",
+      browserEngineVersion: "",
+      osName: "Unknown",
+      osVersion: "",
+      deviceType: "desktop",
+      deviceVendor: "",
+      deviceModel: "",
+      screenWidth: window.screen?.width || 0,
+      screenHeight: window.screen?.height || 0,
+      screenColorDepth: window.screen?.colorDepth || 0,
+      pixelRatio: window.devicePixelRatio || 1,
+      viewportWidth: window.innerWidth || 0,
+      viewportHeight: window.innerHeight || 0,
+      timezone: "Unknown",
+      timezoneOffset: new Date().getTimezoneOffset(),
+      language: navigator.language || "en",
+      languages: [navigator.language || "en"],
+      deviceMemory: null,
+      hardwareConcurrency: null,
+      maxTouchPoints: 0,
+      touchSupport: false,
+      connectionType: null,
+      connectionEffectiveType: null,
+      connectionDownlink: null,
+      connectionRtt: null,
+      platform: navigator.platform || "",
+      vendor: navigator.vendor || "",
+      cookiesEnabled: navigator.cookieEnabled,
+      doNotTrack: false,
+      online: navigator.onLine,
+      isBot: false,
+    };
+  }
+
   private createBaseEvent(): BaseEvent {
     // Check for referrer tracking parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,6 +245,18 @@ class IndeksTracker {
     
     // Custom ref parameter for simple tracking (ref, referrer, source)
     const customRef = urlParams.get('ref') || urlParams.get('referrer') || urlParams.get('source');
+
+    // Get fresh device info for dynamic values (viewport, online status, etc.)
+    // but use cached info for static values (browser, OS, etc.)
+    const currentDevice = this.deviceInfo || this.getFallbackDeviceInfo();
+    
+    // Update dynamic device properties
+    const device: DeviceData = {
+      ...currentDevice,
+      viewportWidth: window.innerWidth || 0,
+      viewportHeight: window.innerHeight || 0,
+      online: navigator.onLine,
+    };
     
     return {
       type: "",
@@ -196,6 +267,7 @@ class IndeksTracker {
       userId: this.userId || "initializing",
       // Priority: utm_source (industry standard) > custom ref > previous page > document.referrer
       referrer: utmSource || customRef || this.previousUrl || document.referrer || undefined,
+      device,
     };
   }
 
@@ -2524,6 +2596,9 @@ class IndeksTracker {
       await this.initializeUserId();
     }
 
+    // Initialize device info (cached for the session)
+    this.initializeDeviceInfo();
+
     // Basic events
     this.setupClickTracking();
     this.setupScrollTracking();
@@ -2624,6 +2699,10 @@ class IndeksTracker {
 
   public getUserId(): string | null {
     return this.userId;
+  }
+
+  public getDeviceInfo(): DeviceData | null {
+    return this.deviceInfo;
   }
 
   public destroy(): void {
