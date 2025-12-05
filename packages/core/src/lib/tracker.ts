@@ -6,7 +6,6 @@ import {
   Logger,
   LogLevel,
   getDeviceInfo,
-  type DeviceInfo,
 } from "@indeks/shared";
 import type { DeviceData } from "@indeks/shared";
 import { IndeksAnalytics } from "./analytics";
