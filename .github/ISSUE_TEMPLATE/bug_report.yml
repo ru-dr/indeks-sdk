@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: SDK version
+      placeholder: "@indeks/core 2.0.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and framework
+      placeholder: "Firefox 130, React 19, Next.js 16"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: A minimal config and page, or a link to a reproduction. Do not include real project keys or personal data.
+    validations:
+      required: true
+  - type: textarea
+    id: events
+    attributes:
+      label: Relevant events or console output
+      description: "With `debug: true` the tracker logs events to the console. Remove anything sensitive."
