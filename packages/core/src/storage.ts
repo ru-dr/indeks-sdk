@@ -30,6 +30,14 @@ export class LocalStorageAdapter implements StorageInterface {
   }
 
   async retrieve(): Promise<IndeksEvent[]> {
+    return this.read();
+  }
+
+  append(events: IndeksEvent[]): void {
+    this.replace([...this.read(), ...events]);
+  }
+
+  private read(): IndeksEvent[] {
     try {
       const stored = localStorage.getItem(this.key);
       const parsed = stored ? safeJsonParse<unknown>(stored, []) : [];

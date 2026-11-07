@@ -14,7 +14,10 @@ bun run lint
 bun run typecheck
 bunx playwright install chromium firefox   # once, for browser tests
 bun run e2e            # real-browser tests
+bun run e2e:container  # same tests in the official Playwright image (needs podman or docker)
 ```
+
+Playwright's WebKit build needs system libraries that are missing on some distributions (for example Fedora). `bun run e2e:container` runs the smoke tests in all three browsers inside the official image instead. The image tag in `package.json` must match the pinned `@playwright/test` version.
 
 Run everything CI runs with `bun run build:all && bun run lint && bun run format:check && bun run typecheck && bun run check:packages && bun test && bun run docs:check`.
 

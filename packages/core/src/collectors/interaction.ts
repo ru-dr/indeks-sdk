@@ -108,11 +108,13 @@ export const mouseMove: Collector = (ctx) => {
   ctx.on(document, "mousemove", (e) => track(e), { passive: true });
 };
 
+const HIGH_VOLUME_INTERVAL_MS = 100;
+
 export const wheel: Collector = (ctx) => {
   ctx.on(
     document,
     "wheel",
-    (e) => {
+    ctx.throttled((e: WheelEvent) => {
       ctx.emit<IndeksWheelEvent>({
         type: "wheel",
         deltaX: e.deltaX,
@@ -121,32 +123,29 @@ export const wheel: Collector = (ctx) => {
         deltaMode: e.deltaMode,
         coordinates: { x: e.pageX, y: e.pageY },
       });
-    },
+    }, HIGH_VOLUME_INTERVAL_MS),
     { passive: true },
   );
 };
 
 export const touch: Collector = (ctx) => {
   for (const type of ["touchstart", "touchend", "touchmove"] as const) {
-    ctx.on(
-      document,
-      type,
-      (e) => {
-        const target = toElement(e.target);
-        if (!target) return;
-        ctx.emit<IndeksTouchEvent>({
-          type,
-          touches: Array.from(e.touches).map((t) => ({
-            identifier: t.identifier,
-            clientX: t.clientX,
-            clientY: t.clientY,
-            force: t.force,
-          })),
-          element: describeElement(target),
-        });
-      },
-      { passive: true },
-    );
+    const report = (e: globalThis.TouchEvent) => {
+      const target = toElement(e.target);
+      if (!target) return;
+      ctx.emit<IndeksTouchEvent>({
+        type,
+        touches: Array.from(e.touches).map((t) => ({
+          identifier: t.identifier,
+          clientX: t.clientX,
+          clientY: t.clientY,
+          force: t.force,
+        })),
+        element: describeElement(target),
+      });
+    };
+    const handler = type === "touchmove" ? ctx.throttled(report, HIGH_VOLUME_INTERVAL_MS) : report;
+    ctx.on(document, type, handler, { passive: true });
   }
 };
 

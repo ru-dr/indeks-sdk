@@ -70,6 +70,16 @@ export class Hub {
     return wrapped;
   }
 
+  throttled<T extends (...args: never[]) => void>(handler: T, interval: number): T {
+    let last = 0;
+    return ((...args: Parameters<T>) => {
+      const now = Date.now();
+      if (now - last < interval) return;
+      last = now;
+      handler(...args);
+    }) as T;
+  }
+
   observe<T extends { disconnect(): void }>(observer: T): T {
     this.observers.push(observer);
     return observer;
