@@ -1,3 +1,20 @@
+<p align="center">
+  <a href="https://github.com/ru-dr/indeks-sdk">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-dark.svg">
+      <img src="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-light.svg" alt="Indeks SDK" width="420">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/@indeks/core"><img alt="@indeks/core on npm" src="https://shieldcn.dev/npm/@indeks/core.svg"></a>
+  <a href="https://www.npmjs.com/package/@indeks/core"><img alt="@indeks/core downloads" src="https://shieldcn.dev/npm/dw/@indeks/core.svg"></a>
+  <a href="https://www.npmjs.com/package/@indeks/core"><img alt="@indeks/core types" src="https://shieldcn.dev/npm/types/@indeks/core.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
+</p>
+
 # @indeks/core
 
 Framework-agnostic tracker for the Indeks SDK.

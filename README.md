@@ -1,3 +1,25 @@
+<p align="center">
+  <a href="https://github.com/ru-dr/indeks-sdk">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-dark.svg">
+      <img src="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-light.svg" alt="Indeks SDK" width="420">
+    </picture>
+  </a>
+</p>
+
+<p align="center">Privacy-first web analytics SDK for self-hosted Indeks.</p>
+
+<p align="center">
+  <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/releases"><img alt="Release" src="https://shieldcn.dev/github/release/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://www.npmjs.com/package/@indeks/core"><img alt="@indeks/core on npm" src="https://shieldcn.dev/npm/@indeks/core.svg"></a>
+  <a href="https://www.npmjs.com/package/@indeks/react"><img alt="@indeks/react on npm" src="https://shieldcn.dev/npm/@indeks/react.svg"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://shieldcn.dev/badge/TypeScript-7-blue.svg?logo=typescript"></a>
+  <a href="https://bun.sh"><img alt="Bun" src="https://shieldcn.dev/badge/Bun-latest-black.svg?logo=bun"></a>
+  <a href="https://nodejs.org"><img alt="Node.js" src="https://shieldcn.dev/badge/Node-22%2B-green.svg?logo=nodedotjs"></a>
+</p>
+
 # Indeks SDK
 
 Privacy-first web analytics SDK for self-hosted [Indeks](https://github.com/ru-dr/indeks). It tracks page views, clicks, scroll depth, forms, errors, performance and more, and sends batched events to your own collector.
