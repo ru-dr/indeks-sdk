@@ -1,140 +1,170 @@
-export const INDEKS_VERSION = "1.4.0";
-
-export const DEFAULT_CONFIG = {
-  enableConsoleLogging: false,
-  captureClicks: true,
-  captureScrolls: true,
-  capturePageViews: true,
-  captureFormSubmissions: true,
-  captureKeystrokes: false,
-  captureMouseMovements: false,
-  captureResizes: true,
-  captureErrors: true,
-  captureBeforeUnload: true,
-  captureVisibilityChange: true,
-  captureWindowFocus: true,
-  captureHashChange: true,
-  capturePopState: true,
-  captureMouseHover: false,
-  captureContextMenu: true,
-  captureDoubleClick: true,
-  captureMousePress: false,
-  captureMouseWheel: true,
-  captureTouchEvents: true,
-  captureDragDrop: true,
-  captureInputChanges: true,
-  captureFieldFocus: true,
-  captureClipboard: true,
-  captureTextSelection: false,
-  captureMediaEvents: true,
-  captureNetworkStatus: true,
-  capturePageLoad: true,
-  captureFullscreenChange: true,
-  captureSessionEvents: true,
-  captureSearchEvents: true,
-  captureRageEvents: true,
-  captureDownloadEvents: true,
-  capturePrintEvents: true,
-  captureShareEvents: true,
-  capturePageLeave: true,
-  captureScrollDepth: true,
-  captureFormAbandon: true,
-  captureFormErrors: true,
-  captureIdleEvents: true,
-  captureTabFocus: true,
-  capturePageLifecycle: true,
-  captureOutboundLinks: true,
-  captureResourceErrors: true,
-  captureMediaProgress: true,
-  captureOrientationChange: true,
-  captureNetworkChange: true,
-  capturePerformanceMetrics: true,
+export const DEFAULTS = {
+  preset: "standard",
   debounceMs: 100,
   idleTimeoutMs: 30000,
   scrollDepthThresholds: [25, 50, 75, 100],
+  privacy: {
+    respectDoNotTrack: true,
+    elementText: true,
+    formValues: false,
+    clipboardText: false,
+    searchTerms: false,
+    fingerprint: false,
+  },
 } as const;
 
-export const API_ENDPOINTS = {
-  PRODUCTION: "https://indeks.bl0q.app/api/v1/collect",
-  LOCAL: "http://localhost:3000/api/v1/collect",
+export const DEFAULT_COLLECTOR_OPTIONS = {
+  search: {
+    inputSelector:
+      'input[type="search"], input[name*="search"], input[name*="query"], input[name="q"]',
+    resultsCountSelector:
+      ".results-count, .search-results-count, [data-results-count], .total-results",
+    resultItemSelector: ".search-result, .result-item, .product-item, .item",
+  },
+  frustration: {
+    rageClickCount: 3,
+    rageClickWindowMs: 2000,
+    deadClickWindowMs: 500,
+    clickableSelector: ".btn, .button, .clickable",
+  },
 } as const;
+
+export const PRIVACY_SENSITIVE_COLLECTORS = [
+  "keystroke",
+  "mouseMove",
+  "clipboard",
+  "textSelection",
+  "inputChange",
+  "formSubmit",
+] as const;
+
+export const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 
 export const STORAGE_KEYS = {
   EVENTS: "indeks_events",
-  SESSION_EVENTS: "indeks_events_session",
   USER_ID: "indeks_user_id",
+  LAST_VISIT: "indeks_last_visit",
+  LAST_SEARCH: "indeks_last_search",
+  OPT_OUT: "indeks_opt_out",
+  EXTERNAL_ID: "indeks_external_id",
   SESSION_ID: "indeks_session_id",
-} as const;
-
-export const EVENT_TYPES = {
-  CLICK: "click",
-  SCROLL: "scroll",
-  PAGEVIEW: "pageview",
-  FORM_SUBMIT: "form_submit",
-  KEYSTROKE: "keystroke",
-  MOUSEMOVE: "mousemove",
-  RESIZE: "resize",
-  ERROR: "error",
-
-  // Navigation & Page Events
-  BEFORE_UNLOAD: "beforeunload",
-  VISIBILITY_CHANGE: "visibilitychange",
-  FOCUS: "focus",
-  BLUR: "blur",
-  HASH_CHANGE: "hashchange",
-  POP_STATE: "popstate",
-
-  // Mouse & Touch Events
-  MOUSE_ENTER: "mouseenter",
-  MOUSE_LEAVE: "mouseleave",
-  CONTEXT_MENU: "contextmenu",
-  DOUBLE_CLICK: "dblclick",
-  MOUSE_DOWN: "mousedown",
-  MOUSE_UP: "mouseup",
-  WHEEL: "wheel",
-  TOUCH_START: "touchstart",
-  TOUCH_END: "touchend",
-  TOUCH_MOVE: "touchmove",
-  DRAG_START: "dragstart",
-  DRAG_END: "dragend",
-  DROP: "drop",
-
-  // Input & Form Events
-  INPUT: "input",
-  CHANGE: "change",
-  COPY: "copy",
-  PASTE: "paste",
-  CUT: "cut",
-  SELECTION_CHANGE: "selectionchange",
-
-  // Media Events
-  PLAY: "play",
-  PAUSE: "pause",
-  VOLUME_CHANGE: "volumechange",
-  SEEKING: "seeking",
-  SEEKED: "seeked",
-  ENDED: "ended",
-
-  // Network & Performance Events
-  ONLINE: "online",
-  OFFLINE: "offline",
-  LOAD: "load",
-  DOM_CONTENT_LOADED: "DOMContentLoaded",
-
-  // UI Interaction Events
-  FULLSCREEN_CHANGE: "fullscreenchange",
 } as const;
 
 export const BATCH_CONFIG = {
   DEFAULT_BATCH_SIZE: 50,
-  AUTO_FLUSH_INTERVAL: 5000, // 5 seconds
+  AUTO_FLUSH_INTERVAL: 5000,
   MAX_BATCH_SIZE: 100,
   MIN_BATCH_SIZE: 1,
+  MAX_QUEUE_SIZE: 1000,
+  MAX_EVENT_QUEUE_SIZE: 1000,
+  RETRY_BASE_MS: 1000,
+  RETRY_MAX_MS: 30000,
+  KEEPALIVE_MAX_BODY_BYTES: 60000,
+  MAX_PERSISTED_EVENTS: 500,
 } as const;
+
+export const SENSITIVE_FIELD_SUBSTRINGS = [
+  "password",
+  "passwd",
+  "secret",
+  "apikey",
+  "authorization",
+  "bearer",
+  "csrf",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
+  "socialsecurity",
+  "taxid",
+  "creditcard",
+  "cardnumber",
+  "cardnum",
+  "cardexpiry",
+  "accountnumber",
+  "routingnumber",
+  "dateofbirth",
+  "birthdate",
+  "passport",
+  "nationalid",
+  "driverslicense",
+  "licensenumber",
+  "mothersmaiden",
+  "securityanswer",
+  "onetimecode",
+  "streetaddress",
+  "postalcode",
+  "zipcode",
+  "emailaddress",
+  "phonenumber",
+  "telephone",
+  "email",
+  "phone",
+] as const;
+
+export const SENSITIVE_FIELD_SEGMENTS = [
+  "pwd",
+  "pin",
+  "ssn",
+  "ein",
+  "dob",
+  "cc",
+  "cvv",
+  "cvc",
+  "otp",
+  "iban",
+  "token",
+  "zip",
+  "tel",
+  "postal",
+  "expiry",
+  "cardholder",
+] as const;
+
+export const SENSITIVE_FIELD_NAMES = [
+  ...SENSITIVE_FIELD_SUBSTRINGS,
+  ...SENSITIVE_FIELD_SEGMENTS,
+] as const;
+
+export const SENSITIVE_QUERY_PARAMS = [
+  "token",
+  "access_token",
+  "id_token",
+  "refresh_token",
+  "code",
+  "state",
+  "session",
+  "sid",
+  "key",
+  "api_key",
+  "apikey",
+  "password",
+  "email",
+  "signature",
+  "sig",
+] as const;
+
+export const SAFE_QUERY_PARAMS = ["ref", "referrer", "source"] as const;
+
+export const REDACTED = "[redacted]";
+
+export const ALLOWED_ELEMENT_ATTRIBUTES = [
+  "id",
+  "class",
+  "href",
+  "src",
+  "alt",
+  "title",
+  "type",
+  "role",
+  "name",
+  "aria-label",
+  "data-testid",
+] as const;
 
 export const VALIDATION = {
   MIN_API_KEY_LENGTH: 10,
   MAX_DEBOUNCE_MS: 10000,
+  MAX_IDLE_TIMEOUT_MS: 3600000,
   MAX_TEXT_LENGTH: 100,
   MAX_SELECTION_LENGTH: 200,
 } as const;
