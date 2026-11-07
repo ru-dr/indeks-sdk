@@ -276,15 +276,17 @@ class IndeksTracker {
     }
     this.lifecycle.onExit(() => this.analytics.flushSync());
     this.watchOptOut();
-    this.isInitialized = true;
 
     await this.analytics.restorePersisted().catch((error) => {
       this.logger.warn("Failed to restore offline buffer:", error);
     });
     if (generation !== this.generation) return false;
-    const pending = this.pending;
-    this.pending = [];
-    for (const action of pending) action();
+    while (this.pending.length) {
+      const batch = this.pending;
+      this.pending = [];
+      for (const action of batch) action();
+    }
+    this.isInitialized = true;
     this.logger.info("Tracker initialized");
     return true;
   }

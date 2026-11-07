@@ -446,6 +446,17 @@ describe("sessions and pages", () => {
     expect(custom.timestamp).toBe(t0);
   });
 
+  test("calls made while init is finishing stay in order behind earlier buffered calls", async () => {
+    const tracker = make();
+    tracker.track("first");
+    const started = tracker.init();
+    tracker.track("second");
+    await started;
+    tracker.track("third");
+    const names = eventsOfType<{ eventName: string }>(tracker, "custom").map((e) => e.eventName);
+    expect(names).toEqual(["first", "second", "third"]);
+  });
+
   test("manual page views are not double counted when the pageview collector runs", async () => {
     const tracker = await start();
     tracker.page("Manual");
