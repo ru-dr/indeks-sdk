@@ -68,14 +68,13 @@ export const fullscreen: Collector = (ctx) => {
 export const orientation: Collector = (ctx) => {
   ctx.on(window, "orientationchange", () => {
     const screenOrientation = window.screen?.orientation;
-    const legacyAngle = (window as Window & { orientation?: number }).orientation;
     const landscape = screenOrientation
       ? screenOrientation.type.startsWith("landscape")
       : window.innerWidth > window.innerHeight;
     ctx.emit<IndeksOrientationChangeEvent>({
       type: "orientation_change",
       orientation: landscape ? "landscape" : "portrait",
-      angle: screenOrientation?.angle ?? legacyAngle ?? 0,
+      angle: screenOrientation?.angle ?? 0,
     });
   });
 };

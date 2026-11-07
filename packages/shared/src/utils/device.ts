@@ -212,10 +212,8 @@ interface ConnectionInfo {
 
 interface NavigatorExtras {
   deviceMemory?: number;
-  msMaxTouchPoints?: number;
   connection?: ConnectionInfo;
-  mozConnection?: ConnectionInfo;
-  webkitConnection?: ConnectionInfo;
+  userAgentData?: { platform?: string };
 }
 
 export function getDeviceInfo(): DeviceData {
@@ -227,7 +225,7 @@ export function getDeviceInfo(): DeviceData {
   const parsed = parseUserAgent(ua);
 
   const extras = navigator as Navigator & NavigatorExtras;
-  const connection = extras.connection || extras.mozConnection || extras.webkitConnection || null;
+  const connection = extras.connection ?? null;
 
   let timezone: string;
   try {
@@ -271,22 +269,16 @@ export function getDeviceInfo(): DeviceData {
     deviceMemory: extras.deviceMemory || null,
     hardwareConcurrency: navigator.hardwareConcurrency || null,
     maxTouchPoints: navigator.maxTouchPoints || 0,
-    touchSupport:
-      "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      (extras.msMaxTouchPoints ?? 0) > 0,
+    touchSupport: "ontouchstart" in window || navigator.maxTouchPoints > 0,
 
     connectionType: connection?.type || null,
     connectionEffectiveType: connection?.effectiveType || null,
     connectionDownlink: connection?.downlink || null,
     connectionRtt: connection?.rtt || null,
 
-    platform: navigator.platform || "",
-    vendor: navigator.vendor || "",
+    platform: extras.userAgentData?.platform || parsed.osName,
     cookiesEnabled: navigator.cookieEnabled,
-    doNotTrack:
-      navigator.doNotTrack === "1" ||
-      (window as Window & { doNotTrack?: string }).doNotTrack === "1",
+    doNotTrack: navigator.doNotTrack === "1",
     online: navigator.onLine,
 
     isBot: parsed.isBot,

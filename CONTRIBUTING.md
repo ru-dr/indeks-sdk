@@ -4,7 +4,9 @@ Thanks for helping improve the Indeks SDK. This guide covers how to set up the r
 
 ## Setup
 
-Requirements: [Bun](https://bun.sh) 1.1 or newer and Node.js 18 or newer.
+Requirements: the latest [Bun](https://bun.sh) and Node.js 22 or newer (the current LTS is recommended).
+
+Type checking uses TypeScript 7 (`tsc`, the native compiler). Tools that still need the JavaScript compiler API (`typescript-eslint`, `tsup` declaration bundling and `scripts/generate-event-docs.ts`) import `typescript`, which is pinned to TypeScript 6 for that purpose. Both are declared in `package.json` (`typescript` and `@typescript/native`); CI fails if `tsc` is not version 7.
 
 ```bash
 bun install

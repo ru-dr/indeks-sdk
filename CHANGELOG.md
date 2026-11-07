@@ -57,6 +57,12 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Events with values JSON cannot represent no longer block the send queue or break `destroy()`.
 - Opt-out is complete: in-flight sends are dropped, identifiers are removed, `identify` is ignored, and an opt-out in another tab or a Do Not Track change is honored.
 
+### Toolchain
+
+- TypeScript 7 for type checking, with TypeScript 6 kept for tools that need the compiler API; all dependencies at their latest versions; `minimatch` overridden to a patched release.
+- GitHub Actions moved to current majors (Node 24 runtime) with least-privilege permissions; CI uses the latest Node LTS.
+- Browser APIs that are deprecated or only for legacy browsers are no longer used (`navigator.platform`, `navigator.vendor`, `window.orientation`, vendor-prefixed connection APIs, `pageXOffset` and `pageYOffset`, `window.doNotTrack`, IE touch points). `DeviceData.vendor` is removed and `DeviceData.platform` comes from User-Agent Client Hints when available.
+
 ### Removed
 
 - Automatic sending to `http://localhost:3000`; an `endpoint` is required.

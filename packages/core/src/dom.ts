@@ -203,8 +203,8 @@ export interface ScrollMetrics {
 export function getScrollMetrics(): ScrollMetrics {
   const doc = document.documentElement;
   const body = document.body;
-  const scrollTop = window.pageYOffset || doc.scrollTop || 0;
-  const scrollLeft = window.pageXOffset || doc.scrollLeft || 0;
+  const scrollTop = window.scrollY || doc.scrollTop || 0;
+  const scrollLeft = window.scrollX || doc.scrollLeft || 0;
   const documentHeight = Math.max(
     body?.scrollHeight ?? 0,
     body?.offsetHeight ?? 0,
@@ -276,10 +276,6 @@ export interface NetworkInformationLike extends EventTarget {
 }
 
 export function getConnection(): NetworkInformationLike | null {
-  const nav = navigator as Navigator & {
-    connection?: NetworkInformationLike;
-    mozConnection?: NetworkInformationLike;
-    webkitConnection?: NetworkInformationLike;
-  };
-  return nav.connection || nav.mozConnection || nav.webkitConnection || null;
+  const nav = navigator as Navigator & { connection?: NetworkInformationLike };
+  return nav.connection ?? null;
 }

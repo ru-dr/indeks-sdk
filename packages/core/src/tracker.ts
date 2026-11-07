@@ -156,8 +156,7 @@ class IndeksTracker {
     if (storageGet("localStorage", STORAGE_KEYS.OPT_OUT) === "1") return true;
     if (!this.config.privacy.respectDoNotTrack) return false;
     const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
-    const legacyDnt = (window as Window & { doNotTrack?: string }).doNotTrack;
-    return nav.doNotTrack === "1" || legacyDnt === "1" || nav.globalPrivacyControl === true;
+    return nav.doNotTrack === "1" || nav.globalPrivacyControl === true;
   }
 
   private emit<E extends IndeksEvent>(fields: EventFields<E>, at?: number): void {

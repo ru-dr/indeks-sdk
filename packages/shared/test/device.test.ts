@@ -56,3 +56,35 @@ describe("getDeviceInfo user agent parsing", () => {
     expect(withUserAgent(WIN, getDeviceInfo).isBot).toBe(false);
   });
 });
+
+describe("device info without deprecated APIs", () => {
+  test("has no vendor field and takes the platform from the user agent when client hints are missing", () => {
+    const info = withUserAgent(WIN, getDeviceInfo) as unknown as Record<string, unknown>;
+    expect("vendor" in info).toBe(false);
+    expect(info.platform).toBe("Windows");
+  });
+
+  test("prefers User-Agent Client Hints for the platform", () => {
+    Object.defineProperty(navigator, "userAgentData", {
+      value: { platform: "Chrome OS" },
+      configurable: true,
+    });
+    try {
+      expect(withUserAgent(WIN, getDeviceInfo).platform).toBe("Chrome OS");
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>).userAgentData;
+    }
+  });
+
+  test("only the standard connection API is read", () => {
+    Object.defineProperty(navigator, "mozConnection", {
+      value: { effectiveType: "2g" },
+      configurable: true,
+    });
+    try {
+      expect(withUserAgent(WIN, getDeviceInfo).connectionEffectiveType).toBeNull();
+    } finally {
+      delete (navigator as unknown as Record<string, unknown>).mozConnection;
+    }
+  });
+});
