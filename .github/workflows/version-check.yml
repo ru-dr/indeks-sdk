@@ -42,4 +42,4 @@ jobs:
             fi
           done
 
-          echo "ℹ️  If you're adding new features or fixes, consider bumping the version before merging to main."
+          echo "Note: If you're adding new features or fixes, consider bumping the version before merging to main."

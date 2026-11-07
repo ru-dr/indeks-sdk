@@ -1,69 +1,112 @@
+export const COLLECTOR_NAMES = [
+  "click",
+  "doubleClick",
+  "contextMenu",
+  "mousePress",
+  "hover",
+  "mouseMove",
+  "wheel",
+  "touch",
+  "dragDrop",
+  "keystroke",
+  "scroll",
+  "scrollDepth",
+  "resize",
+  "fullscreen",
+  "orientation",
+  "idle",
+  "pageview",
+  "pageLoad",
+  "pageLeave",
+  "pageLifecycle",
+  "beforeUnload",
+  "hashChange",
+  "popState",
+  "visibility",
+  "windowFocus",
+  "tabFocus",
+  "session",
+  "formSubmit",
+  "inputChange",
+  "fieldFocus",
+  "formAbandon",
+  "formError",
+  "clipboard",
+  "textSelection",
+  "search",
+  "frustration",
+  "download",
+  "outboundLink",
+  "print",
+  "share",
+  "media",
+  "mediaProgress",
+  "error",
+  "resourceError",
+  "networkStatus",
+  "networkChange",
+  "performance",
+] as const;
+
+export type CollectorName = (typeof COLLECTOR_NAMES)[number];
+
+export type CapturePreset = "minimal" | "standard" | "full";
+
+export interface PrivacyConfig {
+  respectDoNotTrack?: boolean;
+  elementText?: boolean;
+  formValues?: boolean;
+  clipboardText?: boolean;
+  searchTerms?: boolean;
+  fingerprint?: boolean;
+}
+
+export interface SearchOptions {
+  inputSelector?: string;
+  resultsCountSelector?: string;
+  resultItemSelector?: string;
+}
+
+export interface FrustrationOptions {
+  rageClickCount?: number;
+  rageClickWindowMs?: number;
+  deadClickWindowMs?: number;
+  clickableSelector?: string;
+}
+
+export interface CollectorOptions {
+  search?: SearchOptions;
+  frustration?: FrustrationOptions;
+}
+
 export interface IndeksConfig {
   apiKey: string;
-  enableConsoleLogging?: boolean;
   endpoint?: string;
-  localOnly?: boolean;  // Skip sending to API, only track locally
-  captureClicks?: boolean;
-  captureScrolls?: boolean;
-  capturePageViews?: boolean;
-  captureFormSubmissions?: boolean;
-  captureKeystrokes?: boolean;
-  captureMouseMovements?: boolean;
-  captureResizes?: boolean;
-  captureErrors?: boolean;
-  // Navigation & Page Events
-  captureBeforeUnload?: boolean;
-  captureVisibilityChange?: boolean;
-  captureWindowFocus?: boolean;
-  captureHashChange?: boolean;
-  capturePopState?: boolean;
-  // Mouse & Touch Events
-  captureMouseHover?: boolean;
-  captureContextMenu?: boolean;
-  captureDoubleClick?: boolean;
-  captureMousePress?: boolean;
-  captureMouseWheel?: boolean;
-  captureTouchEvents?: boolean;
-  captureDragDrop?: boolean;
-  // Input & Form Events
-  captureInputChanges?: boolean;
-  captureFieldFocus?: boolean;
-  captureClipboard?: boolean;
-  captureTextSelection?: boolean;
-  // Media Events
-  captureMediaEvents?: boolean;
-  // Network & Performance
-  captureNetworkStatus?: boolean;
-  capturePageLoad?: boolean;
-  // UI Interaction Events
-  captureFullscreenChange?: boolean;
-  // Session Events
-  captureSessionEvents?: boolean;
-  // Search Events
-  captureSearchEvents?: boolean;
-  // Rage/Frustration Events
-  captureRageEvents?: boolean;
-  // Download Events
-  captureDownloadEvents?: boolean;
-  // Print Events
-  capturePrintEvents?: boolean;
-  // Share Events
-  captureShareEvents?: boolean;
-  // New Events
-  capturePageLeave?: boolean;
-  captureScrollDepth?: boolean;
-  captureFormAbandon?: boolean;
-  captureFormErrors?: boolean;
-  captureIdleEvents?: boolean;
-  captureTabFocus?: boolean;
-  capturePageLifecycle?: boolean;
-  captureOutboundLinks?: boolean;
-  captureResourceErrors?: boolean;
-  captureMediaProgress?: boolean;
-  captureOrientationChange?: boolean;
-  captureNetworkChange?: boolean;
-  capturePerformanceMetrics?: boolean;
+  localOnly?: boolean;
+  debug?: boolean;
+  preset?: CapturePreset;
+  collectors?: Partial<Record<CollectorName, boolean>>;
+  privacy?: PrivacyConfig;
+  collectorOptions?: CollectorOptions;
   debounceMs?: number;
   idleTimeoutMs?: number;
-  scrollDepthThresholds?: number[] | readonly number[];
+  scrollDepthThresholds?: readonly number[];
+}
+
+export interface ResolvedCollectorOptions {
+  search: Required<SearchOptions>;
+  frustration: Required<FrustrationOptions>;
+}
+
+export interface ResolvedConfig {
+  apiKey: string;
+  endpoint?: string;
+  localOnly: boolean;
+  debug: boolean;
+  collectors: Record<CollectorName, boolean>;
+  privacy: Required<PrivacyConfig>;
+  collectorOptions: ResolvedCollectorOptions;
+  debounceMs: number;
+  idleTimeoutMs: number;
+  scrollDepthThresholds: readonly number[];
 }

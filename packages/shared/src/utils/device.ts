@@ -1,60 +1,4 @@
-/**
- * Device and Browser Information Utility
- * Extracts comprehensive device, browser, and environment data
- */
-
-export interface DeviceInfo {
-  // Browser
-  browserName: string;
-  browserVersion: string;
-  browserEngine: string;
-  browserEngineVersion: string;
-
-  // OS
-  osName: string;
-  osVersion: string;
-
-  // Device
-  deviceType: "mobile" | "tablet" | "desktop";
-  deviceVendor: string;
-  deviceModel: string;
-
-  // Screen
-  screenWidth: number;
-  screenHeight: number;
-  screenColorDepth: number;
-  pixelRatio: number;
-  viewportWidth: number;
-  viewportHeight: number;
-
-  // Locale & Time
-  timezone: string;
-  timezoneOffset: number;
-  language: string;
-  languages: string[];
-
-  // Hardware
-  deviceMemory: number | null;
-  hardwareConcurrency: number | null;
-  maxTouchPoints: number;
-  touchSupport: boolean;
-
-  // Connection
-  connectionType: string | null;
-  connectionEffectiveType: string | null;
-  connectionDownlink: number | null;
-  connectionRtt: number | null;
-
-  // Platform
-  platform: string;
-  vendor: string;
-  cookiesEnabled: boolean;
-  doNotTrack: boolean;
-  online: boolean;
-
-  // Bot detection
-  isBot: boolean;
-}
+import type { DeviceData } from "../types/events";
 
 interface UAParseResult {
   browserName: string;
@@ -69,9 +13,6 @@ interface UAParseResult {
   isBot: boolean;
 }
 
-/**
- * Parse user agent string to extract browser, OS, and device info
- */
 function parseUserAgent(ua: string): UAParseResult {
   const result: UAParseResult = {
     browserName: "Unknown",
@@ -90,7 +31,6 @@ function parseUserAgent(ua: string): UAParseResult {
 
   const uaLower = ua.toLowerCase();
 
-  // Bot detection
   const botPatterns = [
     "bot",
     "crawler",
@@ -110,9 +50,6 @@ function parseUserAgent(ua: string): UAParseResult {
     "facebookexternalhit",
     "twitterbot",
     "linkedinbot",
-    "embedly",
-    "quora",
-    "pinterest",
     "slackbot",
     "discordbot",
     "telegrambot",
@@ -128,7 +65,6 @@ function parseUserAgent(ua: string): UAParseResult {
 
   result.isBot = botPatterns.some((pattern) => uaLower.includes(pattern));
 
-  // Browser detection (order matters - more specific first)
   const browsers: [RegExp, string][] = [
     [/edg(?:e|a|ios)?\/(\d+[\d.]*)/i, "Edge"],
     [/opr\/(\d+[\d.]*)/i, "Opera"],
@@ -158,13 +94,11 @@ function parseUserAgent(ua: string): UAParseResult {
     }
   }
 
-  // Browser engine detection
   if (ua.includes("AppleWebKit")) {
     result.browserEngine = "WebKit";
     const match = ua.match(/applewebkit\/(\d+[\d.]*)/i);
     result.browserEngineVersion = match?.[1] || "";
 
-    // Blink is WebKit fork used by Chrome/Edge/Opera
     if (ua.includes("Chrome") && !ua.includes("Edge")) {
       result.browserEngine = "Blink";
     }
@@ -182,19 +116,17 @@ function parseUserAgent(ua: string): UAParseResult {
     result.browserEngineVersion = match?.[1] || "";
   }
 
-  // OS detection
   const osPatterns: [RegExp, string, number?][] = [
+    [/windows phone (\d+[\d.]*)/i, "Windows Phone"],
     [/windows nt 10\.0/i, "Windows", 10],
-    [/windows nt 11\.0/i, "Windows", 11],
     [/windows nt 6\.3/i, "Windows", 8.1],
     [/windows nt 6\.2/i, "Windows", 8],
     [/windows nt 6\.1/i, "Windows", 7],
-    [/windows nt 6\.0/i, "Windows", undefined],
-    [/windows nt 5\.1/i, "Windows", undefined],
-    [/windows phone (\d+[\d.]*)/i, "Windows Phone"],
-    [/mac os x (\d+[._\d]*)/i, "macOS"],
+    [/windows nt 6\.0/i, "Windows", 6],
+    [/windows nt 5\.1/i, "Windows", 5.1],
     [/iphone os (\d+[._\d]*)/i, "iOS"],
     [/ipad.*os (\d+[._\d]*)/i, "iPadOS"],
+    [/mac os x (\d+[._\d]*)/i, "macOS"],
     [/android (\d+[\d.]*)/i, "Android"],
     [/cros/i, "Chrome OS"],
     [/linux/i, "Linux"],
@@ -217,9 +149,7 @@ function parseUserAgent(ua: string): UAParseResult {
     }
   }
 
-  // Device type detection
-  const mobilePatterns =
-    /android|webos|iphone|ipod|blackberry|iemobile|opera mini|mobile|phone/i;
+  const mobilePatterns = /android|webos|iphone|ipod|blackberry|iemobile|opera mini|mobile|phone/i;
   const tabletPatterns = /ipad|tablet|playbook|silk|kindle|android(?!.*mobile)/i;
 
   if (tabletPatterns.test(ua)) {
@@ -230,7 +160,6 @@ function parseUserAgent(ua: string): UAParseResult {
     result.deviceType = "desktop";
   }
 
-  // Device vendor and model detection
   const vendorPatterns: [RegExp, string, string?][] = [
     [/iphone/i, "Apple", "iPhone"],
     [/ipad/i, "Apple", "iPad"],
@@ -238,19 +167,20 @@ function parseUserAgent(ua: string): UAParseResult {
     [/macintosh/i, "Apple", "Mac"],
     [/samsung[- ]?(gt|sm|sgh|sch|sph)-?([a-z0-9]+)/i, "Samsung"],
     [/samsung/i, "Samsung"],
-    [/huawei[- ]?([a-z0-9]+)/i, "Huawei"],
-    [/xiaomi[- ]?([a-z0-9]+)/i, "Xiaomi"],
-    [/redmi[- ]?([a-z0-9]+)/i, "Xiaomi", "Redmi"],
-    [/oppo[- ]?([a-z0-9]+)/i, "OPPO"],
-    [/vivo[- ]?([a-z0-9]+)/i, "Vivo"],
-    [/oneplus[- ]?([a-z0-9]+)/i, "OnePlus"],
-    [/pixel[- ]?(\d+)/i, "Google", "Pixel"],
-    [/nexus[- ]?([a-z0-9]+)/i, "Google", "Nexus"],
-    [/motorola|moto[- ]?([a-z0-9]+)/i, "Motorola"],
-    [/lg[- ]?([a-z0-9]+)/i, "LG"],
-    [/sony[- ]?([a-z0-9]+)/i, "Sony"],
-    [/htc[- ]?([a-z0-9]+)/i, "HTC"],
-    [/nokia[- ]?([a-z0-9]+)/i, "Nokia"],
+    [/\b(sm-[a-z0-9]+)/i, "Samsung"],
+    [/\bhuawei[- ]?([a-z0-9]+)/i, "Huawei"],
+    [/\bxiaomi[- ]?([a-z0-9]+)/i, "Xiaomi"],
+    [/\bredmi[- ]?([a-z0-9]+)/i, "Xiaomi", "Redmi"],
+    [/\boppo[- ]?([a-z0-9]+)/i, "OPPO"],
+    [/\bvivo[- ]?([a-z0-9]+)/i, "Vivo"],
+    [/\boneplus[- ]?([a-z0-9]+)/i, "OnePlus"],
+    [/\bpixel[- ]?(\d+)/i, "Google", "Pixel"],
+    [/\bnexus[- ]?([a-z0-9]+)/i, "Google", "Nexus"],
+    [/\b(?:motorola|moto)[- ]?([a-z0-9]+)/i, "Motorola"],
+    [/\blg[- ]?([a-z0-9]+)/i, "LG"],
+    [/\bsony[- ]?([a-z0-9]+)/i, "Sony"],
+    [/\bhtc[- ]?([a-z0-9]+)/i, "HTC"],
+    [/\bnokia[- ]?([a-z0-9]+)/i, "Nokia"],
     [/surface/i, "Microsoft", "Surface"],
     [/xbox/i, "Microsoft", "Xbox"],
     [/playstation/i, "Sony", "PlayStation"],
@@ -273,11 +203,22 @@ function parseUserAgent(ua: string): UAParseResult {
   return result;
 }
 
-/**
- * Get comprehensive device information
- * Call this in browser environment only
- */
-export function getDeviceInfo(): DeviceInfo {
+interface ConnectionInfo {
+  type?: string;
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+}
+
+interface NavigatorExtras {
+  deviceMemory?: number;
+  msMaxTouchPoints?: number;
+  connection?: ConnectionInfo;
+  mozConnection?: ConnectionInfo;
+  webkitConnection?: ConnectionInfo;
+}
+
+export function getDeviceInfo(): DeviceData {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     throw new Error("getDeviceInfo must be called in browser environment");
   }
@@ -285,21 +226,17 @@ export function getDeviceInfo(): DeviceInfo {
   const ua = navigator.userAgent;
   const parsed = parseUserAgent(ua);
 
-  // Get connection info if available
-  const connection = (navigator as any).connection ||
-    (navigator as any).mozConnection ||
-    (navigator as any).webkitConnection || null;
+  const extras = navigator as Navigator & NavigatorExtras;
+  const connection = extras.connection || extras.mozConnection || extras.webkitConnection || null;
 
-  // Get timezone
-  let timezone = "Unknown";
+  let timezone: string;
   try {
     timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
-    // Fallback if Intl is not available
+    timezone = "Unknown";
   }
 
-  // Get languages
-  let languages: string[] = [];
+  let languages: string[];
   try {
     languages = Array.from(navigator.languages || [navigator.language]);
   } catch {
@@ -307,22 +244,18 @@ export function getDeviceInfo(): DeviceInfo {
   }
 
   return {
-    // Browser
     browserName: parsed.browserName,
     browserVersion: parsed.browserVersion,
     browserEngine: parsed.browserEngine,
     browserEngineVersion: parsed.browserEngineVersion,
 
-    // OS
     osName: parsed.osName,
     osVersion: parsed.osVersion,
 
-    // Device
     deviceType: parsed.deviceType,
     deviceVendor: parsed.deviceVendor,
     deviceModel: parsed.deviceModel,
 
-    // Screen
     screenWidth: window.screen?.width || 0,
     screenHeight: window.screen?.height || 0,
     screenColorDepth: window.screen?.colorDepth || 0,
@@ -330,67 +263,32 @@ export function getDeviceInfo(): DeviceInfo {
     viewportWidth: window.innerWidth || 0,
     viewportHeight: window.innerHeight || 0,
 
-    // Locale & Time
     timezone,
     timezoneOffset: new Date().getTimezoneOffset(),
     language: navigator.language || "en",
     languages,
 
-    // Hardware
-    deviceMemory: (navigator as any).deviceMemory || null,
+    deviceMemory: extras.deviceMemory || null,
     hardwareConcurrency: navigator.hardwareConcurrency || null,
     maxTouchPoints: navigator.maxTouchPoints || 0,
     touchSupport:
       "ontouchstart" in window ||
       navigator.maxTouchPoints > 0 ||
-      (navigator as any).msMaxTouchPoints > 0,
+      (extras.msMaxTouchPoints ?? 0) > 0,
 
-    // Connection
     connectionType: connection?.type || null,
     connectionEffectiveType: connection?.effectiveType || null,
     connectionDownlink: connection?.downlink || null,
     connectionRtt: connection?.rtt || null,
 
-    // Platform
     platform: navigator.platform || "",
     vendor: navigator.vendor || "",
     cookiesEnabled: navigator.cookieEnabled,
     doNotTrack:
       navigator.doNotTrack === "1" ||
-      (window as any).doNotTrack === "1",
+      (window as Window & { doNotTrack?: string }).doNotTrack === "1",
     online: navigator.onLine,
 
-    // Bot detection
     isBot: parsed.isBot,
-  };
-}
-
-/**
- * Get a simplified device info object for inclusion in events
- * This is a lighter version for frequent event tracking
- */
-export function getDeviceInfoLight(): Pick<
-  DeviceInfo,
-  | "browserName"
-  | "browserVersion"
-  | "osName"
-  | "osVersion"
-  | "deviceType"
-  | "screenWidth"
-  | "screenHeight"
-  | "timezone"
-  | "language"
-> {
-  const full = getDeviceInfo();
-  return {
-    browserName: full.browserName,
-    browserVersion: full.browserVersion,
-    osName: full.osName,
-    osVersion: full.osVersion,
-    deviceType: full.deviceType,
-    screenWidth: full.screenWidth,
-    screenHeight: full.screenHeight,
-    timezone: full.timezone,
-    language: full.language,
   };
 }

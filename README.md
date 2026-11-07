@@ -1,130 +1,77 @@
-<div align="center">
+# Indeks SDK
 
-[![INDEKS-dark.png](https://ucarecdn.com/c5a29e25-d71b-45c0-89e0-7653eea0b7cf/INDEKSdark.svg)](https://ucarecdn.com/c5a29e25-d71b-45c0-89e0-7653eea0b7cf/INDEKSdark.svg)
+Privacy-first web analytics SDK for self-hosted [Indeks](https://github.com/ru-dr/indeks). It tracks page views, clicks, scroll depth, forms, errors, performance and more, and sends batched events to your own collector.
 
-A lightweight, modular web analytics SDK for tracking user behavior and events on your website.
+| Package | What it is |
+| --- | --- |
+| [`@indeks/core`](packages/core) | Framework-agnostic tracker (`indeks()`, `IndeksTracker`, script-tag build) |
+| [`@indeks/react`](packages/react) | `<Indeks>` provider, `useIndeks()` hook and an optional debugger |
+| [`@indeks/shared`](packages/shared) | Types, config resolution, sanitizers and device parsing used by both |
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.0-orange?style=flat-square&logo=bun)](https://bun.sh)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+More documentation: [collector protocol](docs/protocol.md), [event reference](docs/events.md), [changelog](CHANGELOG.md), [contributing](CONTRIBUTING.md), [security policy](SECURITY.md).
 
-</div>
-
-## Installation
-
-### From npm
+## Quick start
 
 ```bash
-npm install @indeks/core @indeks/react
+npm install @indeks/core
 ```
 
-### From GitHub Packages
+```ts
+import { indeks } from "@indeks/core";
 
-```bash
-npm install @indeks/core@npm:@indeks/core@github:ru-dr/indeks-sdk
-npm install @indeks/react@npm:@indeks/react@github:ru-dr/indeks-sdk
-```
-
-Or using bun:
-
-```bash
-bun add @indeks/core @indeks/react
-```
-
-## Usage
-
-### Vanilla TypeScript
-
-```typescript
-import indeks from "@indeks/core";
-const tracker = indeks("api_key", true);
-```
-
-### React
-
-```tsx
-import { Indeks, useIndeks } from "@indeks/react";
-
-export default function App() {
-  return (
-    <Indeks apiKey="api_key" enableConsoleLogging>
-      <Dashboard />
-    </Indeks>
-  );
-}
-```
-
-## Configuration
-
-```typescript
-import indeks from "@indeks/core";
-
-const tracker = indeks("api_key", true, {
-  // Event capture
-  captureClicks: true,
-  captureScrolls: true,
-  capturePageViews: true,
-  captureFormSubmissions: true,
-  captureErrors: true,
-  captureResizes: true,
-
-  // Privacy controls
-  captureKeystrokes: false,
-  captureMouseMovements: false,
-
-  // Performance
-  debounceMs: 100,
-
-  // Development
-  enableConsoleLogging: true,
+const tracker = indeks("YOUR_PROJECT_KEY", {
+  endpoint: "https://analytics.example.com/api/v1/collect",
 });
 
-// Runtime controls
-tracker.updateConfig({ captureKeystrokes: true });
-tracker.getEvents(); // Retrieve captured events
-tracker.clearEvents(); // Clear event queue
-tracker.destroy(); // Cleanup listeners
+tracker.track("signup", { plan: "pro" });
+tracker.identify("user-42", { plan: "pro" });
 ```
 
-## Packages
+There is no default server: `endpoint` is required for events to be sent. React users should read the [`@indeks/react`](packages/react) README.
 
-```
-@indeks/core      # Core tracking engine
-@indeks/react     # React hooks & provider
-@indeks/shared    # Shared types & utilities
-```
+## Browser support
+
+The packages target ES2020, which means Chrome and Edge 80+, Firefox 78+ and Safari 13.1+. Browser APIs that are not everywhere degrade gracefully: if a collector's API is missing (for example Event Timing, the Page Lifecycle API or the Network Information API), that collector does nothing and the rest keep working. End-to-end tests run against current Chromium, Firefox and WebKit in CI.
+
+Bundle size (gzipped): the script-tag build is about 23 kB, and CI fails if it exceeds 24 kB.
+
+## Design
+
+- **Collectors.** Every kind of event is an independent collector (`click`, `scrollDepth`, `performance`, ...). Choose a preset (`minimal`, `standard`, `full`) and override single collectors.
+- **Privacy by default.** URLs are scrubbed (fragments, credentials and sensitive query values removed), free text is redacted for emails, card numbers and tokens, form values are never sent unless enabled, and Do Not Track / Global Privacy Control are honored.
+- **Simple requests.** Events are posted as `text/plain` with the key in the body, so browsers send no CORS preflight, and `sendBeacon` is used on page exit.
+- **Small payloads.** Device details are sent once with `session_start`, not with every event.
+
+## Migrating from 1.x
+
+| 1.x | 2.x |
+| --- | --- |
+| `indeks(key, true, config)` | `indeks(key, { debug: true, ...config })` |
+| `captureClicks: false`, `captureXxx` flags | `collectors: { click: false }` or `preset` |
+| `captureFormValues`, `captureClipboardText`, `captureSearchTerms`, `useFingerprint`, `respectDoNotTrack` | `privacy: { formValues, clipboardText, searchTerms, fingerprint, respectDoNotTrack }` |
+| `enableConsoleLogging` | `debug` |
+| `tracker.track({ selectors })` | `tracker.trackElements({ selectors })`; `tracker.track(name, props)` sends a custom event |
+| `import { IndeksDebugger } from "@indeks/react"` | `import { IndeksDebugger } from "@indeks/react/debugger"` |
+| Event types `ClickEvent`, `ErrorEvent`, ... | `IndeksClickEvent`, `IndeksErrorEvent`, ... |
+| `device` on every event | `device` on `session_start` only |
+| `field` focus events `focus` / `blur` | `field_focus` / `field_blur` (window `focus` / `blur` unchanged) |
+| `outbound_link.url` | `outbound_link.targetUrl` |
+| `first_input_delay`, `time_to_interactive` | `interaction_to_next_paint` |
+| Auto-send to `localhost:3000` | Removed, set `endpoint` |
 
 ## Development
 
 ```bash
-# Install dependencies
 bun install
-
-# Build all packages
-bun run build:all
-
-# Build specific package
-bun run build:core
-bun run build:react
-
-# Development mode
-bun run dev
+bun run build:all   # shared -> core -> react
+bun run typecheck
+bun test            # happy-dom based unit tests
+bun run e2e         # real-browser tests (Chromium, Firefox, WebKit) against a local collector
+bun run release minor --dry-run
 ```
 
-## Event Schema
+Requires Bun 1.1 or newer. Releases are created with `scripts/release.ts`, which bumps all packages, commits and tags; the publish workflow runs when the commit message contains `[publish]`.
 
-```typescript
-interface ClickEvent {
-  type: "click";
-  timestamp: number;
-  element: { tagName: string; id: string; className: string };
-  coordinates: { x: number; y: number };
-  sessionId: string;
-}
+## License
 
-// ScrollEvent, PageViewEvent, FormSubmitEvent, ErrorEvent...
-```
-
-## Privacy
-
-Auto-excludes passwords and sensitive data. Events stored client-side by default.
+MIT

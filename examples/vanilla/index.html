@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Indeks script-tag example</title>
+    <script src="/indeks.global.js" data-indeks-global></script>
+    <script>
+      window.tracker = indeks("example_project_key", {
+        endpoint: "/collect",
+        debug: true,
+      });
+    </script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 40rem;
+        margin: 2rem auto;
+      }
+      .spacer {
+        height: 120vh;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Script tag</h1>
+    <p>Open the server console to watch events arrive.</p>
+    <button id="buy" type="button">Buy now</button>
+    <button id="signup" type="button">Sign up</button>
+    <a href="https://example.org/docs">External link</a>
+    <div class="spacer"></div>
+    <script>
+      document.getElementById("signup").addEventListener("click", () => {
+        window.tracker.track("signup_clicked", { plan: "pro" });
+        window.tracker.identify("demo-user", { plan: "pro" });
+      });
+    </script>
+  </body>
+</html>

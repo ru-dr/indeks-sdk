@@ -1,5 +1,5 @@
 {
-  "name": "indeks",
+  "name": "indeks-sdk",
   "version": "1.1.0",
   "description": "A lightweight, modular web analytics SDK for tracking user behavior and events on your website.",
   "private": true,
@@ -14,9 +14,21 @@
     "build:all": "bun run build:shared && bun run build:core && bun run build:react",
     "dev": "bun run dev:core",
     "dev:core": "cd packages/core && bun run dev",
-    "clean": "rimraf packages/*/dist",
-    "lint": "echo 'Linting - Coming Soon'",
-    "test": "echo 'Testing - Coming Soon'"
+    "clean": "node -e \"for (const p of ['shared','core','react']) require('node:fs').rmSync('packages/'+p+'/dist',{recursive:true,force:true})\"",
+    "lint": "eslint .",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit && bun run --filter \"./packages/*\" typecheck",
+    "release": "bun scripts/release.ts",
+    "e2e": "bun run build:all && playwright test",
+    "check:packages": "bun run build:all && bun run --filter \"./packages/*\" check:package",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs:events": "bun scripts/generate-event-docs.ts",
+    "docs:check": "bun scripts/generate-event-docs.ts --check",
+    "size": "bun scripts/check-size.ts",
+    "examples:build": "bun build examples/react/main.tsx --outfile examples/react/dist/app.js --target browser --format esm --minify --define process.env.NODE_ENV=\\\"production\\\"",
+    "examples": "bun run examples:build && bun examples/server.ts",
+    "e2e:container": "podman run --rm --ipc=host --security-opt label=disable -v \"$PWD\":/work:ro -w /work mcr.microsoft.com/playwright:v1.65.0-noble npx playwright test e2e/smoke.e2e.ts --output=/tmp/pw-out"
   },
   "repository": {
     "type": "git",
@@ -36,19 +48,28 @@
     "vue",
     "monorepo"
   ],
-  "author": "Team indeksModular",
+  "author": "Indeks contributors",
   "license": "MIT",
   "devDependencies": {
-    "@fingerprintjs/fingerprintjs": "^5.0.1",
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@eslint/js": "^10.0.1",
+    "@happy-dom/global-registrator": "^21.0.4",
+    "@playwright/test": "1.65.0",
+    "@types/bun": "^1.4.4",
     "@types/node": "^24.10.1",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "happy-dom": "^21.0.4",
+    "prettier": "^3.9.10",
+    "publint": "^0.3.25",
+    "tsup": "^9.0.0",
     "typescript": "^5.9.3",
-    "rimraf": "^6.1.2"
+    "typescript-eslint": "^8.72.1"
   },
   "engines": {
     "node": ">=16.0.0",
     "bun": ">=1.0.0"
   },
-  "dependencies": {
-    "lucide-react": "^0.553.0"
-  }
+  "type": "module"
 }

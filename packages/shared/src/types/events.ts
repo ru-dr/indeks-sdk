@@ -1,20 +1,22 @@
+export interface ElementRef {
+  tagName: string;
+  className: string;
+  id: string;
+}
+
 export interface DeviceData {
-  // Browser
   browserName: string;
   browserVersion: string;
   browserEngine: string;
   browserEngineVersion: string;
 
-  // OS
   osName: string;
   osVersion: string;
 
-  // Device
   deviceType: "mobile" | "tablet" | "desktop";
   deviceVendor: string;
   deviceModel: string;
 
-  // Screen
   screenWidth: number;
   screenHeight: number;
   screenColorDepth: number;
@@ -22,36 +24,31 @@ export interface DeviceData {
   viewportWidth: number;
   viewportHeight: number;
 
-  // Locale & Time
   timezone: string;
   timezoneOffset: number;
   language: string;
   languages: string[];
 
-  // Hardware
   deviceMemory: number | null;
   hardwareConcurrency: number | null;
   maxTouchPoints: number;
   touchSupport: boolean;
 
-  // Connection
   connectionType: string | null;
   connectionEffectiveType: string | null;
   connectionDownlink: number | null;
   connectionRtt: number | null;
 
-  // Platform
   platform: string;
   vendor: string;
   cookiesEnabled: boolean;
   doNotTrack: boolean;
   online: boolean;
 
-  // Bot detection
   isBot: boolean;
 }
 
-export interface BaseEvent {
+export interface IndeksBaseEvent {
   type: string;
   timestamp: number;
   url: string;
@@ -59,15 +56,12 @@ export interface BaseEvent {
   sessionId: string;
   userId: string;
   referrer?: string;
-  device: DeviceData;
+  externalUserId?: string;
 }
 
-export interface ClickEvent extends BaseEvent {
+export interface IndeksClickEvent extends IndeksBaseEvent {
   type: "click";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     textContent: string;
     attributes: Record<string, string>;
   };
@@ -79,7 +73,7 @@ export interface ClickEvent extends BaseEvent {
   };
 }
 
-export interface ScrollEvent extends BaseEvent {
+export interface IndeksScrollEvent extends IndeksBaseEvent {
   type: "scroll";
   scrollPosition: {
     x: number;
@@ -90,42 +84,42 @@ export interface ScrollEvent extends BaseEvent {
   scrollPercentage: number;
 }
 
-export interface PageViewEvent extends BaseEvent {
+export interface IndeksPageViewEvent extends IndeksBaseEvent {
   type: "pageview";
   title: string;
   referrer: string;
+  name?: string;
+  properties?: Record<string, unknown>;
 }
 
-export interface FormSubmitEvent extends BaseEvent {
+export interface IndeksFormSubmitEvent extends IndeksBaseEvent {
   type: "form_submit";
+
   formData: Record<string, string>;
+
+  formValuesCaptured?: boolean;
   formAction: string;
   formMethod: string;
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element: ElementRef;
 }
 
-export interface KeystrokeEvent extends BaseEvent {
+export interface IndeksKeystrokeEvent extends IndeksBaseEvent {
   type: "keystroke";
-  key: string;
-  code: string;
+
+  key?: string;
+  keyCategory: "printable" | "navigation" | "modifier" | "whitespace";
+  code?: string;
   ctrlKey: boolean;
   shiftKey: boolean;
   altKey: boolean;
   metaKey: boolean;
-  target: {
-    tagName: string;
-    className: string;
-    id: string;
+  target: ElementRef & {
     type?: string;
     name?: string;
   };
 }
 
-export interface MouseMoveEvent extends BaseEvent {
+export interface IndeksMouseMoveEvent extends IndeksBaseEvent {
   type: "mousemove";
   coordinates: {
     x: number;
@@ -135,7 +129,7 @@ export interface MouseMoveEvent extends BaseEvent {
   };
 }
 
-export interface ResizeEvent extends BaseEvent {
+export interface IndeksResizeEvent extends IndeksBaseEvent {
   type: "resize";
   dimensions: {
     width: number;
@@ -145,7 +139,7 @@ export interface ResizeEvent extends BaseEvent {
   };
 }
 
-export interface ErrorEvent extends BaseEvent {
+export interface IndeksErrorEvent extends IndeksBaseEvent {
   type: "error";
   error: {
     message: string;
@@ -156,24 +150,23 @@ export interface ErrorEvent extends BaseEvent {
   };
 }
 
-// Navigation & Page Events
-export interface BeforeUnloadEvent extends BaseEvent {
+export interface IndeksBeforeUnloadEvent extends IndeksBaseEvent {
   type: "beforeunload";
   timeOnPage: number;
 }
 
-export interface VisibilityChangeEvent extends BaseEvent {
+export interface IndeksVisibilityChangeEvent extends IndeksBaseEvent {
   type: "visibilitychange";
   visibilityState: "visible" | "hidden";
   hidden: boolean;
 }
 
-export interface WindowFocusEvent extends BaseEvent {
+export interface IndeksWindowFocusEvent extends IndeksBaseEvent {
   type: "focus" | "blur";
   hasFocus: boolean;
 }
 
-export interface HashChangeEvent extends BaseEvent {
+export interface IndeksHashChangeEvent extends IndeksBaseEvent {
   type: "hashchange";
   oldURL: string;
   newURL: string;
@@ -181,31 +174,23 @@ export interface HashChangeEvent extends BaseEvent {
   newHash: string;
 }
 
-export interface PopStateEvent extends BaseEvent {
+export interface IndeksPopStateEvent extends IndeksBaseEvent {
   type: "popstate";
-  state: any;
+  hasState: boolean;
 }
 
-// Mouse & Touch Events
-export interface MouseHoverEvent extends BaseEvent {
+export interface IndeksMouseHoverEvent extends IndeksBaseEvent {
   type: "mouseenter" | "mouseleave";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element: ElementRef;
   coordinates: {
     x: number;
     y: number;
   };
 }
 
-export interface ContextMenuEvent extends BaseEvent {
+export interface IndeksContextMenuEvent extends IndeksBaseEvent {
   type: "contextmenu";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     textContent: string;
   };
   coordinates: {
@@ -214,12 +199,9 @@ export interface ContextMenuEvent extends BaseEvent {
   };
 }
 
-export interface DoubleClickEvent extends BaseEvent {
+export interface IndeksDoubleClickEvent extends IndeksBaseEvent {
   type: "dblclick";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     textContent: string;
   };
   coordinates: {
@@ -228,22 +210,18 @@ export interface DoubleClickEvent extends BaseEvent {
   };
 }
 
-export interface MousePressEvent extends BaseEvent {
+export interface IndeksMousePressEvent extends IndeksBaseEvent {
   type: "mousedown" | "mouseup";
   button: number;
   buttons: number;
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element: ElementRef;
   coordinates: {
     x: number;
     y: number;
   };
 }
 
-export interface WheelEvent extends BaseEvent {
+export interface IndeksWheelEvent extends IndeksBaseEvent {
   type: "wheel";
   deltaX: number;
   deltaY: number;
@@ -255,7 +233,7 @@ export interface WheelEvent extends BaseEvent {
   };
 }
 
-export interface TouchEvent extends BaseEvent {
+export interface IndeksTouchEvent extends IndeksBaseEvent {
   type: "touchstart" | "touchend" | "touchmove";
   touches: Array<{
     identifier: number;
@@ -263,89 +241,71 @@ export interface TouchEvent extends BaseEvent {
     clientY: number;
     force?: number;
   }>;
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element: ElementRef;
 }
 
-export interface DragDropEvent extends BaseEvent {
+export interface IndeksDragDropEvent extends IndeksBaseEvent {
   type: "dragstart" | "dragend" | "drop";
   dataTransfer?: {
     dropEffect: string;
     effectAllowed: string;
     types: string[];
   };
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element: ElementRef;
   coordinates: {
     x: number;
     y: number;
   };
 }
 
-// Input & Form Events
-export interface InputChangeEvent extends BaseEvent {
+export interface IndeksInputChangeEvent extends IndeksBaseEvent {
   type: "input" | "change";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     type: string;
     name: string;
-    value: string;
+
+    value?: string;
+    valueLength: number;
   };
   inputType?: string;
 }
 
-export interface FieldFocusEvent extends BaseEvent {
-  type: "focus" | "blur";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+export interface IndeksFieldFocusEvent extends IndeksBaseEvent {
+  type: "field_focus" | "field_blur";
+  element: ElementRef & {
     type: string;
     name: string;
   };
 }
 
-export interface ClipboardEvent extends BaseEvent {
+export interface IndeksClipboardEvent extends IndeksBaseEvent {
   type: "copy" | "paste" | "cut";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     type?: string;
     name?: string;
   };
-  text?: string; // Only for copy/cut, not paste for privacy
+
+  text?: string;
+
+  textLength?: number;
 }
 
-export interface TextSelectionEvent extends BaseEvent {
+export interface IndeksTextSelectionEvent extends IndeksBaseEvent {
   type: "selectionchange";
-  selectedText: string;
+
+  selectedText?: string;
+  selectedTextLength: number;
   selectionStart: number;
   selectionEnd: number;
-  element?: {
-    tagName: string;
-    className: string;
-    id: string;
+  element?: ElementRef & {
     type?: string;
     name?: string;
   };
 }
 
-// Media Events
-export interface MediaEvent extends BaseEvent {
+export interface IndeksMediaEvent extends IndeksBaseEvent {
   type: "play" | "pause" | "volumechange" | "seeking" | "seeked" | "ended";
-  element: {
-    tagName: string;
-    className: string;
-    id: string;
+  element: ElementRef & {
     src: string;
     currentTime: number;
     duration: number;
@@ -354,47 +314,34 @@ export interface MediaEvent extends BaseEvent {
   };
 }
 
-// Network & Performance Events
-export interface NetworkStatusEvent extends BaseEvent {
+export interface IndeksNetworkStatusEvent extends IndeksBaseEvent {
   type: "online" | "offline";
   isOnline: boolean;
   connectionType?: string;
 }
 
-export interface PageLoadEvent extends BaseEvent {
+export interface IndeksPageLoadEvent extends IndeksBaseEvent {
   type: "load" | "DOMContentLoaded";
   loadTime?: number;
   domInteractive?: number;
   domComplete?: number;
 }
 
-// UI Interaction Events
-export interface FullscreenChangeEvent extends BaseEvent {
+export interface IndeksFullscreenChangeEvent extends IndeksBaseEvent {
   type: "fullscreenchange";
   isFullscreen: boolean;
-  element?: {
-    tagName: string;
-    className: string;
-    id: string;
-  };
+  element?: ElementRef;
 }
 
-// Session Events
-export interface SessionStartEvent extends BaseEvent {
+export interface IndeksSessionStartEvent extends IndeksBaseEvent {
   type: "session_start";
+  device: DeviceData;
   referrer: string;
   referrerDomain: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
-  trafficSource:
-    | "organic"
-    | "direct"
-    | "social"
-    | "referral"
-    | "paid"
-    | "email"
-    | "other";
+  trafficSource: "organic" | "direct" | "social" | "referral" | "paid" | "email" | "other";
   landingPage: string;
   isMobile: boolean;
   isTablet: boolean;
@@ -404,7 +351,7 @@ export interface SessionStartEvent extends BaseEvent {
   daysSinceLastVisit?: number;
 }
 
-export interface SessionEndEvent extends BaseEvent {
+export interface IndeksSessionEndEvent extends IndeksBaseEvent {
   type: "session_end";
   sessionDuration: number;
   activeTime: number;
@@ -413,15 +360,16 @@ export interface SessionEndEvent extends BaseEvent {
   totalClicks: number;
   totalScrolls: number;
   exitPage: string;
-  exitType: "navigation" | "tab_close" | "timeout" | "refresh";
+  exitType: "navigation" | "tab_close" | "timeout" | "refresh" | "reset";
   converted: boolean;
   bounce: boolean;
 }
 
-// Search Events
-export interface SearchEvent extends BaseEvent {
+export interface IndeksSearchEvent extends IndeksBaseEvent {
   type: "search";
-  query: string;
+
+  query?: string;
+  queryLength: number;
   resultsCount: number;
   searchLocation: "header" | "sidebar" | "page" | "mobile" | "other";
   filtersApplied?: Record<string, string>;
@@ -430,54 +378,52 @@ export interface SearchEvent extends BaseEvent {
   resultPositionClicked?: number[];
   timeToFirstClick?: number;
   isRefinement: boolean;
+
   previousQuery?: string;
   searchSource?: "direct" | "autocomplete" | "suggestion" | "voice";
 }
 
-// Rage/Frustration Events
-export interface RageClickEvent extends BaseEvent {
+export interface IndeksRageClickEvent extends IndeksBaseEvent {
   type: "rage_click";
-  element: string; // CSS selector
+  element: string;
   clicksInTimeframe: number;
-  timeframe: number; // seconds
+  timeframe: number;
   whyRage: "button_disabled" | "loading" | "no_response" | "error" | "other";
   timeOnPage: number;
-  userGaveUp: boolean;
   elementVisibleTime?: number;
 }
 
-export interface DeadClickEvent extends BaseEvent {
+export interface IndeksDeadClickEvent extends IndeksBaseEvent {
   type: "dead_click";
-  element: string; // CSS selector
+  element: string;
   expectedBehavior: "navigate" | "submit" | "expand" | "close" | "other";
   actualBehavior: "none" | "error" | "redirect" | "other";
-  elementVisibleTime: number;
+
+  elementVisibleTime?: number;
   previousClicksOnElement: number;
 }
 
-export interface ErrorClickEvent extends BaseEvent {
+export interface IndeksErrorClickEvent extends IndeksBaseEvent {
   type: "error_click";
-  element: string; // CSS selector
+  element: string;
   errorMessage: string;
   errorType: "validation" | "network" | "javascript" | "timeout" | "other";
   userContinued: boolean;
   timeToError: number;
 }
 
-// Download Events
-export interface FileDownloadEvent extends BaseEvent {
+export interface IndeksFileDownloadEvent extends IndeksBaseEvent {
   type: "file_download";
   fileName: string;
   fileType: string;
-  fileSize: number; // bytes
+  fileSize: number;
   downloadSource: "link" | "button" | "auto" | "programmatic";
   downloadUrl?: string;
   timeOnPageBeforeDownload: number;
-  downloadSpeed?: number; // bytes per second
+  downloadSpeed?: number;
 }
 
-// Print Events
-export interface PrintEvent extends BaseEvent {
+export interface IndeksPrintEvent extends IndeksBaseEvent {
   type: "print";
   pagePrinted: string;
   timeOnPageBeforePrint: number;
@@ -485,8 +431,7 @@ export interface PrintEvent extends BaseEvent {
   pagesPrinted?: number;
 }
 
-// Share Events
-export interface ShareEvent extends BaseEvent {
+export interface IndeksShareEvent extends IndeksBaseEvent {
   type: "share";
   shareMethod:
     | "copy_link"
@@ -497,14 +442,13 @@ export interface ShareEvent extends BaseEvent {
     | "whatsapp"
     | "native_share"
     | "other";
-  contentShared: string; // URL, product ID, or content identifier
+  contentShared: string;
   shareLocation: "product_page" | "article" | "cart" | "checkout" | "other";
   shareText?: string;
   shareUrl?: string;
 }
 
-// Page Leave Event
-export interface PageLeaveEvent extends BaseEvent {
+export interface IndeksPageLeaveEvent extends IndeksBaseEvent {
   type: "pageleave";
   timeOnPage: number;
   scrollDepth: number;
@@ -512,15 +456,13 @@ export interface PageLeaveEvent extends BaseEvent {
   engaged: boolean;
 }
 
-// Scroll Depth Event
-export interface ScrollDepthEvent extends BaseEvent {
+export interface IndeksScrollDepthEvent extends IndeksBaseEvent {
   type: "scroll_depth";
   depth: 25 | 50 | 75 | 100;
   timeToDepth: number;
 }
 
-// Form Events
-export interface FormAbandonEvent extends BaseEvent {
+export interface IndeksFormAbandonEvent extends IndeksBaseEvent {
   type: "form_abandon";
   formId: string;
   fieldsCompleted: number;
@@ -529,7 +471,7 @@ export interface FormAbandonEvent extends BaseEvent {
   lastField: string;
 }
 
-export interface FormErrorEvent extends BaseEvent {
+export interface IndeksFormErrorEvent extends IndeksBaseEvent {
   type: "form_error";
   formId: string;
   field: string;
@@ -537,42 +479,36 @@ export interface FormErrorEvent extends BaseEvent {
   errorMessage: string;
 }
 
-// Idle Events
-export interface IdleEvent extends BaseEvent {
+export interface IndeksIdleEvent extends IndeksBaseEvent {
   type: "idle_start" | "idle_end";
   idleDuration?: number;
 }
 
-// Tab Focus Events
-export interface TabFocusEvent extends BaseEvent {
+export interface IndeksTabFocusEvent extends IndeksBaseEvent {
   type: "tab_focus" | "tab_blur";
   timeAway?: number;
 }
 
-// Page Lifecycle Events
-export interface PageLifecycleEvent extends BaseEvent {
+export interface IndeksPageLifecycleEvent extends IndeksBaseEvent {
   type: "page_freeze" | "page_resume";
 }
 
-// Outbound Link Event
-export interface OutboundLinkEvent extends BaseEvent {
+export interface IndeksOutboundLinkEvent extends IndeksBaseEvent {
   type: "outbound_link";
-  url: string;
+  targetUrl: string;
   domain: string;
   linkText: string;
   openInNewTab: boolean;
 }
 
-// Resource Error Event
-export interface ResourceErrorEvent extends BaseEvent {
+export interface IndeksResourceErrorEvent extends IndeksBaseEvent {
   type: "resource_error";
   resourceType: "img" | "script" | "style" | "font" | "other";
   resourceUrl: string;
   errorMessage: string;
 }
 
-// Media Progress Events
-export interface MediaProgressEvent extends BaseEvent {
+export interface IndeksMediaProgressEvent extends IndeksBaseEvent {
   type: "video_progress" | "audio_progress";
   progress: 25 | 50 | 75 | 100;
   currentTime: number;
@@ -580,109 +516,94 @@ export interface MediaProgressEvent extends BaseEvent {
   mediaUrl: string;
 }
 
-// Device Events
-export interface OrientationChangeEvent extends BaseEvent {
+export interface IndeksOrientationChangeEvent extends IndeksBaseEvent {
   type: "orientation_change";
   orientation: "portrait" | "landscape";
   angle: number;
 }
 
-export interface NetworkChangeEvent extends BaseEvent {
+export interface IndeksNetworkChangeEvent extends IndeksBaseEvent {
   type: "network_change";
   effectiveType: "slow-2g" | "2g" | "3g" | "4g" | "unknown";
   downlink?: number;
   rtt?: number;
 }
 
-// Performance Events
-export interface PerformanceEvent extends BaseEvent {
+export interface IndeksPerformanceEvent extends IndeksBaseEvent {
   type:
     | "first_contentful_paint"
     | "largest_contentful_paint"
-    | "first_input_delay"
+    | "interaction_to_next_paint"
     | "cumulative_layout_shift"
-    | "time_to_interactive"
     | "time_to_first_byte";
   value: number;
   rating?: "good" | "needs-improvement" | "poor";
 }
 
-// Manual/Custom Events
-export interface CustomEvent extends BaseEvent {
+export interface IndeksCustomEvent extends IndeksBaseEvent {
   type: "custom";
   eventName: string;
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
   category?: string;
   value?: number;
   label?: string;
 }
 
+export interface IndeksIdentifyEvent extends IndeksBaseEvent {
+  type: "identify";
+  traits: Record<string, unknown>;
+}
+
 export type IndeksEvent =
-  | ClickEvent
-  | ScrollEvent
-  | PageViewEvent
-  | FormSubmitEvent
-  | KeystrokeEvent
-  | MouseMoveEvent
-  | ResizeEvent
-  | ErrorEvent
-  // Navigation & Page Events
-  | PageLeaveEvent
-  | BeforeUnloadEvent
-  | VisibilityChangeEvent
-  | WindowFocusEvent
-  | HashChangeEvent
-  | PopStateEvent
-  | PageLifecycleEvent
-  // Mouse & Touch Events
-  | MouseHoverEvent
-  | ContextMenuEvent
-  | DoubleClickEvent
-  | MousePressEvent
-  | WheelEvent
-  | TouchEvent
-  | DragDropEvent
-  // Input & Form Events
-  | InputChangeEvent
-  | FieldFocusEvent
-  | ClipboardEvent
-  | TextSelectionEvent
-  | FormAbandonEvent
-  | FormErrorEvent
-  // Scroll Events
-  | ScrollDepthEvent
-  // Media Events
-  | MediaEvent
-  | MediaProgressEvent
-  // Network & Performance Events
-  | NetworkStatusEvent
-  | NetworkChangeEvent
-  | PageLoadEvent
-  | PerformanceEvent
-  // UI Interaction Events
-  | FullscreenChangeEvent
-  // Session Events
-  | SessionStartEvent
-  | SessionEndEvent
-  | IdleEvent
-  | TabFocusEvent
-  // Search Events
-  | SearchEvent
-  // Rage/Frustration Events
-  | RageClickEvent
-  | DeadClickEvent
-  | ErrorClickEvent
-  // Download Events
-  | FileDownloadEvent
-  // Print Events
-  | PrintEvent
-  // Share Events
-  | ShareEvent
-  // Link Events
-  | OutboundLinkEvent
-  // Error Events
-  | ResourceErrorEvent
-  // Device Events
-  | OrientationChangeEvent
-  // Manual/Custom Events
-  | CustomEvent;
+  | IndeksClickEvent
+  | IndeksScrollEvent
+  | IndeksPageViewEvent
+  | IndeksFormSubmitEvent
+  | IndeksKeystrokeEvent
+  | IndeksMouseMoveEvent
+  | IndeksResizeEvent
+  | IndeksErrorEvent
+  | IndeksPageLeaveEvent
+  | IndeksBeforeUnloadEvent
+  | IndeksVisibilityChangeEvent
+  | IndeksWindowFocusEvent
+  | IndeksHashChangeEvent
+  | IndeksPopStateEvent
+  | IndeksPageLifecycleEvent
+  | IndeksMouseHoverEvent
+  | IndeksContextMenuEvent
+  | IndeksDoubleClickEvent
+  | IndeksMousePressEvent
+  | IndeksWheelEvent
+  | IndeksTouchEvent
+  | IndeksDragDropEvent
+  | IndeksInputChangeEvent
+  | IndeksFieldFocusEvent
+  | IndeksClipboardEvent
+  | IndeksTextSelectionEvent
+  | IndeksFormAbandonEvent
+  | IndeksFormErrorEvent
+  | IndeksScrollDepthEvent
+  | IndeksMediaEvent
+  | IndeksMediaProgressEvent
+  | IndeksNetworkStatusEvent
+  | IndeksNetworkChangeEvent
+  | IndeksPageLoadEvent
+  | IndeksPerformanceEvent
+  | IndeksFullscreenChangeEvent
+  | IndeksSessionStartEvent
+  | IndeksSessionEndEvent
+  | IndeksIdleEvent
+  | IndeksTabFocusEvent
+  | IndeksSearchEvent
+  | IndeksRageClickEvent
+  | IndeksDeadClickEvent
+  | IndeksErrorClickEvent
+  | IndeksFileDownloadEvent
+  | IndeksPrintEvent
+  | IndeksShareEvent
+  | IndeksOutboundLinkEvent
+  | IndeksResourceErrorEvent
+  | IndeksOrientationChangeEvent
+  | IndeksCustomEvent
+  | IndeksIdentifyEvent;
