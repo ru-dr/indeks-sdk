@@ -2,13 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,11 +11,13 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
+    "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@indeks/shared": ["../shared/src/index.ts"],
+      "@indeks/core": ["../core/src/index.ts"]
+    },
+    "types": ["bun"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*", "../../test/globals.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
