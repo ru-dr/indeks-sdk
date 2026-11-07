@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { STORAGE_KEYS } from "@indeks/shared";
-import type { IndeksEvent } from "@indeks/shared";
+import { STORAGE_KEYS } from "@useindeks/shared";
+import type { IndeksEvent } from "@useindeks/shared";
 import { exposeGlobals, indeks } from "../src";
 import type { IndeksTracker } from "../src";
 import { LocalStorageAdapter } from "../src/storage";

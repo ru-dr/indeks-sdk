@@ -1,5 +1,5 @@
 {
-  "name": "@indeks/core",
+  "name": "@useindeks/core",
   "version": "2.0.0",
   "description": "Core browser event tracking library with user behavior analytics",
   "main": "./dist/index.cjs",
@@ -42,7 +42,7 @@
   "author": "Indeks contributors",
   "license": "MIT",
   "dependencies": {
-    "@indeks/shared": "workspace:*"
+    "@useindeks/shared": "workspace:*"
   },
   "devDependencies": {
     "@thumbmarkjs/thumbmarkjs": "^1.12.0",

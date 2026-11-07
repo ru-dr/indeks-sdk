@@ -13,8 +13,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "paths": {
-      "@indeks/shared": ["../shared/src/index.ts"],
-      "@indeks/core": ["../core/src/index.ts"]
+      "@useindeks/shared": ["../shared/src/index.ts"],
+      "@useindeks/core": ["../core/src/index.ts"]
     },
     "types": ["bun"]
   },

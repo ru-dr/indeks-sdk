@@ -1,5 +1,5 @@
 {
-  "name": "@indeks/react",
+  "name": "@useindeks/react",
   "version": "2.0.0",
   "description": "React hooks and components for Indeks analytics SDK",
   "main": "./dist/index.cjs",
@@ -55,8 +55,8 @@
     "react": "^19.2.0"
   },
   "dependencies": {
-    "@indeks/core": "workspace:*",
-    "@indeks/shared": "workspace:*"
+    "@useindeks/core": "workspace:*",
+    "@useindeks/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

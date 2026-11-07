@@ -10,7 +10,7 @@ import type {
   IndeksSessionEndEvent as SessionEndEvent,
   IndeksSessionStartEvent as SessionStartEvent,
   IndeksShareEvent as ShareEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import { IndeksTracker } from "../src";
 import { API_KEY, click, createTracker, eventsOfType, html, resetBrowser, sleep } from "./helpers";
 

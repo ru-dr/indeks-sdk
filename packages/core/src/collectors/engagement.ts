@@ -5,7 +5,7 @@ import type {
   IndeksResizeEvent,
   IndeksScrollDepthEvent,
   IndeksScrollEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector } from "../context";
 import { describeElement, getScrollMetrics } from "../dom";
 

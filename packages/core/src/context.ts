@@ -5,7 +5,7 @@ import type {
   IndeksEvent,
   Logger,
   ResolvedConfig,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Hub } from "./hub";
 import type { Lifecycle, PageState } from "./lifecycle";
 import type { SessionManager } from "./session";

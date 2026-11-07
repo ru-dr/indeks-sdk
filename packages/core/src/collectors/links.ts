@@ -1,10 +1,10 @@
-import { scrubUrl } from "@indeks/shared";
+import { scrubUrl } from "@useindeks/shared";
 import type {
   IndeksFileDownloadEvent,
   IndeksOutboundLinkEvent,
   IndeksPrintEvent,
   IndeksShareEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 import { getClassName, isMasked, isSameSite, normalizeText, toElement } from "../dom";
 

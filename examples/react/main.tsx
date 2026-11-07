@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
-import { Indeks, useIndeks } from "@indeks/react";
-import { IndeksDebugger } from "@indeks/react/debugger";
+import { Indeks, useIndeks } from "@useindeks/react";
+import { IndeksDebugger } from "@useindeks/react/debugger";
 
 function Page() {
   const { track, identify, sessionId } = useIndeks();

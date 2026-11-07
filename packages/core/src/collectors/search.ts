@@ -1,5 +1,5 @@
-import { STORAGE_KEYS, sanitizeUserInput } from "@indeks/shared";
-import type { IndeksSearchEvent } from "@indeks/shared";
+import { STORAGE_KEYS, sanitizeUserInput } from "@useindeks/shared";
+import type { IndeksSearchEvent } from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 
 type SearchSettings = CollectorContext["config"]["collectorOptions"]["search"];

@@ -17,7 +17,7 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Transport as a CORS simple request (`text/plain`, key in the body) with retry and backoff, offline buffering and `sendBeacon` on exit.
 - Real session handling: 30 minute timeout, persisted counters, active time.
 - Real INP, LCP, CLS, FCP and TTFB reporting.
-- `@indeks/react`: `track`, `identify` and `page` on `useIndeks()`, and the debugger in its own entry point, `@indeks/react/debugger`.
+- `@useindeks/react`: `track`, `identify` and `page` on `useIndeks()`, and the debugger in its own entry point, `@useindeks/react/debugger`.
 - Script-tag build `indeks.global.js`.
 - Documentation: collector protocol, generated event reference.
 - Tooling: unit tests, real-browser tests (Chromium, Firefox, WebKit), ESLint, Prettier, `publint` and `attw` checks.

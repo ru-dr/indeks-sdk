@@ -1,4 +1,4 @@
-import type { CollectorName } from "@indeks/shared";
+import type { CollectorName } from "@useindeks/shared";
 import type { Collector } from "../context";
 import {
   click,

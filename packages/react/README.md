@@ -8,23 +8,23 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@indeks/react"><img alt="@indeks/react on npm" src="https://shieldcn.dev/npm/@indeks/react.svg"></a>
-  <a href="https://www.npmjs.com/package/@indeks/react"><img alt="@indeks/react downloads" src="https://shieldcn.dev/npm/dw/@indeks/react.svg"></a>
-  <a href="https://www.npmjs.com/package/@indeks/react"><img alt="@indeks/react types" src="https://shieldcn.dev/npm/types/@indeks/react.svg"></a>
+  <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react on npm" src="https://shieldcn.dev/npm/@useindeks/react.svg"></a>
+  <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react downloads" src="https://shieldcn.dev/npm/dw/@useindeks/react.svg"></a>
+  <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react types" src="https://shieldcn.dev/npm/types/@useindeks/react.svg"></a>
   <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
   <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
 </p>
 
-# @indeks/react
+# @useindeks/react
 
 React provider, hook and optional debugger for the Indeks SDK. Requires React 19.
 
 ```bash
-npm install @indeks/react
+npm install @useindeks/react
 ```
 
 ```tsx
-import { Indeks } from "@indeks/react";
+import { Indeks } from "@useindeks/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -38,7 +38,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-The tracker is created on the client after mount. It is recreated when `apiKey`, `debug` or the contents of `config` change, and destroyed on unmount. `config` accepts every option from [`@indeks/core`](../core) except `apiKey`.
+The tracker is created on the client after mount. It is recreated when `apiKey`, `debug` or the contents of `config` change, and destroyed on unmount. `config` accepts every option from [`@useindeks/core`](../core) except `apiKey`.
 
 ## `useIndeks()`
 
@@ -53,7 +53,7 @@ const { track, identify, page, tracker, isInitialized, sessionId, userId } = use
 ## Debugger
 
 ```tsx
-import { IndeksDebugger } from "@indeks/react/debugger";
+import { IndeksDebugger } from "@useindeks/react/debugger";
 
 {process.env.NODE_ENV === "development" && <IndeksDebugger />}
 ```

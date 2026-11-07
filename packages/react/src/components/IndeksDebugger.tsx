@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { sanitizeEventData } from "@indeks/shared";
-import type { IndeksEvent } from "@indeks/shared";
+import { sanitizeEventData } from "@useindeks/shared";
+import type { IndeksEvent } from "@useindeks/shared";
 import { useIndeks } from "../hooks/useIndeks";
 import { styles, theme } from "./theme";
 

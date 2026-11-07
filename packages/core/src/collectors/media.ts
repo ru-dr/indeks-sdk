@@ -1,5 +1,5 @@
-import { scrubUrl } from "@indeks/shared";
-import type { IndeksMediaEvent, IndeksMediaProgressEvent } from "@indeks/shared";
+import { scrubUrl } from "@useindeks/shared";
+import type { IndeksMediaEvent, IndeksMediaProgressEvent } from "@useindeks/shared";
 import type { Collector } from "../context";
 import { describeElement } from "../dom";
 

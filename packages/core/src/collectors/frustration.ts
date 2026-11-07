@@ -1,9 +1,9 @@
-import { redactText } from "@indeks/shared";
+import { redactText } from "@useindeks/shared";
 import type {
   IndeksDeadClickEvent,
   IndeksErrorClickEvent,
   IndeksRageClickEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 import { INTERACTIVE_SELECTOR, getClassName, toElement } from "../dom";
 

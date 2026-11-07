@@ -12,7 +12,7 @@ import {
   scrubUrl,
   validateConfig,
   validateEventData,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type {
   CollectorName,
   DeviceData,
@@ -23,7 +23,7 @@ import type {
   ManualTrackingSchema,
   PrivacyConfig,
   ResolvedConfig,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import { IndeksAnalytics } from "./analytics";
 import { COLLECTORS } from "./collectors";
 import { emitPageView } from "./collectors/navigation";

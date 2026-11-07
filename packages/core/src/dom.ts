@@ -4,7 +4,7 @@ import {
   isSensitiveFieldName,
   redactText,
   scrubUrl,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 
 export const MAX_TEXT_LENGTH = 100;
 const MAX_SCANNED_TEXT_LENGTH = 2000;
