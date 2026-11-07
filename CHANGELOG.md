@@ -47,6 +47,15 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Clicking a very large container no longer reads its full rendered text.
 - Same-origin collector paths such as `/api/collect` are accepted as `endpoint`.
 - The React provider and the debugger now share one context even when the package is bundled twice.
+- StrictMode or a config change could leave `history.pushState` unpatched and silently stop SPA tracking; a tracker destroyed during start could keep running; `optIn()` did nothing after an opted-out load; calls made while opted out were replayed; sessions expired during activity that produced no events; offline persistence overwrote earlier batches and nothing flushed after reconnecting; visibility events missed the exit send; page time included hidden time and no `pageleave` was sent for the page a route change left; `reset()` skipped the session lifecycle; the React context kept stale ids and the debugger collapsed expanded rows.
+
+### Security and privacy fixes from independent review
+
+- Sensitive inputs no longer emit input events or lengths; printable keystrokes no longer carry `code`.
+- URL scrubbing covers non-http schemes, emails and tokens in paths, email-valued parameters, search terms and more parameter names; field-name detection covers more names.
+- Masked elements and masked content inside selections no longer leak through attributes, clipboard or selection text; page titles, campaign parameters, search filters, sort labels and selectors are redacted or gated.
+- Events with values JSON cannot represent no longer block the send queue or break `destroy()`.
+- Opt-out is complete: in-flight sends are dropped, identifiers are removed, `identify` is ignored, and an opt-out in another tab or a Do Not Track change is honored.
 
 ### Removed
 

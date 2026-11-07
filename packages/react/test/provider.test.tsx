@@ -37,8 +37,13 @@ beforeEach(() => {
   latest = null;
 });
 
+const nativePushStateGlobal = history.pushState;
+const nativeReplaceStateGlobal = history.replaceState;
+
 afterEach(async () => {
   await act(async () => root.unmount());
+  history.pushState = nativePushStateGlobal;
+  history.replaceState = nativeReplaceStateGlobal;
   container.remove();
 });
 
@@ -157,5 +162,44 @@ describe("duplicate package copies", () => {
       );
     });
     expect(typeof sessionId).toBe("string");
+  });
+});
+
+describe("StrictMode and live values", () => {
+  const nativePushState = history.pushState;
+
+  test("a StrictMode double mount leaves exactly one working tracker with SPA tracking", async () => {
+    await act(async () => {
+      root.render(
+        <React.StrictMode>
+          <Indeks apiKey={API_KEY} config={{ localOnly: true, debounceMs: 1 }}>
+            <Probe />
+          </Indeks>
+        </React.StrictMode>,
+      );
+    });
+    expect(latest?.isInitialized).toBe(true);
+    expect(history.pushState).not.toBe(nativePushState);
+    history.pushState({}, "", "/spa-next");
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    const events = latest!.tracker!.getEvents();
+    expect(events.filter((e) => e.type === "pageview")).toHaveLength(2);
+    expect(events.filter((e) => e.type === "session_start")).toHaveLength(1);
+  });
+
+  test("session and user ids stay current after a reset", async () => {
+    await mount();
+    const before = latest!.sessionId;
+    latest!.tracker!.reset();
+    expect(latest!.sessionId).not.toBe(before);
+    expect(latest!.sessionId).toBe(latest!.tracker!.getSessionId());
+  });
+
+  test("changing config recreates the tracker without losing SPA tracking", async () => {
+    await mount();
+    await mount({ config: { localOnly: true, debounceMs: 3 } });
+    history.pushState({}, "", "/after-config-change");
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    expect(latest!.tracker!.getEvents().filter((e) => e.type === "pageview")).toHaveLength(2);
   });
 });

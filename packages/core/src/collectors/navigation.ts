@@ -65,17 +65,20 @@ export const pageLoad: Collector = (ctx) => {
   else ctx.on(document, "DOMContentLoaded", domReady);
 };
 
-export const pageLeave: Collector = (ctx) => {
-  ctx.lifecycle.onExit(() => {
-    const timeOnPage = Date.now() - ctx.page.startTime;
-    ctx.emit<IndeksPageLeaveEvent>({
-      type: "pageleave",
-      timeOnPage,
-      scrollDepth: ctx.page.maxScrollDepth,
-      clickCount: ctx.page.clicks,
-      engaged: timeOnPage > 10000 && ctx.page.clicks > 2,
-    });
+function emitPageLeave(ctx: CollectorContext): void {
+  const timeOnPage = ctx.page.timeOnPage();
+  ctx.emit<IndeksPageLeaveEvent>({
+    type: "pageleave",
+    timeOnPage,
+    scrollDepth: ctx.page.maxScrollDepth,
+    clickCount: ctx.page.clicks,
+    engaged: timeOnPage > 10000 && ctx.page.clicks > 2,
   });
+}
+
+export const pageLeave: Collector = (ctx) => {
+  ctx.lifecycle.onExit(() => emitPageLeave(ctx));
+  ctx.lifecycle.onBeforeNavigation(() => emitPageLeave(ctx));
 };
 
 export const pageLifecycle: Collector = (ctx) => {

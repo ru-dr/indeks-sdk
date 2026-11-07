@@ -360,7 +360,7 @@ export interface IndeksSessionEndEvent extends IndeksBaseEvent {
   totalClicks: number;
   totalScrolls: number;
   exitPage: string;
-  exitType: "navigation" | "tab_close" | "timeout" | "refresh";
+  exitType: "navigation" | "tab_close" | "timeout" | "refresh" | "reset";
   converted: boolean;
   bounce: boolean;
 }

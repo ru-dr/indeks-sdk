@@ -28,13 +28,15 @@ import { IndeksAnalytics } from "./analytics";
 import { COLLECTORS } from "./collectors";
 import { emitPageView } from "./collectors/navigation";
 import type { CollectorContext, CollectorState, EventFields, SessionHooks } from "./context";
-import { getElementInfo, storageGet, storageSet, toElement } from "./dom";
+import { getElementInfo, normalizeText, storageGet, storageSet, toElement } from "./dom";
 import { Hub } from "./hub";
 import type { Disposer } from "./hub";
 import { Lifecycle, PageState } from "./lifecycle";
 import { SessionManager } from "./session";
 
 const MAX_PENDING_CALLS = 100;
+const MAX_NAME_LENGTH = 200;
+const MAX_EXTERNAL_ID_LENGTH = 256;
 const PRIVACY_KEYS = [
   "elementText",
   "formValues",
@@ -75,6 +77,9 @@ class IndeksTracker {
   private pending: Array<() => void> = [];
   private initPromise: Promise<void> | null = null;
   private isInitialized = false;
+  private active = false;
+  private accepting = true;
+  private generation = 0;
   private rotatingSession = false;
 
   constructor(config: IndeksConfig) {
@@ -114,6 +119,7 @@ class IndeksTracker {
       on: ((...args: Parameters<Hub["on"]>) => this.hub.on(...args)) as Hub["on"],
       later: (handler, delay) => this.hub.later(handler, delay),
       debounced: (handler) => this.hub.debounced(handler, this.config.debounceMs),
+      throttled: (handler, interval) => this.hub.throttled(handler, interval),
       emit: (fields) => this.emit(fields),
       captureText: () => this.config.privacy.elementText,
     } as CollectorContext;
@@ -154,11 +160,12 @@ class IndeksTracker {
     return nav.doNotTrack === "1" || legacyDnt === "1" || nav.globalPrivacyControl === true;
   }
 
-  private emit<E extends IndeksEvent>(fields: EventFields<E>): void {
+  private emit<E extends IndeksEvent>(fields: EventFields<E>, at?: number): void {
+    if (!this.active) return;
     this.rotateSessionIfExpired();
     const referrer = scrubUrl(document.referrer) || undefined;
     const event = {
-      timestamp: Date.now(),
+      timestamp: at ?? Date.now(),
       url: scrubUrl(window.location.href) || window.location.pathname,
       userAgent: navigator.userAgent,
       sessionId: this.session.id,
@@ -197,13 +204,14 @@ class IndeksTracker {
     }
   }
 
-  private whenReady(action: () => Disposer | void): Disposer {
-    if (this.isInitialized) return action() ?? noop;
-    if (this.pending.length >= MAX_PENDING_CALLS) return noop;
+  private whenReady(action: (calledAt: number) => Disposer | void): Disposer {
+    const calledAt = Date.now();
+    if (this.isInitialized) return action(calledAt) ?? noop;
+    if (!this.accepting || this.pending.length >= MAX_PENDING_CALLS) return noop;
     let cancelled = false;
     let inner: Disposer | void;
     this.pending.push(() => {
-      if (!cancelled) inner = action();
+      if (!cancelled) inner = action(calledAt);
     });
     return () => {
       cancelled = true;
@@ -212,31 +220,48 @@ class IndeksTracker {
   }
 
   public init(): Promise<void> {
-    this.initPromise ??= this.runInit().catch((error) => {
-      this.initPromise = null;
-      throw error;
-    });
-    return this.initPromise;
+    if (this.initPromise) return this.initPromise;
+    this.accepting = true;
+    const promise: Promise<void> = this.runInit(this.generation).then(
+      (started) => {
+        if (!started && this.initPromise === promise) this.initPromise = null;
+      },
+      (error) => {
+        if (this.initPromise === promise) this.initPromise = null;
+        throw error;
+      },
+    );
+    this.initPromise = promise;
+    return promise;
   }
 
-  private async runInit(): Promise<void> {
+  private async runInit(generation: number): Promise<boolean> {
     if (typeof window === "undefined") {
       this.logger.warn("Cannot initialize in non-browser environment");
-      return;
+      return false;
     }
+    await Promise.resolve();
+    if (generation !== this.generation) return false;
     if (this.hasOptedOut()) {
       this.logger.info(
         "Tracking disabled: opt-out, Do Not Track or Global Privacy Control is active",
       );
-      return;
+      this.pending = [];
+      this.accepting = false;
+      return false;
     }
-    if (this.config.privacy.fingerprint) await this.useFingerprint();
+    if (this.config.privacy.fingerprint) {
+      await this.useFingerprint();
+      if (generation !== this.generation) return false;
+    }
     try {
       this.device = getDeviceInfo();
     } catch (error) {
       this.logger.warn("Failed to read device info:", error);
     }
 
+    this.active = true;
+    this.analytics.open();
     this.lifecycle.start();
     this.session.addPageView();
     this.lifecycle.onNavigation(() => this.session.addPageView());
@@ -250,15 +275,31 @@ class IndeksTracker {
       }
     }
     this.lifecycle.onExit(() => this.analytics.flushSync());
+    this.watchOptOut();
     this.isInitialized = true;
 
     await this.analytics.restorePersisted().catch((error) => {
       this.logger.warn("Failed to restore offline buffer:", error);
     });
+    if (generation !== this.generation) return false;
     const pending = this.pending;
     this.pending = [];
     for (const action of pending) action();
     this.logger.info("Tracker initialized");
+    return true;
+  }
+
+  private watchOptOut(): void {
+    this.hub.on(window, "storage", (event) => {
+      if (event.key === STORAGE_KEYS.OPT_OUT && event.newValue === "1") void this.applyOptOut();
+    });
+    const recheck = () => {
+      if (this.hasOptedOut()) void this.applyOptOut();
+    };
+    this.hub.on(window, "pageshow", recheck);
+    this.hub.on(document, "visibilitychange", () => {
+      if (document.visibilityState === "visible") recheck();
+    });
   }
 
   public track(
@@ -266,13 +307,18 @@ class IndeksTracker {
     properties: Record<string, unknown> = {},
     options: TrackOptions = {},
   ): void {
-    this.whenReady(() => {
-      this.emit<IndeksCustomEvent>({
-        type: "custom",
-        eventName: name,
-        properties: sanitizeEventData(properties),
-        ...options,
-      });
+    this.whenReady((at) => {
+      this.emit<IndeksCustomEvent>(
+        {
+          type: "custom",
+          eventName: normalizeText(name, MAX_NAME_LENGTH),
+          properties: sanitizeEventData(properties),
+          category: options.category ? normalizeText(options.category, MAX_NAME_LENGTH) : undefined,
+          label: options.label ? normalizeText(options.label, MAX_NAME_LENGTH) : undefined,
+          value: Number.isFinite(options.value) ? options.value : undefined,
+        },
+        at,
+      );
     });
   }
 
@@ -287,15 +333,15 @@ class IndeksTracker {
           if (!match) continue;
           this.emit<IndeksCustomEvent>({
             type: "custom",
-            eventName: schema.eventName || `manual_${eventType}`,
+            eventName: normalizeText(schema.eventName || `manual_${eventType}`, MAX_NAME_LENGTH),
             properties: {
               ...schema.properties,
               selector,
               element: getElementInfo(match, this.config.privacy.elementText),
             },
-            category: schema.category,
-            value: schema.value,
-            label: schema.label,
+            category: schema.category ? normalizeText(schema.category, MAX_NAME_LENGTH) : undefined,
+            value: Number.isFinite(schema.value) ? schema.value : undefined,
+            label: schema.label ? normalizeText(schema.label, MAX_NAME_LENGTH) : undefined,
           });
           return;
         }
@@ -305,9 +351,9 @@ class IndeksTracker {
 
   public page(name?: string, properties?: Record<string, unknown>): void {
     this.whenReady(() => {
-      this.session.addPageView();
+      if (!this.config.collectors.pageview) this.session.addPageView();
       emitPageView(this.context, {
-        name,
+        name: name ? normalizeText(name, MAX_NAME_LENGTH) : undefined,
         properties: properties ? sanitizeEventData(properties) : undefined,
       });
     });
@@ -318,35 +364,67 @@ class IndeksTracker {
       this.logger.warn("identify() requires a non-empty string id");
       return;
     }
-    this.externalUserId = id;
-    storageSet("localStorage", STORAGE_KEYS.EXTERNAL_ID, id);
-    this.whenReady(() => {
-      this.emit<IndeksIdentifyEvent>({ type: "identify", traits: sanitizeEventData(traits) });
+    if (this.hasOptedOut()) {
+      this.logger.info("identify() ignored: tracking is opted out");
+      return;
+    }
+    const externalId = id.slice(0, MAX_EXTERNAL_ID_LENGTH);
+    this.externalUserId = externalId;
+    storageSet("localStorage", STORAGE_KEYS.EXTERNAL_ID, externalId);
+    this.whenReady((at) => {
+      this.emit<IndeksIdentifyEvent>({ type: "identify", traits: sanitizeEventData(traits) }, at);
     });
   }
 
   public reset(): void {
+    this.sessionHooks.end?.("reset");
     this.externalUserId = null;
     try {
       localStorage.removeItem(STORAGE_KEYS.EXTERNAL_ID);
       localStorage.removeItem(STORAGE_KEYS.USER_ID);
+      sessionStorage.removeItem(STORAGE_KEYS.LAST_SEARCH);
     } catch {
       this.logger.debug("Could not clear stored identity");
     }
     this.userId = this.resolveUserId();
     this.session.restart();
     this.pageState.reset();
+    if (this.active) this.session.addPageView();
+    this.sessionHooks.start?.();
+  }
+
+  private clearStoredData(): void {
+    for (const key of [
+      STORAGE_KEYS.EVENTS,
+      STORAGE_KEYS.USER_ID,
+      STORAGE_KEYS.EXTERNAL_ID,
+      STORAGE_KEYS.LAST_VISIT,
+    ]) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        this.logger.debug(`Could not clear ${key}`);
+      }
+    }
+    for (const key of [STORAGE_KEYS.SESSION_ID, STORAGE_KEYS.LAST_SEARCH]) {
+      try {
+        sessionStorage.removeItem(key);
+      } catch {
+        this.logger.debug(`Could not clear ${key}`);
+      }
+    }
+  }
+
+  private async applyOptOut(): Promise<void> {
+    this.analytics.discard();
+    this.teardown();
+    this.externalUserId = null;
+    this.clearStoredData();
   }
 
   public async optOut(): Promise<void> {
     storageSet("localStorage", STORAGE_KEYS.OPT_OUT, "1");
-    this.analytics.clearBatch();
-    try {
-      localStorage.removeItem(STORAGE_KEYS.EVENTS);
-    } catch {
-      this.logger.debug("Could not clear persisted events");
-    }
-    await this.destroy();
+    await this.applyOptOut();
   }
 
   public async optIn(): Promise<void> {
@@ -355,6 +433,9 @@ class IndeksTracker {
     } catch {
       this.logger.debug("Could not clear opt-out flag");
     }
+    this.userId = this.resolveUserId();
+    this.externalUserId = null;
+    this.session.restart();
     await this.init();
   }
 
@@ -428,9 +509,11 @@ class IndeksTracker {
     return this.analytics.getBatchSize();
   }
 
-  public async destroy(): Promise<void> {
-    await this.analytics.shutdown();
-    this.session.touch(true);
+  private teardown(): void {
+    this.generation++;
+    this.accepting = false;
+    this.active = false;
+    this.initPromise = null;
     this.hub.dispose();
     this.lifecycle.stop();
     this.eventQueue = [];
@@ -442,7 +525,12 @@ class IndeksTracker {
     this.pageState.previousUrl = null;
     this.pageState.reset();
     this.isInitialized = false;
-    this.initPromise = null;
+  }
+
+  public async destroy(): Promise<void> {
+    if (this.active) this.session.touch(true);
+    this.analytics.close();
+    this.teardown();
   }
 }
 

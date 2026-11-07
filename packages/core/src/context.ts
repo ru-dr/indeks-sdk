@@ -15,7 +15,7 @@ export type EventFields<E extends IndeksEvent> = Omit<
   Exclude<keyof IndeksBaseEvent, "type" | "referrer">
 >;
 
-export type SessionEndTrigger = "pagehide" | "hidden" | "timeout";
+export type SessionEndTrigger = "pagehide" | "hidden" | "timeout" | "reset";
 
 export interface CollectorState {
   lastError: { message: string; at: number } | null;
@@ -40,6 +40,7 @@ export interface CollectorContext {
   on: Hub["on"];
   later: Hub["later"];
   debounced<T extends (...args: never[]) => void>(handler: T): Debounced<T>;
+  throttled<T extends (...args: never[]) => void>(handler: T, interval: number): T;
   emit<E extends IndeksEvent>(fields: EventFields<E>): void;
   captureText(): boolean;
 }

@@ -255,11 +255,11 @@ describe("error collectors", () => {
     expect(event.error.message).not.toContain("jo@example.com");
   });
 
-  test("clicks right after an error produce an error_click", async () => {
+  test("an error right after a click produces an error_click", async () => {
     const t = await start();
     html(`<button id="b">Go</button>`);
-    window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: x is undefined" }));
     click(document.getElementById("b")!);
+    window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: x is undefined" }));
     await sleep(150);
     const [errorClick] = eventsOfType<{ errorType: string }>(t, "error_click");
     expect(errorClick.errorType).toBe("javascript");
@@ -746,8 +746,9 @@ describe("review findings: privacy in collectors", () => {
     const t = await start();
     html(`<button id="a">A</button><button id="b">B</button>`);
     window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: before click" }));
-    await sleep(5);
+    await sleep(8);
     click(document.getElementById("a")!);
+    await sleep(2);
     window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: after first click" }));
     click(document.getElementById("b")!);
     await sleep(160);

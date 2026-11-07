@@ -5,6 +5,13 @@ import { isSameSite, normalizeText, safeHostname, storageGet, storageSet } from 
 
 type TrafficSource = IndeksSessionStartEvent["trafficSource"];
 
+const EXIT_TYPES: Record<SessionEndTrigger, IndeksSessionEndEvent["exitType"]> = {
+  timeout: "timeout",
+  hidden: "tab_close",
+  pagehide: "navigation",
+  reset: "reset",
+};
+
 const SEARCH_ENGINES = [
   "google.",
   "bing.",
@@ -100,7 +107,7 @@ function emitSessionEnd(ctx: CollectorContext, trigger: SessionEndTrigger): void
     totalClicks: data.clicks,
     totalScrolls: data.scrolls,
     exitPage: pathAndSearch(window.location.href),
-    exitType: trigger === "timeout" ? "timeout" : trigger === "hidden" ? "tab_close" : "navigation",
+    exitType: EXIT_TYPES[trigger],
     converted: data.converted,
     bounce: data.pageViews <= 1,
   });

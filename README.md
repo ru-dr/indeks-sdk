@@ -33,7 +33,7 @@ There is no default server: `endpoint` is required for events to be sent. React 
 
 The packages target ES2020, which means Chrome and Edge 80+, Firefox 78+ and Safari 13.1+. Browser APIs that are not everywhere degrade gracefully: if a collector's API is missing (for example Event Timing, the Page Lifecycle API or the Network Information API), that collector does nothing and the rest keep working. End-to-end tests run against current Chromium, Firefox and WebKit in CI.
 
-Bundle size (gzipped): the script-tag build is about 21 kB, and CI fails if it exceeds 24 kB.
+Bundle size (gzipped): the script-tag build is about 23 kB, and CI fails if it exceeds 24 kB.
 
 ## Design
 

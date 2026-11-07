@@ -46,6 +46,7 @@ export class SessionManager {
   restart(): void {
     this.record = this.create();
     this.fresh = true;
+    this.write();
   }
 
   touch(force = false): void {
@@ -104,7 +105,8 @@ export class SessionManager {
 
   private create(): SessionRecord {
     const now = Date.now();
-    const record: SessionRecord = {
+    this.lastPersist = 0;
+    return {
       id: generateId("indeks"),
       startedAt: now,
       lastSeen: now,
@@ -114,8 +116,6 @@ export class SessionManager {
       activeMs: 0,
       converted: false,
     };
-    this.write(record);
-    return record;
   }
 
   private write(record: SessionRecord = this.record): void {

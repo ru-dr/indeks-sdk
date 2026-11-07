@@ -112,11 +112,26 @@ Presets: `minimal` (click, pageview, session, error, pageLeave, scrollDepth, out
 
 What is always applied:
 
+- Inputs that look sensitive (password, email, phone, card and similar types or names) produce no input events at all, not even their length, and show as `[redacted]` in form submissions. Printable keystrokes never include the key code.
+- Search terms are never part of a URL: parameters such as `q`, `query`, `search`, `s` and `keyword` are redacted, along with session ids, tokens and email-valued parameters. Terms are only sent as `query` when `privacy.searchTerms` is on.
+- Links that are not http(s) (`mailto:`, `tel:`, `javascript:`, `data:`, `blob:`) are reduced to their scheme, and emails or token-like segments in URL paths are redacted.
+- Custom event names, labels and categories are redacted and capped at 200 characters; property strings are redacted, arrays capped at 100 items, and values JSON cannot represent are converted or dropped. `identify` ids are capped at 256 characters; use an opaque id and not an email address.
+- With `elementText: false`, text-bearing attributes (`alt`, `title`, `aria-label`) are dropped as well, and search filters and sort labels are not read.
 - URLs: fragments (except hash-router routes), credentials, and values of sensitive query params (`token`, `code`, `email`, ...) are removed.
 - Free text (element text, errors, share text) is redacted for emails, card numbers, JWTs and bearer tokens.
 - Password, email, tel, number and similar fields are never recorded, and sensitive field names are shown as `[redacted]`.
 - Add `data-indeks-mask` (or `data-indeks-ignore`) to an element to drop its text and ignore its fields.
 - Custom event and `identify` properties with sensitive key names are redacted.
+
+## Behavior notes
+
+- `session_end` and `pageleave` are snapshots sent when the page is hidden or unloaded; use the last one per session or page. `pageleave` time counts only the time the tab was visible, and is also sent for the page being left on a `pushState` or `replaceState` navigation (not for back and forward).
+- `form_abandon` is reported when the page is unloaded or the form leaves the page, not when the tab is merely hidden.
+- `track`, `identify` and `page` made before initialization are buffered and keep the time they were called. After `destroy()` or `optOut()` they are dropped.
+- `page()` is meant for apps that turn the `pageview` collector off. The automatic collector already reports route changes.
+- `wheel` and `touchmove` events are throttled to one per 100 ms, and text selection changes are debounced.
+- `optOut()` also removes the stored user id, external id, session and buffered events, and takes effect in other open tabs. A Do Not Track or Global Privacy Control change is honored when the tab becomes visible again.
+- Calling `init()` right after `destroy()` (for example React StrictMode or a config change) is safe: teardown is immediate and a tracker destroyed before it finishes starting never starts.
 
 ## Events and transport
 

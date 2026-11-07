@@ -171,7 +171,9 @@ export const formAbandon: Collector = (ctx) => {
     const form = toElement(e.target) as HTMLFormElement | null;
     if (form) interactions.delete(formKey(form));
   });
-  ctx.lifecycle.onExit(() => flushAbandons(ctx, interactions, false));
+  ctx.lifecycle.onExit((trigger) => {
+    if (trigger === "pagehide") flushAbandons(ctx, interactions, false);
+  });
   ctx.lifecycle.onNavigation(() => flushAbandons(ctx, interactions, true));
 };
 

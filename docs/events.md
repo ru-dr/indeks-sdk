@@ -70,7 +70,7 @@ TypeScript type: `IndeksKeystrokeEvent`
 | --- | --- | --- |
 | `key` | `string` | no |
 | `keyCategory` | `"printable" \| "navigation" \| "modifier" \| "whitespace"` | yes |
-| `code` | `string` | yes |
+| `code` | `string` | no |
 | `ctrlKey` | `boolean` | yes |
 | `shiftKey` | `boolean` | yes |
 | `altKey` | `boolean` | yes |
@@ -323,7 +323,7 @@ TypeScript type: `IndeksSessionEndEvent`
 | `totalClicks` | `number` | yes |
 | `totalScrolls` | `number` | yes |
 | `exitPage` | `string` | yes |
-| `exitType` | `"navigation" \| "tab_close" \| "timeout" \| "refresh"` | yes |
+| `exitType` | `"navigation" \| "tab_close" \| "timeout" \| "refresh" \| "reset"` | yes |
 | `converted` | `boolean` | yes |
 | `bounce` | `boolean` | yes |
 

@@ -26,7 +26,7 @@ beforeEach(async () => {
     root.render(
       <Indeks apiKey="test_api_key_123" config={{ localOnly: true, debounceMs: 1 }}>
         <Capture />
-        <IndeksDebugger refreshInterval={0} />
+        <IndeksDebugger refreshInterval={10} />
       </Indeks>,
     );
   });
@@ -94,5 +94,50 @@ describe("IndeksDebugger", () => {
         .click(),
     );
     expect(query('[role="dialog"]')!.textContent).toContain("No events yet");
+  });
+});
+
+describe("IndeksDebugger stability", () => {
+  const buttons = () => Array.from(container.ownerDocument.querySelectorAll("button"));
+
+  test("an expanded payload stays open when new events arrive", async () => {
+    await act(async () =>
+      query<HTMLButtonElement>('button[aria-label="Open Indeks debugger"]')!.click(),
+    );
+    await act(async () => {
+      trackFn("first_event");
+    });
+    await act(async () =>
+      buttons()
+        .find((b) => b.textContent === "Refresh")!
+        .click(),
+    );
+    const row = buttons().find((b) => b.textContent?.includes("custom"))!;
+    await act(async () => row.click());
+    expect(query("pre")!.textContent).toContain("first_event");
+
+    await act(async () => {
+      trackFn("second_event");
+    });
+    await act(async () =>
+      buttons()
+        .find((b) => b.textContent === "Refresh")!
+        .click(),
+    );
+    const payloads = Array.from(container.ownerDocument.querySelectorAll("pre")).map(
+      (p) => p.textContent,
+    );
+    expect(payloads.some((text) => text?.includes("first_event"))).toBe(true);
+  });
+
+  test("the badge counts events while the panel is closed", async () => {
+    await act(async () => {
+      trackFn("while_closed");
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+    const trigger = query<HTMLButtonElement>('button[aria-label="Open Indeks debugger"]')!;
+    expect(Number(trigger.textContent)).toBeGreaterThan(0);
   });
 });

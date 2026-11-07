@@ -22,6 +22,7 @@ interface ApiEvent {
 
 type PersistentStorage = StorageInterface & {
   replace(events: IndeksEvent[]): void;
+  append(events: IndeksEvent[]): void;
 };
 
 class HttpError extends Error {
@@ -46,6 +47,12 @@ export class IndeksAnalytics implements AnalyticsInterface {
   private nextRetryAt = 0;
   private endpointErrorLogged = false;
   private droppedEvents = 0;
+  private closed = false;
+  private epoch = 0;
+  private listeningForOnline = false;
+  private readonly handleOnline = () => {
+    this.flush().catch((error) => this.logger.warn("Flush after reconnect failed:", error));
+  };
 
   constructor(
     private config: ResolvedConfig,
@@ -55,6 +62,33 @@ export class IndeksAnalytics implements AnalyticsInterface {
       enableConsole: config.debug,
       level: LogLevel.INFO,
     });
+  }
+
+  open(): void {
+    this.closed = false;
+    this.consecutiveFailures = 0;
+    this.nextRetryAt = 0;
+  }
+
+  close(): void {
+    this.flushSync();
+    this.stop();
+  }
+
+  discard(): void {
+    this.batchQueue = [];
+    this.stop();
+  }
+
+  private stop(): void {
+    this.closed = true;
+    this.epoch++;
+    this.flushing = false;
+    this.cancelTimer();
+    if (this.listeningForOnline && typeof window !== "undefined") {
+      window.removeEventListener("online", this.handleOnline);
+    }
+    this.listeningForOnline = false;
   }
 
   private resolveEndpoint(): string | null {
@@ -71,27 +105,33 @@ export class IndeksAnalytics implements AnalyticsInterface {
     return null;
   }
 
-  private toApiEvents(events: IndeksEvent[]): ApiEvent[] {
-    return events.map((event) => {
-      const { type, timestamp, url, userAgent, sessionId, userId, referrer, ...properties } = event;
-      return {
-        type,
-        url,
-        sessionId,
-        userId,
-        userAgent,
-        referrer: referrer || scrubUrl(document.referrer) || undefined,
-        properties: sanitizeEventData(properties as Record<string, unknown>),
-        timestamp,
-      };
-    });
+  private toApiEvent(event: IndeksEvent): ApiEvent {
+    const { type, timestamp, url, userAgent, sessionId, userId, referrer, ...properties } = event;
+    return {
+      type,
+      url,
+      sessionId,
+      userId,
+      userAgent,
+      referrer: referrer || scrubUrl(document.referrer) || undefined,
+      properties: sanitizeEventData(properties as Record<string, unknown>),
+      timestamp,
+    };
   }
 
-  private serialize(events: IndeksEvent[]): string {
-    return JSON.stringify({
-      apiKey: this.config.apiKey,
-      events: this.toApiEvents(events),
-    });
+  private serialize(events: IndeksEvent[]): string | null {
+    const apiEvents: ApiEvent[] = [];
+    for (const event of events) {
+      try {
+        const apiEvent = this.toApiEvent(event);
+        JSON.stringify(apiEvent);
+        apiEvents.push(apiEvent);
+      } catch {
+        this.logger.warn(`Dropping ${event.type} event that cannot be serialized`);
+      }
+    }
+    if (!apiEvents.length) return null;
+    return JSON.stringify({ apiKey: this.config.apiKey, events: apiEvents });
   }
 
   private byteLength(body: string): number {
@@ -121,6 +161,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
   }
 
   private scheduleFlush(delay: number): void {
+    if (this.closed) return;
     this.cancelTimer();
     this.flushTimer = setTimeout(() => {
       this.flushTimer = null;
@@ -135,6 +176,12 @@ export class IndeksAnalytics implements AnalyticsInterface {
     }
   }
 
+  private listenForOnline(): void {
+    if (this.listeningForOnline || typeof window === "undefined") return;
+    window.addEventListener("online", this.handleOnline);
+    this.listeningForOnline = true;
+  }
+
   async send(events: IndeksEvent[]): Promise<void> {
     if (!events.length) return;
     if (this.config.localOnly) {
@@ -145,6 +192,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
     if (!endpoint) return;
 
     const body = this.serialize(events);
+    if (!body) return;
     const response = await fetch(endpoint, {
       method: "POST",
       body,
@@ -161,6 +209,8 @@ export class IndeksAnalytics implements AnalyticsInterface {
   }
 
   async batch(events: IndeksEvent[]): Promise<void> {
+    if (this.closed) return;
+    this.listenForOnline();
     this.enqueue(events);
     if (this.batchQueue.length >= BATCH_CONFIG.DEFAULT_BATCH_SIZE) {
       await this.flush().catch((error) => this.logger.warn("Flush failed:", error));
@@ -172,7 +222,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
   }
 
   async flush(): Promise<void> {
-    if (!this.batchQueue.length || this.flushing) return;
+    if (this.closed || !this.batchQueue.length || this.flushing) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
     const wait = this.nextRetryAt - Date.now();
     if (wait > 0) {
@@ -180,6 +230,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
       return;
     }
 
+    const epoch = this.epoch;
     this.flushing = true;
     this.cancelTimer();
     try {
@@ -188,6 +239,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
         try {
           await this.send(chunk);
         } catch (error) {
+          if (epoch !== this.epoch) return;
           if (error instanceof HttpError && !error.retryable) {
             this.logger.error(`Dropped ${chunk.length} events:`, error.message);
             continue;
@@ -198,27 +250,30 @@ export class IndeksAnalytics implements AnalyticsInterface {
           this.scheduleFlush(this.nextRetryAt - Date.now());
           throw error;
         }
+        if (epoch !== this.epoch) return;
       }
       this.consecutiveFailures = 0;
       this.nextRetryAt = 0;
     } finally {
-      this.flushing = false;
+      if (epoch === this.epoch) this.flushing = false;
     }
   }
 
   flushSync(): void {
-    if (!this.batchQueue.length || this.config.localOnly) return;
+    if (!this.batchQueue.length) return;
+    this.cancelTimer();
+    const events = this.batchQueue.splice(0, this.batchQueue.length);
+    if (this.config.localOnly) return;
     const endpoint = this.resolveEndpoint();
     if (!endpoint) return;
 
-    this.cancelTimer();
-    const events = this.batchQueue.splice(0, this.batchQueue.length);
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      this.storage.replace(events);
+      this.storage.append(events);
       return;
     }
 
     const body = this.serialize(events);
+    if (!body) return;
     const withinKeepalive = this.byteLength(body) <= BATCH_CONFIG.KEEPALIVE_MAX_BODY_BYTES;
 
     if (withinKeepalive && typeof navigator?.sendBeacon === "function") {
@@ -234,7 +289,7 @@ export class IndeksAnalytics implements AnalyticsInterface {
       method: "POST",
       body,
       keepalive: withinKeepalive,
-    }).catch(() => this.storage.replace(events));
+    }).catch(() => this.storage.append(events));
   }
 
   async restorePersisted(): Promise<number> {
@@ -244,11 +299,6 @@ export class IndeksAnalytics implements AnalyticsInterface {
     this.enqueue(stored, true);
     this.logger.info(`Restored ${stored.length} events from offline buffer`);
     return stored.length;
-  }
-
-  async shutdown(): Promise<void> {
-    this.cancelTimer();
-    this.flushSync();
   }
 
   getBatchSize(): number {

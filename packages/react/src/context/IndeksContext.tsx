@@ -24,8 +24,6 @@ export interface IndeksContextValue {
 
 interface ActiveTracker {
   tracker: IndeksTracker;
-  sessionId: string;
-  userId: string | null;
 }
 
 const MAX_BUFFERED_CALLS = 100;
@@ -95,11 +93,7 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
       .init()
       .then(() => {
         if (cancelled) return;
-        setActive({
-          tracker,
-          sessionId: tracker.getSessionId(),
-          userId: tracker.getUserId(),
-        });
+        setActive({ tracker });
       })
       .catch((error: unknown) => {
         console.error("Failed to initialize Indeks tracker:", error);
@@ -115,19 +109,23 @@ export const Indeks: React.FC<IndeksProviderProps> = ({
     };
   }, [apiKey, debug, configKey]);
 
-  const value = useMemo<IndeksContextValue>(
-    () => ({
-      tracker: active?.tracker ?? null,
+  const value = useMemo<IndeksContextValue>(() => {
+    const tracker = active?.tracker ?? null;
+    return {
+      tracker,
       isInitialized: active !== null,
-      sessionId: active?.sessionId ?? null,
-      userId: active?.userId ?? null,
+      get sessionId() {
+        return tracker ? tracker.getSessionId() : null;
+      },
+      get userId() {
+        return tracker ? tracker.getUserId() : null;
+      },
       config: { apiKey, debug, ...(config ?? {}) },
       track: (name, properties, options) => call((t) => t.track(name, properties, options)),
       identify: (id, traits) => call((t) => t.identify(id, traits)),
       page: (name, properties) => call((t) => t.page(name, properties)),
-    }),
-    [active, apiKey, debug, configKey, call],
-  );
+    };
+  }, [active, apiKey, debug, configKey, call]);
 
   return <IndeksContext.Provider value={value}>{children}</IndeksContext.Provider>;
 };

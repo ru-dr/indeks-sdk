@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { sanitizeEventData } from "@indeks/shared";
 import type { IndeksEvent } from "@indeks/shared";
 import { useIndeks } from "../hooks/useIndeks";
@@ -51,6 +51,16 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
 }) => {
   const { tracker, sessionId, userId, isInitialized, config } = useIndeks();
   const [isOpen, setIsOpen] = useState(false);
+  const eventIds = useRef(new WeakMap<IndeksEvent, number>());
+  const nextEventId = useRef(0);
+  const idOf = (event: IndeksEvent): number => {
+    let id = eventIds.current.get(event);
+    if (id === undefined) {
+      id = nextEventId.current++;
+      eventIds.current.set(event, id);
+    }
+    return id;
+  };
   const [events, setEvents] = useState<IndeksEvent[]>([]);
 
   const refresh = useCallback(() => {
@@ -59,12 +69,12 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
   }, [tracker, maxEvents]);
 
   useEffect(() => {
-    if (!tracker || !isInitialized || !isOpen) return;
+    if (!tracker || !isInitialized) return;
     refresh();
     if (!refreshInterval) return;
     const interval = setInterval(refresh, refreshInterval);
     return () => clearInterval(interval);
-  }, [tracker, isInitialized, isOpen, refreshInterval, refresh]);
+  }, [tracker, isInitialized, refreshInterval, refresh]);
 
   const clear = () => {
     tracker?.clearEvents();
@@ -131,9 +141,7 @@ export const IndeksDebugger: React.FC<IndeksDebuggerProps> = ({
                 {events.length === 0 ? (
                   <div style={styles.empty}>No events yet</div>
                 ) : (
-                  events.map((event, index) => (
-                    <EventRow key={`${event.timestamp}-${index}`} event={event} />
-                  ))
+                  events.map((event) => <EventRow key={idOf(event)} event={event} />)
                 )}
               </div>
             </div>

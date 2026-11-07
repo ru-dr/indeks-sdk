@@ -27,7 +27,8 @@
     "docs:check": "bun scripts/generate-event-docs.ts --check",
     "size": "bun scripts/check-size.ts",
     "examples:build": "bun build examples/react/main.tsx --outfile examples/react/dist/app.js --target browser --format esm --minify --define process.env.NODE_ENV=\\\"production\\\"",
-    "examples": "bun run examples:build && bun examples/server.ts"
+    "examples": "bun run examples:build && bun examples/server.ts",
+    "e2e:container": "podman run --rm --ipc=host --security-opt label=disable -v \"$PWD\":/work:ro -w /work mcr.microsoft.com/playwright:v1.65.0-noble npx playwright test e2e/smoke.e2e.ts --output=/tmp/pw-out"
   },
   "repository": {
     "type": "git",
@@ -53,7 +54,7 @@
     "@arethetypeswrong/cli": "^0.18.5",
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^21.0.4",
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "1.65.0",
     "@types/bun": "^1.4.4",
     "@types/node": "^24.10.1",
     "eslint": "^10.14.0",
