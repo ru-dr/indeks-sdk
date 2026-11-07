@@ -57,6 +57,7 @@ export const mediaProgress: Collector = (ctx) => {
         reached = new Set();
         reachedByMedia.set(id, reached);
       }
+      if (!Number.isFinite(target.duration) || target.duration <= 0) return;
       const progress = Math.round((target.currentTime / target.duration) * 100);
       for (const threshold of PROGRESS_THRESHOLDS) {
         if (progress < threshold || reached.has(threshold)) continue;

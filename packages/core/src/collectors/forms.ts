@@ -1,4 +1,4 @@
-import { sanitizeUserInput, scrubUrl } from "@indeks/shared";
+import { REDACTED, sanitizeUserInput, scrubUrl } from "@indeks/shared";
 import type {
   IndeksClipboardEvent,
   IndeksFieldFocusEvent,
@@ -15,6 +15,7 @@ import {
   fieldLabel,
   isMasked,
   isSensitiveField,
+  selectionTouchesMasked,
   normalizeText,
   safeFieldName,
   toElement,
@@ -54,10 +55,12 @@ export const formSubmit: Collector = (ctx) => {
       const rawName = control.name || control.id;
       if (!rawName) continue;
       const value = typeof control.value === "string" ? control.value : "";
-      formData[safeFieldName(rawName)] =
-        !captureValues || isSensitiveField(control) || isMasked(control)
-          ? valueIndicator(value)
-          : safeValue(value);
+      const hidden = isSensitiveField(control) || isMasked(control);
+      formData[safeFieldName(rawName)] = hidden
+        ? REDACTED
+        : captureValues
+          ? safeValue(value)
+          : valueIndicator(value);
     }
     ctx.emit<IndeksFormSubmitEvent>({
       type: "form_submit",
@@ -76,7 +79,7 @@ export const inputChange: Collector = (ctx) => {
     if (!target) return;
     const value = typeof target.value === "string" ? target.value : "";
     const sensitive = isSensitiveField(target);
-    if (sensitive && target.type === "password") return;
+    if (sensitive) return;
     const captureValue = ctx.config.privacy.formValues && !sensitive && !isMasked(target);
     ctx.emit<IndeksInputChangeEvent>({
       type,
@@ -200,12 +203,14 @@ export const clipboard: Collector = (ctx) => {
   const track = (type: "copy" | "paste" | "cut") => (e: globalThis.ClipboardEvent) => {
     const target = toElement(e.target);
     if (!target) return;
-    const selection = window.getSelection()?.toString() || "";
+    const range = window.getSelection();
+    const selection = range?.toString() || "";
     const allowText =
       type !== "paste" &&
       ctx.config.privacy.clipboardText &&
       !isSensitiveField(target) &&
-      !isMasked(target);
+      !isMasked(target) &&
+      !selectionTouchesMasked(range);
     ctx.emit<IndeksClipboardEvent>({
       type,
       element: {
@@ -223,14 +228,15 @@ export const clipboard: Collector = (ctx) => {
 };
 
 export const textSelection: Collector = (ctx) => {
-  ctx.on(document, "selectionchange", () => {
+  const report = ctx.debounced(() => {
     const selection = window.getSelection();
     const selectedText = selection?.toString() || "";
     if (!selection || !selectedText.length) return;
     const parent = selection.anchorNode?.parentElement;
     const allowText =
       ctx.config.privacy.clipboardText &&
-      !(parent && (isSensitiveField(parent) || isMasked(parent)));
+      !(parent && (isSensitiveField(parent) || isMasked(parent))) &&
+      !selectionTouchesMasked(selection);
     ctx.emit<IndeksTextSelectionEvent>({
       type: "selectionchange",
       selectedText: allowText
@@ -248,4 +254,5 @@ export const textSelection: Collector = (ctx) => {
         : undefined,
     });
   });
+  ctx.on(document, "selectionchange", report);
 };

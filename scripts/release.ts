@@ -12,10 +12,11 @@ const dryRun = flags.has("--dry-run");
 const publish = flags.has("--publish");
 
 const root = resolve(import.meta.dirname, "..");
-const manifestPath = (name) => resolve(root, "packages", name, "package.json");
-const readManifest = (name) => JSON.parse(readFileSync(manifestPath(name), "utf8"));
+const manifestPath = (name: string) => resolve(root, "packages", name, "package.json");
+const readManifest = (name: string): { version: string; [key: string]: unknown } =>
+  JSON.parse(readFileSync(manifestPath(name), "utf8"));
 
-function nextVersion(current, kind) {
+function nextVersion(current: string, kind: string): string {
   if (SEMVER.test(kind)) return kind;
   const [major, minor, patch] = current.split("-")[0].split(".").map(Number);
   if (kind === "major") return `${major + 1}.0.0`;
@@ -24,7 +25,8 @@ function nextVersion(current, kind) {
   throw new Error(`Unknown bump "${kind}". Use patch, minor, major or an explicit x.y.z version.`);
 }
 
-const git = (...gitArgs) => execFileSync("git", gitArgs, { cwd: root, encoding: "utf8" }).trim();
+const git = (...gitArgs: string[]) =>
+  execFileSync("git", gitArgs, { cwd: root, encoding: "utf8" }).trim();
 
 const current = readManifest("core").version;
 const version = nextVersion(current, bump);

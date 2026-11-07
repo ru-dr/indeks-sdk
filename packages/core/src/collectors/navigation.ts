@@ -12,6 +12,7 @@ import type {
   IndeksWindowFocusEvent,
 } from "@indeks/shared";
 import type { Collector, CollectorContext } from "../context";
+import { normalizeText } from "../dom";
 
 const NAVIGATION_SETTLE_MS = 50;
 
@@ -22,7 +23,7 @@ export function emitPageView(
   const { page } = ctx;
   ctx.emit<IndeksPageViewEvent>({
     type: "pageview",
-    title: document.title,
+    title: normalizeText(document.title, 200),
     referrer: (page.previousUrl ? scrubUrl(page.previousUrl) : "") || scrubUrl(document.referrer),
     ...extra,
   });

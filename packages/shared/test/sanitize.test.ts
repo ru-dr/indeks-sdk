@@ -159,3 +159,141 @@ describe("hostile input", () => {
     expect(Object.getPrototypeOf(out)).toBe(Object.prototype);
   });
 });
+
+describe("review findings: URL scrubbing", () => {
+  test("non-http schemes never expose their payload", () => {
+    for (const url of [
+      "mailto:john@x.com?subject=secret",
+      "tel:+15551234567",
+      "javascript:login('u','p4ss')",
+      "data:text/csv,ssn,123-45-6789",
+      "blob:https://a.com/1234",
+    ]) {
+      const out = scrubUrl(url);
+      expect(out.endsWith(REDACTED)).toBe(true);
+      expect(out).not.toMatch(/john|5551234567|p4ss|123-45|secret/);
+    }
+  });
+
+  test("emails and token-like segments in the path are redacted", () => {
+    const out = scrubUrl(
+      "https://a.com/reset/AbC123dEf456GhI789jKl012MnO345pQ/john%40x.com/profile",
+    );
+    expect(out).toContain("/reset/");
+    expect(out).toContain("/profile");
+    expect(out).not.toContain("AbC123");
+    expect(out).not.toContain("john");
+  });
+
+  test("ordinary paths and slugs are untouched", () => {
+    expect(scrubUrl("https://a.com/blog/how-to-write-a-very-long-descriptive-article-title")).toBe(
+      "https://a.com/blog/how-to-write-a-very-long-descriptive-article-title",
+    );
+    expect(scrubUrl("https://a.com/products/123")).toBe("https://a.com/products/123");
+  });
+
+  test("search terms, session ids and email-valued parameters are redacted", () => {
+    const url = new URL(
+      scrubUrl(
+        "https://a.com/p?q=my+secret+search&session_id=abc&auth_key=zzz&sessionid=1&jwt=eyJ&u=a@b.com&ticket=T&page=2",
+      ),
+    );
+    for (const key of ["q", "session_id", "auth_key", "sessionid", "jwt", "u", "ticket"]) {
+      expect(url.searchParams.get(key)).toBe(REDACTED);
+    }
+    expect(url.searchParams.get("page")).toBe("2");
+  });
+});
+
+describe("review findings: field names", () => {
+  test("common sensitive names are detected", () => {
+    for (const name of [
+      "ccnumber",
+      "cardNo",
+      "card_no",
+      "securitycode",
+      "security_code",
+      "expDate",
+      "sessionid",
+      "session_id",
+      "authKey",
+      "jwt",
+      "credential",
+      "birthday",
+      "pass",
+      "passcode",
+      "taxNumber",
+      "mobile",
+      "address",
+      "fullName",
+      "username",
+      "mail",
+    ]) {
+      expect([name, isSensitiveFieldName(name)]).toEqual([name, true]);
+    }
+  });
+
+  test("ordinary names are not flagged", () => {
+    for (const name of ["city", "plan", "quantity", "color", "title", "compass", "bypass"]) {
+      expect([name, isSensitiveFieldName(name)]).toEqual([name, false]);
+    }
+  });
+});
+
+describe("review findings: serialization safety", () => {
+  test("values JSON cannot represent never reach the serializer", () => {
+    const data = {
+      big: 10n,
+      fn: () => 1,
+      sym: Symbol("x"),
+      when: new Date("2024-01-02T03:04:05Z"),
+      bad: new Date("nope"),
+      error: new Error("failed for jo@example.com"),
+      list: [1n, undefined, "a@b.com"],
+      note: "mail jo@example.com",
+    };
+    const out = sanitizeEventData(data);
+    expect(() => JSON.stringify(out)).not.toThrow();
+    expect(out.big).toBe("10");
+    expect("fn" in out).toBe(false);
+    expect(out.when).toBe("2024-01-02T03:04:05.000Z");
+    expect(out.bad).toBeNull();
+    expect(JSON.stringify(out)).not.toContain("jo@example.com");
+    expect(JSON.stringify(out)).not.toContain("a@b.com");
+    expect(out.list).toEqual(["1", null, REDACTED]);
+  });
+
+  test("throwing getters and huge arrays are contained", () => {
+    const hostile = {
+      get boom() {
+        throw new Error("nope");
+      },
+    };
+    expect(() => sanitizeEventData({ hostile })).not.toThrow();
+    const out = sanitizeEventData({ items: Array.from({ length: 1000 }, (_, i) => i) });
+    expect((out.items as unknown[]).length).toBe(100);
+  });
+
+  test("long strings are bounded", () => {
+    expect((sanitizeEventData({ text: "x".repeat(100_000) }).text as string).length).toBe(4000);
+  });
+});
+
+describe("review findings: element attributes", () => {
+  const attrs = [
+    { name: "aria-label", value: "Pay for john's order" },
+    { name: "title", value: "Account 1234 of Jane" },
+    { name: "alt", value: "Photo of Jane" },
+    { name: "id", value: "pay" },
+    { name: "data-testid", value: "pay-button" },
+  ];
+
+  test("text-bearing attributes are dropped when text capture is off", () => {
+    const out = filterElementAttributes(attrs, { includeText: false });
+    expect(Object.keys(out).sort()).toEqual(["data-testid", "id"]);
+  });
+
+  test("they are kept by default", () => {
+    expect(Object.keys(filterElementAttributes(attrs))).toContain("aria-label");
+  });
+});

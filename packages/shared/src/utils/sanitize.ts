@@ -49,31 +49,62 @@ export function sanitizeUserInput(input: string): string {
     .trim();
 }
 
+const MAX_STRING_LENGTH = 4000;
+const MAX_ARRAY_LENGTH = 100;
+
 export function sanitizeEventData(data: Record<string, unknown>): Record<string, unknown> {
   const seen = new WeakSet<object>();
 
   const walk = (value: unknown, depth: number): unknown => {
-    if (value === null || typeof value !== "object") return value;
+    switch (typeof value) {
+      case "string":
+        return redactText(value).slice(0, MAX_STRING_LENGTH);
+      case "bigint":
+        return value.toString();
+      case "function":
+      case "symbol":
+      case "undefined":
+        return undefined;
+      case "number":
+      case "boolean":
+        return value;
+    }
+    if (value === null) return null;
     if (depth >= MAX_SANITIZE_DEPTH) return REDACTED;
-    if (seen.has(value as object)) return "[circular]";
-    seen.add(value as object);
+    const object = value as object;
+    if (seen.has(object)) return "[circular]";
+    seen.add(object);
 
-    if (Array.isArray(value)) {
-      return value.map((item) => walk(item, depth + 1));
+    if (object instanceof Date) {
+      return Number.isNaN(object.getTime()) ? null : object.toISOString();
+    }
+    if (object instanceof Error) {
+      return { name: object.name, message: redactText(object.message) };
+    }
+    if (Array.isArray(object)) {
+      return object.slice(0, MAX_ARRAY_LENGTH).map((item) => walk(item, depth + 1) ?? null);
     }
 
+    let entries: Array<[string, unknown]>;
+    try {
+      entries = Object.entries(object);
+    } catch {
+      return "[unserializable]";
+    }
     const out: Record<string, unknown> = {};
     let keyCount = 0;
-    for (const [key, child] of Object.entries(value as object)) {
+    for (const [key, child] of entries) {
       if (UNSAFE_KEYS.has(key)) continue;
       if (++keyCount > MAX_SANITIZE_KEYS) break;
-      out[key] = isSensitiveFieldName(key) ? REDACTED : walk(child, depth + 1);
+      const sanitized = isSensitiveFieldName(key) ? REDACTED : walk(child, depth + 1);
+      if (sanitized !== undefined) out[key] = sanitized;
     }
     return out;
   };
 
   if (!data || typeof data !== "object") return {};
-  return walk(data, 0) as Record<string, unknown>;
+  const result = walk(data, 0);
+  return result && typeof result === "object" ? (result as Record<string, unknown>) : {};
 }
 
 export function validateApiKey(apiKey: string): boolean {
@@ -83,6 +114,8 @@ export function validateApiKey(apiKey: string): boolean {
 }
 
 const EMAIL_PATTERN = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,255}\.[A-Z]{2,24}/gi;
+const EMAIL_ANYWHERE = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,255}\.[A-Z]{2,24}/i;
+const TOKEN_SEGMENT = /^[A-Za-z0-9_-]{32,}$/;
 const CARD_PATTERN = /\b(?:\d[ -]?){13,19}\b/g;
 const JWT_PATTERN = /\beyJ[\w-]+\.[\w-]+\.[\w-]+\b/g;
 const BEARER_PATTERN = /\bBearer\s+[\w.~+/=-]+/gi;
@@ -97,9 +130,28 @@ function isScrubbableParam(key: string): boolean {
 }
 
 function scrubSearchParams(params: URLSearchParams): void {
-  for (const key of Array.from(params.keys())) {
-    if (isScrubbableParam(key)) params.set(key, REDACTED);
+  for (const [key, value] of Array.from(params.entries())) {
+    if (isScrubbableParam(key) || EMAIL_ANYWHERE.test(value)) params.set(key, REDACTED);
   }
+}
+
+function looksLikeToken(segment: string): boolean {
+  return TOKEN_SEGMENT.test(segment) && /\d/.test(segment) && /[A-Za-z]/.test(segment);
+}
+
+function scrubPath(pathname: string): string {
+  return pathname
+    .split("/")
+    .map((segment) => {
+      let decoded: string;
+      try {
+        decoded = decodeURIComponent(segment);
+      } catch {
+        decoded = segment;
+      }
+      return EMAIL_ANYWHERE.test(decoded) || looksLikeToken(decoded) ? REDACTED : segment;
+    })
+    .join("/");
 }
 
 export function scrubHash(hash: string | null | undefined): string {
@@ -119,8 +171,12 @@ export function scrubUrl(url: string | null | undefined): string {
   } catch {
     return "";
   }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return `${parsed.protocol}${REDACTED}`;
+  }
   parsed.username = "";
   parsed.password = "";
+  parsed.pathname = scrubPath(parsed.pathname);
   scrubSearchParams(parsed.searchParams);
   parsed.hash = scrubHash(parsed.hash);
   return parsed.toString();
@@ -144,13 +200,18 @@ export function redactText(text: string | null | undefined): string {
     .replace(CARD_PATTERN, REDACTED);
 }
 
+const TEXT_ATTRIBUTES = new Set(["alt", "title", "aria-label"]);
+
 export function filterElementAttributes(
   attributes: Array<{ name: string; value: string }>,
+  options: { includeText?: boolean } = {},
 ): Record<string, string> {
+  const includeText = options.includeText !== false;
   const out: Record<string, string> = {};
   for (const attr of attributes) {
     const name = attr.name.toLowerCase();
     if (name === "value") continue;
+    if (!includeText && TEXT_ATTRIBUTES.has(name)) continue;
     const allowed =
       (ALLOWED_ELEMENT_ATTRIBUTES as readonly string[]).includes(name) ||
       name.startsWith("data-indeks-");

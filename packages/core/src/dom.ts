@@ -112,14 +112,26 @@ export function readText(element: Element, captureText: boolean): string {
   return normalizeText(boundedInnerText(element));
 }
 
+export function selectionTouchesMasked(selection: Selection | null | undefined): boolean {
+  if (!selection || !selection.rangeCount) return false;
+  for (const mask of Array.from(document.querySelectorAll(MASK_SELECTOR))) {
+    if (selection.containsNode(mask, true)) return true;
+  }
+  return false;
+}
+
 export function getElementInfo(element: Element, captureText = true) {
+  if (isMasked(element)) {
+    return { ...describeElement(element), textContent: "", attributes: {} };
+  }
   const attributes: Record<string, string> = filterElementAttributes(
     Array.from(element.attributes).map((attr) => ({
       name: attr.name,
       value: attr.value,
     })),
+    { includeText: captureText },
   );
-  const text = captureText && !isMasked(element);
+  const text = captureText;
 
   const link = element.closest("a");
   if (link?.href) {

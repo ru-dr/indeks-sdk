@@ -1,7 +1,7 @@
 import { STORAGE_KEYS, pathAndSearch, scrubUrl } from "@indeks/shared";
 import type { IndeksSessionEndEvent, IndeksSessionStartEvent } from "@indeks/shared";
 import type { Collector, CollectorContext, SessionEndTrigger } from "../context";
-import { isSameSite, safeHostname, storageGet, storageSet } from "../dom";
+import { isSameSite, normalizeText, safeHostname, storageGet, storageSet } from "../dom";
 
 type TrafficSource = IndeksSessionStartEvent["trafficSource"];
 
@@ -70,9 +70,9 @@ function emitSessionStart(ctx: CollectorContext): void {
     device: ctx.device,
     referrer: scrubUrl(document.referrer),
     referrerDomain: safeHostname(document.referrer),
-    utmSource: params.get("utm_source") || undefined,
-    utmMedium: params.get("utm_medium") || undefined,
-    utmCampaign: params.get("utm_campaign") || undefined,
+    utmSource: normalizeText(params.get("utm_source"), 100) || undefined,
+    utmMedium: normalizeText(params.get("utm_medium"), 100) || undefined,
+    utmCampaign: normalizeText(params.get("utm_campaign"), 100) || undefined,
     trafficSource: determineTrafficSource(params),
     landingPage: pathAndSearch(window.location.href),
     isMobile: ctx.device.deviceType === "mobile",

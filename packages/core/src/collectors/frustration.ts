@@ -1,3 +1,4 @@
+import { redactText } from "@indeks/shared";
 import type {
   IndeksDeadClickEvent,
   IndeksErrorClickEvent,
@@ -7,9 +8,14 @@ import type { Collector, CollectorContext } from "../context";
 import { INTERACTIVE_SELECTOR, getClassName, toElement } from "../dom";
 
 const MAX_CLICK_ENTRIES = 50;
+const MAX_SELECTOR_LENGTH = 200;
 const MAX_PENDING_DEAD_CLICKS = 5;
 
 export function getElementSelector(element: Element): string {
+  return redactText(buildSelector(element)).slice(0, MAX_SELECTOR_LENGTH);
+}
+
+function buildSelector(element: Element): string {
   if (element.id) return `#${element.id}`;
   const tag = element.tagName.toLowerCase();
   const classes = getClassName(element).split(" ").filter(Boolean);
@@ -142,9 +148,11 @@ function trackErrorClicks(ctx: CollectorContext) {
   ctx.on(document, "click", (e) => {
     const target = toElement(e.target) as HTMLElement | null;
     if (!target) return;
+    const clickedAt = Date.now();
     ctx.later(() => {
       const error = ctx.state.lastError;
-      if (!error || Date.now() - error.at >= 1000) return;
+      if (!error || error.at < clickedAt || Date.now() - error.at >= 1000) return;
+      ctx.state.lastError = null;
       ctx.emit<IndeksErrorClickEvent>({
         type: "error_click",
         element: getElementSelector(target),

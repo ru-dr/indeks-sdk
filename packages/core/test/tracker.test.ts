@@ -250,18 +250,22 @@ describe("privacy", () => {
     }
   });
 
-  test("does not log password input events and redacts field names", async () => {
+  test("never reports input events for sensitive fields, not even their length", async () => {
     const t = await start();
-    html(`<input id="pw" type="password" name="pw"><input id="e" type="text" name="email">`);
-    const pw = document.getElementById("pw") as HTMLInputElement;
-    pw.value = "hunter2";
-    pw.dispatchEvent(new Event("input", { bubbles: true }));
-    const email = document.getElementById("e") as HTMLInputElement;
-    email.value = "a@b.com";
-    email.dispatchEvent(new Event("input", { bubbles: true }));
-    const inputs = eventsOfType<Record<string, Record<string, unknown>>>(t, "input");
+    html(
+      `<input id="pw" type="password" name="pw"><input id="named" type="text" name="password"><input id="mail" type="text" name="email"><input id="city" type="text" name="city">`,
+    );
+    for (const id of ["pw", "named", "mail", "city"]) {
+      const input = document.getElementById(id) as HTMLInputElement;
+      input.value = "some value";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    const inputs = eventsOfType<{ element: { name: string; value?: string; valueLength: number } }>(
+      t,
+      "input",
+    );
     expect(inputs).toHaveLength(1);
-    expect(inputs[0].element.name).toBe("[redacted]");
+    expect(inputs[0].element.name).toBe("city");
     expect(inputs[0].element.value).toBeUndefined();
   });
 });

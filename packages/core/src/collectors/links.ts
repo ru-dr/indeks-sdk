@@ -173,26 +173,38 @@ function emitShare(ctx: CollectorContext, element: HTMLElement): void {
   });
 }
 
-export const share: Collector = (ctx) => {
-  if (typeof navigator.share === "function") {
-    const original = navigator.share;
-    navigator.share = (data?: ShareData) =>
-      original.call(navigator, data).then(() => {
-        ctx.emit<IndeksShareEvent>({
-          type: "share",
-          shareMethod: "native_share",
-          contentShared: scrubUrl(data?.url || window.location.href),
-          shareLocation: shareLocation(),
-          shareText: data?.text ? normalizeText(data.text) : undefined,
-          shareUrl: data?.url ? scrubUrl(data.url) : undefined,
-        });
-      });
-    ctx.hub.observe({
-      disconnect: () => {
-        navigator.share = original;
-      },
-    });
+const SHARE_WRAPPED = Symbol.for("indeks.share.wrapped");
+
+function wrapNativeShare(ctx: CollectorContext): void {
+  const original = navigator.share;
+  if (
+    typeof original !== "function" ||
+    (original as unknown as Record<symbol, unknown>)[SHARE_WRAPPED]
+  ) {
+    return;
   }
+  const wrapped = (data?: ShareData) =>
+    original.call(navigator, data).then(() => {
+      ctx.emit<IndeksShareEvent>({
+        type: "share",
+        shareMethod: "native_share",
+        contentShared: scrubUrl(data?.url || window.location.href),
+        shareLocation: shareLocation(),
+        shareText: data?.text ? normalizeText(data.text) : undefined,
+        shareUrl: data?.url ? scrubUrl(data.url) : undefined,
+      });
+    });
+  Object.defineProperty(wrapped, SHARE_WRAPPED, { value: true });
+  navigator.share = wrapped;
+  ctx.hub.observe({
+    disconnect: () => {
+      if (navigator.share === wrapped) navigator.share = original;
+    },
+  });
+}
+
+export const share: Collector = (ctx) => {
+  wrapNativeShare(ctx);
   ctx.on(document, "click", (e) => {
     const target = toElement(e.target);
     if (!target) return;
