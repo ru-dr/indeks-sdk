@@ -1,49 +1,32 @@
-import IndeksTracker from "@/lib/tracker";
+import IndeksTracker from "./tracker";
 import type { IndeksConfig } from "@indeks/shared";
 
-// Main initialization function
-export function indeks(
-  apiKey: string,
-  printToConsole: boolean = false,
-  config: Partial<IndeksConfig> = {},
-): IndeksTracker {
-  if (!apiKey) {
-    throw new Error("Indeks: API key is required");
-  }
-
-  const fullConfig: IndeksConfig = {
-    apiKey,
-    enableConsoleLogging: printToConsole,
-    ...config,
-  };
-
-  const tracker = new IndeksTracker(fullConfig);
-
-  // Auto-initialize if we're in a browser environment
+export function indeks(apiKey: string, config: Partial<IndeksConfig> = {}): IndeksTracker {
+  const tracker = new IndeksTracker({ ...config, apiKey });
   if (typeof window !== "undefined") {
-    // Wait for DOM to be ready
+    const start = () => tracker.init().catch(console.error);
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () =>
-        tracker.init().catch(console.error),
-      );
+      document.addEventListener("DOMContentLoaded", start, { once: true });
     } else {
-      tracker.init().catch(console.error);
+      void start();
     }
   }
-
   return tracker;
 }
 
-// Named exports
 export { IndeksTracker };
-export * from "@indeks/shared";
-export * from "@/lib";
-export * from "@/utils";
-
-// Default export
+export type { TrackOptions } from "./tracker";
+export type {
+  CapturePreset,
+  CollectorName,
+  DeviceData,
+  IndeksConfig,
+  IndeksEvent,
+  ManualTrackingSchema,
+  PrivacyConfig,
+} from "@indeks/shared";
 export default indeks;
 
-// Global types for better TypeScript support
 declare global {
   interface Window {
     indeks?: typeof indeks;
@@ -51,8 +34,15 @@ declare global {
   }
 }
 
-// Auto-attach to window for browser usage
-if (typeof window !== "undefined") {
+export function exposeGlobals(): void {
+  if (typeof window === "undefined") return;
   window.indeks = indeks;
   window.IndeksTracker = IndeksTracker;
+}
+
+if (typeof document !== "undefined") {
+  const current = document.currentScript as HTMLScriptElement | null;
+  if (current?.hasAttribute("data-indeks-global")) {
+    exposeGlobals();
+  }
 }

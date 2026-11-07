@@ -1,15 +1,20 @@
 {
   "name": "@indeks/core",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "description": "Core browser event tracking library with user behavior analytics",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js",
-      "types": "./dist/types/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "repository": {
@@ -21,12 +26,10 @@
     "README.md"
   ],
   "scripts": {
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "bun build src/index.ts --outdir dist/esm --format esm --target browser",
-    "build:cjs": "bun build src/index.ts --outdir dist/cjs --format cjs --target node",
-    "build:types": "tsc --emitDeclarationOnly --outDir dist/types",
-    "clean": "rimraf dist",
-    "dev": "bun run build --watch"
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "check:package": "publint . && attw --pack . --ignore-rules cjs-resolves-to-esm"
   },
   "keywords": [
     "analytics",
@@ -36,19 +39,31 @@
     "typescript",
     "fingerprinting"
   ],
-  "author": "Your Name",
+  "author": "Indeks contributors",
   "license": "MIT",
   "dependencies": {
-    "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@indeks/shared": "workspace:*"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@thumbmarkjs/thumbmarkjs": "^1.12.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public"
+  },
+  "peerDependencies": {
+    "@thumbmarkjs/thumbmarkjs": "^1.12.0"
+  },
+  "peerDependenciesMeta": {
+    "@thumbmarkjs/thumbmarkjs": {
+      "optional": true
+    }
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
   }
 }
