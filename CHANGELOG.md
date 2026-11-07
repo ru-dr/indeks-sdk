@@ -29,7 +29,8 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Event types are prefixed `Indeks` (`IndeksClickEvent`, ...). Field focus events are `field_focus` and `field_blur`. `outbound_link.url` is `targetUrl`.
 - `first_input_delay` is replaced by `interaction_to_next_paint`.
 - Packages are dual ESM and CommonJS with bundled type declarations.
-- The optional fingerprint library is now [ThumbmarkJS](https://www.thumbmarkjs.com), always started with its telemetry disabled.
+- The optional fingerprint library is now [ThumbmarkJS](https://www.thumbmarkjs.com), always started with its telemetry disabled. The script-tag build does not include it.
+- The publish workflow runs lint, type, test and package checks first, publishes with provenance, and uses the `next` dist-tag for prereleases.
 
 ### Fixed
 
@@ -41,6 +42,11 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Dead clicks were reported for elements that responded correctly.
 - Outbound links were reported for `mailto:` and `tel:` links and for subdomains of the same site.
 - OAuth tokens in URL fragments and sensitive query values could be sent.
+- Text redaction could freeze the page for seconds on very large text blocks (quadratic regular expression); input is now bounded and the expression is linear.
+- Event properties named `__proto__`, `constructor` or `prototype` are ignored instead of altering the sanitized object.
+- Clicking a very large container no longer reads its full rendered text.
+- Same-origin collector paths such as `/api/collect` are accepted as `endpoint`.
+- The React provider and the debugger now share one context even when the package is bundled twice.
 
 ### Removed
 
