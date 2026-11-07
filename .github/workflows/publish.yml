@@ -99,44 +99,59 @@ jobs:
             echo "README.md found in packages/$pkg"
           done
 
-      - name: Build shared package
-        working-directory: ./packages/shared
-        run: bun run build
+      - name: Verify no workspace protocol remains
+        run: |
+          if grep -n "workspace:" packages/*/package.json; then
+            echo "ERROR: workspace: dependencies must be replaced before publishing"
+            exit 1
+          fi
 
-      - name: Build core package
-        working-directory: ./packages/core
-        run: bun run build
+      - name: Build all packages
+        run: bun run build:all
 
-      - name: Build react package
-        working-directory: ./packages/react
-        run: bun run build
+      - name: Lint, typecheck and test
+        run: |
+          bun run lint
+          bun run typecheck
+          bun run test
+
+      - name: Check package exports and size
+        run: |
+          bun run check:packages
+          bun run size
+
+      - name: Choose npm dist-tag
+        id: dist_tag
+        run: |
+          VERSION="${{ needs.check-publish.outputs.version }}"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          if [[ "$VERSION" == *-* ]]; then
+            echo "tag=next" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Publish @indeks/shared
         working-directory: ./packages/shared
-        run: |
-          echo "Publishing @indeks/shared..."
-          npm publish
+        run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: false
 
       - name: Publish @indeks/core
         working-directory: ./packages/core
-        run: |
-          echo "Publishing @indeks/core..."
-          npm publish
+        run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: false
 
       - name: Publish @indeks/react
         working-directory: ./packages/react
-        run: |
-          echo "Publishing @indeks/react..."
-          npm publish
+        run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        continue-on-error: false
 
       - name: Create and push git tag
         run: |
@@ -162,4 +177,4 @@ jobs:
           tag_name: "v${{ needs.check-publish.outputs.version || github.event.inputs.version }}"
           generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.dist_tag.outputs.prerelease }}
