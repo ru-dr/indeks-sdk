@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { COLLECTOR_NAMES } from "@indeks/shared";
+import { COLLECTOR_NAMES } from "@useindeks/shared";
 import type { IndeksTracker } from "../src";
 import { COLLECTORS } from "../src/collectors";
 import { click, createTracker, eventsOfType, html, resetBrowser, sleep } from "./helpers";

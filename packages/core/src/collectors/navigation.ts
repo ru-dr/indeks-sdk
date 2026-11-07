@@ -1,4 +1,4 @@
-import { scrubHash, scrubUrl } from "@indeks/shared";
+import { scrubHash, scrubUrl } from "@useindeks/shared";
 import type {
   IndeksBeforeUnloadEvent,
   IndeksHashChangeEvent,
@@ -10,7 +10,7 @@ import type {
   IndeksTabFocusEvent,
   IndeksVisibilityChangeEvent,
   IndeksWindowFocusEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 import { normalizeText } from "../dom";
 

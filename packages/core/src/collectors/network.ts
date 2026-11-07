@@ -1,10 +1,10 @@
-import { redactText, scrubUrl } from "@indeks/shared";
+import { redactText, scrubUrl } from "@useindeks/shared";
 import type {
   IndeksErrorEvent,
   IndeksNetworkChangeEvent,
   IndeksNetworkStatusEvent,
   IndeksResourceErrorEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector } from "../context";
 import { getConnection } from "../dom";
 

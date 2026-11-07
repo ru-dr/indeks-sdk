@@ -14,7 +14,7 @@ export default defineConfig([
     format: ["esm", "cjs"],
     dts: true,
     clean: true,
-    external: ["@indeks/shared", "@thumbmarkjs/thumbmarkjs"],
+    external: ["@useindeks/shared", "@thumbmarkjs/thumbmarkjs"],
   },
   {
     ...shared,
@@ -22,7 +22,7 @@ export default defineConfig([
     format: ["iife"],
     minify: true,
     sourcemap: false,
-    noExternal: ["@indeks/shared"],
+    noExternal: ["@useindeks/shared"],
     esbuildOptions(options) {
       options.external = [...(options.external ?? []), "@thumbmarkjs/thumbmarkjs"];
     },

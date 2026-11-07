@@ -6,7 +6,7 @@ body:
     id: version
     attributes:
       label: SDK version
-      placeholder: "@indeks/core 2.0.0"
+      placeholder: "@useindeks/core 2.0.0"
     validations:
       required: true
   - type: input

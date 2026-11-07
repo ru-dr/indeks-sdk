@@ -17,7 +17,7 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Transport as a CORS simple request (`text/plain`, key in the body) with retry and backoff, offline buffering and `sendBeacon` on exit.
 - Real session handling: 30 minute timeout, persisted counters, active time.
 - Real INP, LCP, CLS, FCP and TTFB reporting.
-- `@indeks/react`: `track`, `identify` and `page` on `useIndeks()`, and the debugger in its own entry point, `@indeks/react/debugger`.
+- `@useindeks/react`: `track`, `identify` and `page` on `useIndeks()`, and the debugger in its own entry point, `@useindeks/react/debugger`.
 - Script-tag build `indeks.global.js`.
 - Documentation: collector protocol, generated event reference.
 - Tooling: unit tests, real-browser tests (Chromium, Firefox, WebKit), ESLint, Prettier, `publint` and `attw` checks.
@@ -56,6 +56,12 @@ A redesign of the SDK. See the migration table in the [README](README.md#migrati
 - Masked elements and masked content inside selections no longer leak through attributes, clipboard or selection text; page titles, campaign parameters, search filters, sort labels and selectors are redacted or gated.
 - Events with values JSON cannot represent no longer block the send queue or break `destroy()`.
 - Opt-out is complete: in-flight sends are dropped, identifiers are removed, `identify` is ignored, and an opt-out in another tab or a Do Not Track change is honored.
+
+### Toolchain
+
+- TypeScript 7 for type checking, with TypeScript 6 kept for tools that need the compiler API; all dependencies at their latest versions; `minimatch` overridden to a patched release.
+- GitHub Actions moved to current majors (Node 24 runtime) with least-privilege permissions; CI uses the latest Node LTS.
+- Browser APIs that are deprecated or only for legacy browsers are no longer used (`navigator.platform`, `navigator.vendor`, `window.orientation`, vendor-prefixed connection APIs, `pageXOffset` and `pageYOffset`, `window.doNotTrack`, IE touch points). `DeviceData.vendor` is removed and `DeviceData.platform` comes from User-Agent Client Hints when available.
 
 ### Removed
 

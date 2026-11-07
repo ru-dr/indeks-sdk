@@ -1,5 +1,5 @@
-import { STORAGE_KEYS, pathAndSearch, scrubUrl } from "@indeks/shared";
-import type { IndeksSessionEndEvent, IndeksSessionStartEvent } from "@indeks/shared";
+import { STORAGE_KEYS, pathAndSearch, scrubUrl } from "@useindeks/shared";
+import type { IndeksSessionEndEvent, IndeksSessionStartEvent } from "@useindeks/shared";
 import type { Collector, CollectorContext, SessionEndTrigger } from "../context";
 import { isSameSite, normalizeText, safeHostname, storageGet, storageSet } from "../dom";
 

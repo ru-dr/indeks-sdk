@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, mock, setSystemTime, test } from "bun:test";
-import { STORAGE_KEYS, resolveConfig } from "@indeks/shared";
-import type { IndeksEvent } from "@indeks/shared";
+import { STORAGE_KEYS, resolveConfig } from "@useindeks/shared";
+import type { IndeksEvent } from "@useindeks/shared";
 import { IndeksTracker } from "../src";
 import { IndeksAnalytics } from "../src/analytics";
 import { API_KEY, click, createTracker, eventsOfType, html, resetBrowser, sleep } from "./helpers";

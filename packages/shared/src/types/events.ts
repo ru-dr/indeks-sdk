@@ -40,7 +40,6 @@ export interface DeviceData {
   connectionRtt: number | null;
 
   platform: string;
-  vendor: string;
   cookiesEnabled: boolean;
   doNotTrack: boolean;
   online: boolean;

@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   splitting: false,
-  external: ["react", "react-dom", "@indeks/core", "@indeks/shared"],
+  external: ["react", "react-dom", "@useindeks/core", "@useindeks/shared"],
 });

@@ -1,4 +1,4 @@
-import { SESSION_TIMEOUT_MS, STORAGE_KEYS, generateId } from "@indeks/shared";
+import { SESSION_TIMEOUT_MS, STORAGE_KEYS, generateId } from "@useindeks/shared";
 import { storageGet, storageSet } from "./dom";
 
 const PERSIST_INTERVAL_MS = 1000;

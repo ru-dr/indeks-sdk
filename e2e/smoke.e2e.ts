@@ -14,8 +14,9 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ context }) => {
-  harness.reset();
   await context.clearCookies();
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  harness.reset();
 });
 
 async function open(page: Page, path = "/?token=SECRET#access_token=abc") {

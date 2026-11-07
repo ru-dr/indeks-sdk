@@ -7,7 +7,7 @@ const root = resolve(import.meta.dir, "..");
 plugin({
   name: "indeks-workspace-sources",
   setup(build) {
-    build.onResolve({ filter: /^@indeks\/(shared|core|react)$/ }, (args) => {
+    build.onResolve({ filter: /^@useindeks\/(shared|core|react)$/ }, (args) => {
       const name = args.path.split("/")[1];
       return { path: resolve(root, `packages/${name}/src/index.ts`) };
     });

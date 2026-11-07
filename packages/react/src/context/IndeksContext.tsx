@@ -7,9 +7,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { IndeksTracker } from "@indeks/core";
-import type { TrackOptions } from "@indeks/core";
-import type { IndeksConfig } from "@indeks/shared";
+import { IndeksTracker } from "@useindeks/core";
+import type { TrackOptions } from "@useindeks/core";
+import type { IndeksConfig } from "@useindeks/shared";
 
 export interface IndeksContextValue {
   tracker: IndeksTracker | null;
@@ -28,7 +28,7 @@ interface ActiveTracker {
 
 const MAX_BUFFERED_CALLS = 100;
 
-const CONTEXT_KEY = Symbol.for("@indeks/react/context");
+const CONTEXT_KEY = Symbol.for("@useindeks/react/context");
 
 type ContextStore = typeof globalThis & {
   [CONTEXT_KEY]?: React.Context<IndeksContextValue | undefined>;

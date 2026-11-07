@@ -1,4 +1,4 @@
-import { debounce } from "@indeks/shared";
+import { debounce } from "@useindeks/shared";
 
 export type Disposer = () => void;
 

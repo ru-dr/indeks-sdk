@@ -1,11 +1,8 @@
-import { BATCH_CONFIG, STORAGE_KEYS, safeJsonParse } from "@indeks/shared";
-import type { IndeksEvent, StorageInterface } from "@indeks/shared";
+import { BATCH_CONFIG, STORAGE_KEYS, safeJsonParse } from "@useindeks/shared";
+import type { IndeksEvent, StorageInterface } from "@useindeks/shared";
 
 function isQuotaExceeded(error: unknown): boolean {
-  return (
-    error instanceof DOMException &&
-    (error.name === "QuotaExceededError" || error.name === "NS_ERROR_DOM_QUOTA_REACHED")
-  );
+  return error instanceof DOMException && error.name === "QuotaExceededError";
 }
 
 export class LocalStorageAdapter implements StorageInterface {

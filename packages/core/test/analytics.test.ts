@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { BATCH_CONFIG, resolveConfig } from "@indeks/shared";
-import type { IndeksConfig } from "@indeks/shared";
-import type { IndeksEvent } from "@indeks/shared";
+import { BATCH_CONFIG, resolveConfig } from "@useindeks/shared";
+import type { IndeksConfig } from "@useindeks/shared";
+import type { IndeksEvent } from "@useindeks/shared";
 import { IndeksAnalytics } from "../src/analytics";
 import { API_KEY, resetBrowser } from "./helpers";
 

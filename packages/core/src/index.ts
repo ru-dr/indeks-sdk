@@ -1,5 +1,5 @@
 import IndeksTracker from "./tracker";
-import type { IndeksConfig } from "@indeks/shared";
+import type { IndeksConfig } from "@useindeks/shared";
 
 export function indeks(apiKey: string, config: Partial<IndeksConfig> = {}): IndeksTracker {
   const tracker = new IndeksTracker({ ...config, apiKey });
@@ -24,7 +24,7 @@ export type {
   IndeksEvent,
   ManualTrackingSchema,
   PrivacyConfig,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 export default indeks;
 
 declare global {

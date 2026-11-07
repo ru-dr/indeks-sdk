@@ -1,10 +1,10 @@
-import { BATCH_CONFIG, Logger, LogLevel, sanitizeEventData, scrubUrl } from "@indeks/shared";
+import { BATCH_CONFIG, Logger, LogLevel, sanitizeEventData, scrubUrl } from "@useindeks/shared";
 import type {
   IndeksEvent,
   ResolvedConfig,
   AnalyticsInterface,
   StorageInterface,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import { LocalStorageAdapter } from "./storage";
 
 const PLAIN_TEXT = "text/plain;charset=UTF-8";

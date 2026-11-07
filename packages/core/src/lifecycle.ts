@@ -1,4 +1,4 @@
-import { scrubUrl } from "@indeks/shared";
+import { scrubUrl } from "@useindeks/shared";
 import { getScrollMetrics } from "./dom";
 import type { Hub } from "./hub";
 import type { SessionManager } from "./session";

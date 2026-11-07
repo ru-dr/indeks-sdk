@@ -1,4 +1,4 @@
-import { sanitizeUserInput } from "@indeks/shared";
+import { sanitizeUserInput } from "@useindeks/shared";
 import type {
   IndeksClickEvent,
   IndeksContextMenuEvent,
@@ -10,7 +10,7 @@ import type {
   IndeksMousePressEvent,
   IndeksTouchEvent,
   IndeksWheelEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector } from "../context";
 import {
   categorizeKey,

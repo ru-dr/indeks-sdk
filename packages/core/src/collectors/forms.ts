@@ -1,4 +1,4 @@
-import { REDACTED, sanitizeUserInput, scrubUrl } from "@indeks/shared";
+import { REDACTED, sanitizeUserInput, scrubUrl } from "@useindeks/shared";
 import type {
   IndeksClipboardEvent,
   IndeksFieldFocusEvent,
@@ -7,7 +7,7 @@ import type {
   IndeksFormSubmitEvent,
   IndeksInputChangeEvent,
   IndeksTextSelectionEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 import {
   MAX_TEXT_LENGTH,

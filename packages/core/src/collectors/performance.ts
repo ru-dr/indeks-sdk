@@ -1,4 +1,4 @@
-import type { IndeksPerformanceEvent } from "@indeks/shared";
+import type { IndeksPerformanceEvent } from "@useindeks/shared";
 import type { Collector, CollectorContext } from "../context";
 import { whenLoaded } from "./navigation";
 

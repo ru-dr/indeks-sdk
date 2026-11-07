@@ -1,5 +1,5 @@
 {
-  "name": "@indeks/shared",
+  "name": "@useindeks/shared",
   "version": "2.0.0",
   "description": "Shared types, constants, and utilities for Indeks SDK",
   "main": "./dist/index.cjs",
@@ -41,7 +41,8 @@
   "author": "Indeks contributors",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "^6.0.3"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
@@ -50,6 +51,6 @@
   "type": "module",
   "sideEffects": false,
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

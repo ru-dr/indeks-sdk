@@ -1,23 +1,45 @@
+<p align="center">
+  <a href="https://github.com/ru-dr/indeks-sdk">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-dark.svg">
+      <img src="https://raw.githubusercontent.com/ru-dr/indeks-sdk/main/assets/logo-sdk-light.svg" alt="Indeks SDK" width="420">
+    </picture>
+  </a>
+</p>
+
+<p align="center">Privacy-first web analytics SDK for self-hosted Indeks.</p>
+
+<p align="center">
+  <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://github.com/ru-dr/indeks-sdk/releases"><img alt="Release" src="https://shieldcn.dev/github/release/ru-dr/indeks-sdk.svg"></a>
+  <a href="https://www.npmjs.com/package/@useindeks/core"><img alt="@useindeks/core on npm" src="https://shieldcn.dev/npm/@useindeks/core.svg"></a>
+  <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react on npm" src="https://shieldcn.dev/npm/@useindeks/react.svg"></a>
+  <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://shieldcn.dev/badge/TypeScript-7-blue.svg?logo=typescript"></a>
+  <a href="https://bun.sh"><img alt="Bun" src="https://shieldcn.dev/badge/Bun-latest-black.svg?logo=bun"></a>
+  <a href="https://nodejs.org"><img alt="Node.js" src="https://shieldcn.dev/badge/Node-22%2B-green.svg?logo=nodedotjs"></a>
+</p>
+
 # Indeks SDK
 
 Privacy-first web analytics SDK for self-hosted [Indeks](https://github.com/ru-dr/indeks). It tracks page views, clicks, scroll depth, forms, errors, performance and more, and sends batched events to your own collector.
 
 | Package | What it is |
 | --- | --- |
-| [`@indeks/core`](packages/core) | Framework-agnostic tracker (`indeks()`, `IndeksTracker`, script-tag build) |
-| [`@indeks/react`](packages/react) | `<Indeks>` provider, `useIndeks()` hook and an optional debugger |
-| [`@indeks/shared`](packages/shared) | Types, config resolution, sanitizers and device parsing used by both |
+| [`@useindeks/core`](packages/core) | Framework-agnostic tracker (`indeks()`, `IndeksTracker`, script-tag build) |
+| [`@useindeks/react`](packages/react) | `<Indeks>` provider, `useIndeks()` hook and an optional debugger |
+| [`@useindeks/shared`](packages/shared) | Types, config resolution, sanitizers and device parsing used by both |
 
 More documentation: [collector protocol](docs/protocol.md), [event reference](docs/events.md), [changelog](CHANGELOG.md), [contributing](CONTRIBUTING.md), [security policy](SECURITY.md).
 
 ## Quick start
 
 ```bash
-npm install @indeks/core
+npm install @useindeks/core
 ```
 
 ```ts
-import { indeks } from "@indeks/core";
+import { indeks } from "@useindeks/core";
 
 const tracker = indeks("YOUR_PROJECT_KEY", {
   endpoint: "https://analytics.example.com/api/v1/collect",
@@ -27,7 +49,7 @@ tracker.track("signup", { plan: "pro" });
 tracker.identify("user-42", { plan: "pro" });
 ```
 
-There is no default server: `endpoint` is required for events to be sent. React users should read the [`@indeks/react`](packages/react) README.
+There is no default server: `endpoint` is required for events to be sent. React users should read the [`@useindeks/react`](packages/react) README.
 
 ## Browser support
 
@@ -51,7 +73,7 @@ Bundle size (gzipped): the script-tag build is about 23 kB, and CI fails if it e
 | `captureFormValues`, `captureClipboardText`, `captureSearchTerms`, `useFingerprint`, `respectDoNotTrack` | `privacy: { formValues, clipboardText, searchTerms, fingerprint, respectDoNotTrack }` |
 | `enableConsoleLogging` | `debug` |
 | `tracker.track({ selectors })` | `tracker.trackElements({ selectors })`; `tracker.track(name, props)` sends a custom event |
-| `import { IndeksDebugger } from "@indeks/react"` | `import { IndeksDebugger } from "@indeks/react/debugger"` |
+| `import { IndeksDebugger } from "@useindeks/react"` | `import { IndeksDebugger } from "@useindeks/react/debugger"` |
 | Event types `ClickEvent`, `ErrorEvent`, ... | `IndeksClickEvent`, `IndeksErrorEvent`, ... |
 | `device` on every event | `device` on `session_start` only |
 | `field` focus events `focus` / `blur` | `field_focus` / `field_blur` (window `focus` / `blur` unchanged) |
@@ -70,7 +92,7 @@ bun run e2e         # real-browser tests (Chromium, Firefox, WebKit) against a l
 bun run release minor --dry-run
 ```
 
-Requires Bun 1.1 or newer. Releases are created with `scripts/release.ts`, which bumps all packages, commits and tags; the publish workflow runs when the commit message contains `[publish]`.
+Requires the latest Bun and Node.js 22 or newer. Releases are created with `scripts/release.ts`, which bumps all packages, commits and tags; the publish workflow runs when the commit message contains `[publish]`.
 
 ## License
 

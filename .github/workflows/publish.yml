@@ -24,7 +24,7 @@ jobs:
       should_publish: ${{ steps.check.outputs.should_publish }}
       version: ${{ steps.extract.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check if should publish
         id: check
@@ -54,21 +54,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
-          scope: "@indeks"
+          scope: "@useindeks"
 
       - name: Install dependencies
         run: bun install
@@ -80,10 +80,10 @@ jobs:
             VERSION="${{ github.event.inputs.version }}"
           fi
           # Update core package.json to use actual version instead of workspace:*
-          sed -i "s/\"@indeks\/shared\": \"workspace:\*\"/\"@indeks\/shared\": \"$VERSION\"/g" packages/core/package.json
+          sed -i "s/\"@useindeks\/shared\": \"workspace:\*\"/\"@useindeks\/shared\": \"$VERSION\"/g" packages/core/package.json
           # Update react package.json to use actual versions instead of workspace:*
-          sed -i "s/\"@indeks\/core\": \"workspace:\*\"/\"@indeks\/core\": \"$VERSION\"/g" packages/react/package.json
-          sed -i "s/\"@indeks\/shared\": \"workspace:\*\"/\"@indeks\/shared\": \"$VERSION\"/g" packages/react/package.json
+          sed -i "s/\"@useindeks\/core\": \"workspace:\*\"/\"@useindeks\/core\": \"$VERSION\"/g" packages/react/package.json
+          sed -i "s/\"@useindeks\/shared\": \"workspace:\*\"/\"@useindeks\/shared\": \"$VERSION\"/g" packages/react/package.json
 
       - name: Validate package.json files
         run: |
@@ -135,19 +135,19 @@ jobs:
             echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Publish @indeks/shared
+      - name: Publish @useindeks/shared
         working-directory: ./packages/shared
         run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @indeks/core
+      - name: Publish @useindeks/core
         working-directory: ./packages/core
         run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @indeks/react
+      - name: Publish @useindeks/react
         working-directory: ./packages/react
         run: npm publish --provenance --access public --tag ${{ steps.dist_tag.outputs.tag }}
         env:
@@ -171,7 +171,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           name: "Release ${{ needs.check-publish.outputs.version || github.event.inputs.version }}"
           tag_name: "v${{ needs.check-publish.outputs.version || github.event.inputs.version }}"

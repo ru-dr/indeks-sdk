@@ -6,7 +6,7 @@ import type {
   IndeksPageViewEvent,
   IndeksSessionEndEvent,
   IndeksSessionStartEvent,
-} from "@indeks/shared";
+} from "@useindeks/shared";
 import { IndeksTracker } from "../src";
 import { API_KEY, click, createTracker, eventsOfType, html, resetBrowser } from "./helpers";
 
