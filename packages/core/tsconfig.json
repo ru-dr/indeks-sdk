@@ -20,6 +20,6 @@
       "@indeks/shared": ["../shared/src/index.ts"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "../../test/globals.d.ts"],
+  "include": ["src/**/*", "test/**/*", "../../test/globals.d.ts", "tsup.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

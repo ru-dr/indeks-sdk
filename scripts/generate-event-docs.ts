@@ -13,9 +13,27 @@ const sourceFile = ts.createSourceFile(
   ts.ScriptTarget.ES2020,
   true,
 );
+interface Field {
+  name: string;
+  optional: boolean;
+  type: string;
+}
+
+interface EventShape {
+  interface: string;
+  types: string[];
+  fields: Field[];
+}
+
+function literalTypes(type: ts.TypeNode): string[] {
+  if (ts.isLiteralTypeNode(type) && ts.isStringLiteral(type.literal)) return [type.literal.text];
+  if (ts.isUnionTypeNode(type)) return type.types.flatMap(literalTypes);
+  return [];
+}
+
 const printer = ts.createPrinter({ removeComments: true });
 
-const print = (node) =>
+const print = (node: ts.Node) =>
   printer
     .printNode(ts.EmitHint.Unspecified, node, sourceFile)
     .replace(/\s*\n\s*/g, " ")
@@ -24,19 +42,17 @@ const print = (node) =>
     .replace(/\s+\}/g, " }")
     .replace(/\|/g, "\\|");
 
-const events = [];
+const events: EventShape[] = [];
 for (const node of sourceFile.statements) {
   if (!ts.isInterfaceDeclaration(node) || !node.name.text.endsWith("Event")) continue;
   if (node.name.text === "IndeksBaseEvent") continue;
-  const fields = [];
-  let types = [];
+  const fields: Field[] = [];
+  let types: string[] = [];
   for (const member of node.members) {
     if (!ts.isPropertySignature(member) || !member.type) continue;
     const name = member.name.getText(sourceFile);
     if (name === "type") {
-      types = ts.isLiteralTypeNode(member.type)
-        ? [member.type.literal.text]
-        : member.type.types.map((t) => t.literal.text);
+      types = literalTypes(member.type);
       continue;
     }
     fields.push({ name, optional: Boolean(member.questionToken), type: print(member.type) });
@@ -47,7 +63,7 @@ for (const node of sourceFile.statements) {
 const lines = [
   "# Event reference",
   "",
-  "Generated from `packages/shared/src/types/events.ts` by `scripts/generate-event-docs.mjs`. Do not edit by hand; run `bun run docs:events`.",
+  "Generated from `packages/shared/src/types/events.ts` by `scripts/generate-event-docs.ts`. Do not edit by hand; run `bun run docs:events`.",
   "",
   "## Common fields",
   "",
@@ -64,11 +80,11 @@ const lines = [
   "| `referrer` | string, optional | Scrubbed `document.referrer` |",
   "| `externalUserId` | string, optional | Id set with `identify()`; sent inside `properties` |",
   "",
-  `There are ${events.length} event shapes covering ${events.reduce((n, e) => n + e.types.length, 0)} event types.`,
+  `There are ${events.length} event shapes covering ${events.reduce((n: number, e: EventShape) => n + e.types.length, 0)} event types.`,
   "",
 ];
 for (const event of events) {
-  lines.push(`## ${event.types.map((t) => `\`${t}\``).join(", ")}`, "");
+  lines.push(`## ${event.types.map((t: string) => `\`${t}\``).join(", ")}`, "");
   lines.push(`TypeScript type: \`${event.interface}\``, "");
   if (event.fields.length === 0) {
     lines.push("No additional fields.", "");

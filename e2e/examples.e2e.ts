@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
-import { startExamples } from "../examples/server.mjs";
+import { startExamples } from "../examples/server";
 
 let server: Awaited<ReturnType<typeof startExamples>>;
 

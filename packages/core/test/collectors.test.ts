@@ -567,6 +567,7 @@ describe("remaining collectors", () => {
     });
     let t = await start({ collectors: { textSelection: true } });
     document.dispatchEvent(new Event("selectionchange"));
+    await sleep(20);
     let [event] = eventsOfType<{ selectedText?: string; selectedTextLength: number }>(
       t,
       "selectionchange",
@@ -580,6 +581,7 @@ describe("remaining collectors", () => {
       privacy: { clipboardText: true },
     });
     document.dispatchEvent(new Event("selectionchange"));
+    await sleep(20);
     [event] = eventsOfType<{ selectedText?: string; selectedTextLength: number }>(
       t,
       "selectionchange",
@@ -616,5 +618,173 @@ describe("remaining collectors", () => {
     for (let i = 0; i < 5; i++) document.dispatchEvent(new MouseEvent("mousemove", { clientX: i }));
     await sleep(20);
     expect(eventsOfType(t, "mousemove")).toHaveLength(1);
+  });
+});
+
+describe("review findings: privacy in collectors", () => {
+  test("printable keystrokes never include the key code", async () => {
+    const t = await start({ collectors: { keystroke: true } });
+    html(`<input id="a" name="city">`);
+    const press = (key: string, code: string) =>
+      document
+        .getElementById("a")!
+        .dispatchEvent(new KeyboardEvent("keydown", { key, code, bubbles: true }));
+    press("s", "KeyS");
+    press("7", "Digit7");
+    press("Enter", "Enter");
+    const events = eventsOfType<{ key?: string; code?: string }>(t, "keystroke");
+    expect(events.map((e) => e.code)).toEqual([undefined, undefined, "Enter"]);
+    expect(JSON.stringify(events)).not.toContain("KeyS");
+  });
+
+  test("masked and text-off elements expose no text-bearing attributes", async () => {
+    let t = await start({ privacy: { elementText: false } });
+    html(
+      `<button id="b" aria-label="Pay for john's order" title="Account 1234" data-testid="pay">x</button>`,
+    );
+    click(document.getElementById("b")!);
+    let [event] = eventsOfType<{ element: { attributes: Record<string, string> } }>(t, "click");
+    const keys = Object.keys(event.element.attributes);
+    expect(keys).toEqual(expect.arrayContaining(["id", "data-testid"]));
+    for (const textKey of ["aria-label", "title", "__ariaLabel"])
+      expect(keys).not.toContain(textKey);
+    expect(JSON.stringify(event)).not.toMatch(/john|Account 1234/);
+    await t.destroy();
+
+    t = tracker = await createTracker();
+    html(
+      `<div data-indeks-mask><a id="m" href="https://a.com/x" aria-label="Jane" title="Secret">link</a></div>`,
+    );
+    document.getElementById("m")!.addEventListener("click", (e) => e.preventDefault());
+    click(document.getElementById("m")!);
+    [event] = eventsOfType<{ element: { attributes: Record<string, string> } }>(t, "click");
+    expect(event.element.attributes).toEqual({});
+    expect(JSON.stringify(event)).not.toMatch(/Jane|Secret|a\.com/);
+  });
+
+  test("form submit redacts sensitive and masked fields entirely, even their length", async () => {
+    const t = await start();
+    html(
+      `<form id="f"><input name="city" value="Paris"><input type="password" name="pw" value="hunter22"><div data-indeks-mask><input name="note" value="private"></div></form>`,
+    );
+    document.getElementById("f")!.dispatchEvent(new Event("submit", { bubbles: true }));
+    const [submit] = eventsOfType<{ formData: Record<string, string> }>(t, "form_submit");
+    expect(submit.formData).toEqual({
+      city: "[len:5]",
+      pw: "[redacted]",
+      note: "[redacted]",
+    });
+  });
+
+  test("selected text that spans masked content is not sent", async () => {
+    html(`<p id="p">public</p><div data-indeks-mask id="m">secret</div>`);
+    const mask = document.getElementById("m")!;
+    const selection = {
+      toString: () => "public secret",
+      anchorNode: document.getElementById("p")!.firstChild,
+      anchorOffset: 0,
+      focusOffset: 6,
+      rangeCount: 1,
+      containsNode: (node: Node) => node === mask,
+    };
+    const original = window.getSelection;
+    window.getSelection = (() => selection) as unknown as typeof window.getSelection;
+    extraCleanup.push(() => {
+      window.getSelection = original;
+    });
+    const t = await start({ privacy: { clipboardText: true } });
+    document.getElementById("p")!.dispatchEvent(new Event("copy", { bubbles: true }));
+    const [copy] = eventsOfType<{ text?: string; textLength?: number }>(t, "copy");
+    expect(copy.text).toBeUndefined();
+    expect(copy.textLength).toBe(13);
+  });
+
+  test("page titles and campaign parameters are redacted and bounded", async () => {
+    resetBrowser("https://app.example.com/?utm_source=john@x.com&utm_medium=" + "m".repeat(500));
+    document.title = "Inbox - john@x.com";
+    const t = await start();
+    const [view] = eventsOfType<{ title: string }>(t, "pageview");
+    const [start0] = eventsOfType<{ utmSource?: string; utmMedium?: string }>(t, "session_start");
+    expect(view.title).not.toContain("john@x.com");
+    expect(start0.utmSource).not.toContain("john@x.com");
+    expect(start0.utmMedium!.length).toBe(100);
+    document.title = "";
+  });
+
+  test("search filters and sort order respect elementText and masks", async () => {
+    html(`
+      <div class="filter active" data-filter="size">XL for john</div>
+      <select name="sort"><option value="price" selected>price</option></select>
+      <form id="f"><input name="q" value="hats"></form>`);
+    let t = await start({ privacy: { elementText: false } });
+    document.getElementById("f")!.dispatchEvent(new Event("submit", { bubbles: true }));
+    let [search] = eventsOfType<{ filtersApplied?: unknown; sortBy?: string }>(t, "search");
+    expect(search.filtersApplied).toBeUndefined();
+    expect(search.sortBy).toBeUndefined();
+    await t.destroy();
+
+    t = tracker = await createTracker();
+    document.getElementById("f")!.dispatchEvent(new Event("submit", { bubbles: true }));
+    [search] = eventsOfType<{ filtersApplied?: Record<string, string>; sortBy?: string }>(
+      t,
+      "search",
+    );
+    expect(search.filtersApplied).toEqual({ size: "XL for john" });
+    expect(search.sortBy).toBe("price");
+  });
+
+  test("click selectors never contain emails", async () => {
+    const t = await start({ collectorOptions: { frustration: { rageClickCount: 2 } } });
+    html(`<button id="jo@example.com">Go</button>`);
+    const button = document.getElementById("jo@example.com")!;
+    click(button);
+    click(button);
+    expect(JSON.stringify(eventsOfType(t, "rage_click"))).not.toContain("jo@example.com");
+  });
+
+  test("one error produces one error_click, and only for clicks before it", async () => {
+    const t = await start();
+    html(`<button id="a">A</button><button id="b">B</button>`);
+    window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: before click" }));
+    await sleep(5);
+    click(document.getElementById("a")!);
+    window.dispatchEvent(new ErrorEvent("error", { message: "TypeError: after first click" }));
+    click(document.getElementById("b")!);
+    await sleep(160);
+    const errorClicks = eventsOfType<{ errorMessage: string }>(t, "error_click");
+    expect(errorClicks.map((e) => e.errorMessage)).toEqual(["TypeError: after first click"]);
+  });
+
+  test("media progress ignores unknown or zero durations", async () => {
+    const t = await start();
+    html(`<video id="v"></video>`);
+    const video = document.getElementById("v") as HTMLVideoElement;
+    Object.defineProperty(video, "duration", { value: NaN, configurable: true });
+    Object.defineProperty(video, "currentTime", { value: 5, configurable: true });
+    video.dispatchEvent(new Event("timeupdate"));
+    expect(eventsOfType(t, "video_progress")).toHaveLength(0);
+  });
+
+  test("native share is wrapped once even with two trackers", async () => {
+    const original = async () => undefined;
+    Object.defineProperty(navigator, "share", {
+      value: original,
+      configurable: true,
+      writable: true,
+    });
+    extraCleanup.push(() => {
+      delete (navigator as unknown as Record<string, unknown>).share;
+    });
+    const first = await start();
+    const wrapped = navigator.share;
+    const second = await createTracker();
+    expect(navigator.share).toBe(wrapped);
+    await navigator.share({ url: "https://a.com" });
+    expect(eventsOfType(first, "share")).toHaveLength(1);
+    expect(eventsOfType(second, "share")).toHaveLength(0);
+    await second.destroy();
+    expect(navigator.share).toBe(wrapped);
+    await first.destroy();
+    expect(navigator.share).toBe(original);
   });
 });

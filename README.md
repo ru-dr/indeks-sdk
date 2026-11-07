@@ -70,7 +70,7 @@ bun run e2e         # real-browser tests (Chromium, Firefox, WebKit) against a l
 bun run release minor --dry-run
 ```
 
-Requires Bun 1.1 or newer. Releases are created with `scripts/release.mjs`, which bumps all packages, commits and tags; the publish workflow runs when the commit message contains `[publish]`.
+Requires Bun 1.1 or newer. Releases are created with `scripts/release.ts`, which bumps all packages, commits and tags; the publish workflow runs when the commit message contains `[publish]`.
 
 ## License
 

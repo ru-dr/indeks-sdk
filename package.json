@@ -17,17 +17,17 @@
     "clean": "node -e \"for (const p of ['shared','core','react']) require('node:fs').rmSync('packages/'+p+'/dist',{recursive:true,force:true})\"",
     "lint": "eslint .",
     "test": "bun test",
-    "typecheck": "bun run --filter \"./packages/*\" typecheck",
-    "release": "node scripts/release.mjs",
+    "typecheck": "tsc --noEmit && bun run --filter \"./packages/*\" typecheck",
+    "release": "bun scripts/release.ts",
     "e2e": "bun run build:all && playwright test",
     "check:packages": "bun run build:all && bun run --filter \"./packages/*\" check:package",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docs:events": "node scripts/generate-event-docs.mjs",
-    "docs:check": "node scripts/generate-event-docs.mjs --check",
-    "size": "node scripts/check-size.mjs",
+    "docs:events": "bun scripts/generate-event-docs.ts",
+    "docs:check": "bun scripts/generate-event-docs.ts --check",
+    "size": "bun scripts/check-size.ts",
     "examples:build": "bun build examples/react/main.tsx --outfile examples/react/dist/app.js --target browser --format esm --minify --define process.env.NODE_ENV=\\\"production\\\"",
-    "examples": "bun run examples:build && node examples/server.mjs"
+    "examples": "bun run examples:build && bun examples/server.ts"
   },
   "repository": {
     "type": "git",

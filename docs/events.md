@@ -1,6 +1,6 @@
 # Event reference
 
-Generated from `packages/shared/src/types/events.ts` by `scripts/generate-event-docs.mjs`. Do not edit by hand; run `bun run docs:events`.
+Generated from `packages/shared/src/types/events.ts` by `scripts/generate-event-docs.ts`. Do not edit by hand; run `bun run docs:events`.
 
 ## Common fields
 

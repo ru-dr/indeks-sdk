@@ -108,7 +108,7 @@ export interface IndeksKeystrokeEvent extends IndeksBaseEvent {
 
   key?: string;
   keyCategory: "printable" | "navigation" | "modifier" | "whitespace";
-  code: string;
+  code?: string;
   ctrlKey: boolean;
   shiftKey: boolean;
   altKey: boolean;

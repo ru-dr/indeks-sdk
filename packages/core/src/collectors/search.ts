@@ -3,7 +3,7 @@ import type { IndeksSearchEvent } from "@indeks/shared";
 import type { Collector, CollectorContext } from "../context";
 
 type SearchSettings = CollectorContext["config"]["collectorOptions"]["search"];
-import { normalizeText, storageGet, storageSet, toElement } from "../dom";
+import { isMasked, normalizeText, storageGet, storageSet, toElement } from "../dom";
 
 const DEDUPE_WINDOW_MS = 500;
 function resultsCount(options: SearchSettings): number {
@@ -29,9 +29,11 @@ function searchLocation(): IndeksSearchEvent["searchLocation"] {
   return rect.left < 100 ? "sidebar" : "page";
 }
 
-function appliedFilters(): Record<string, string> | undefined {
+function appliedFilters(ctx: CollectorContext): Record<string, string> | undefined {
+  if (!ctx.captureText()) return undefined;
   const filters: Record<string, string> = {};
   document.querySelectorAll("[data-filter], .filter.active, .facet.active").forEach((el) => {
+    if (isMasked(el)) return;
     const key = el.getAttribute("data-filter") || el.getAttribute("data-facet");
     const value = el.getAttribute("data-value") || el.textContent?.trim();
     if (key && value) filters[key] = normalizeText(value);
@@ -39,16 +41,13 @@ function appliedFilters(): Record<string, string> | undefined {
   return Object.keys(filters).length ? filters : undefined;
 }
 
-function sortBy(): string | undefined {
+function sortBy(ctx: CollectorContext): string | undefined {
+  if (!ctx.captureText()) return undefined;
   for (const selector of ['select[name*="sort"]', "[data-sort]", ".sort-by"]) {
     const element = document.querySelector<HTMLSelectElement>(selector);
-    if (element) {
-      return (
-        element.value ||
-        element.getAttribute("data-sort") ||
-        element.textContent?.trim() ||
-        undefined
-      );
+    if (element && !isMasked(element)) {
+      const raw = element.value || element.getAttribute("data-sort") || element.textContent?.trim();
+      return normalizeText(raw) || undefined;
     }
   }
   return undefined;
@@ -74,8 +73,8 @@ function emitSearch(
     queryLength: query.length,
     resultsCount: resultsCount(ctx.config.collectorOptions.search),
     searchLocation: searchLocation(),
-    filtersApplied: appliedFilters(),
-    sortBy: sortBy(),
+    filtersApplied: appliedFilters(ctx),
+    sortBy: sortBy(ctx),
     resultsClicked: 0,
     isRefinement: previous !== null && last !== undefined,
     previousQuery: captureTerms ? (previous ?? undefined) : undefined,

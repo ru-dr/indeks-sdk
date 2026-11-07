@@ -185,7 +185,7 @@ export const keystroke: Collector = (ctx) => {
       type: "keystroke",
       keyCategory,
       key: keyCategory === "printable" ? undefined : sanitizeUserInput(e.key),
-      code: e.code,
+      code: keyCategory === "printable" ? undefined : e.code,
       ctrlKey: e.ctrlKey,
       shiftKey: e.shiftKey,
       altKey: e.altKey,
