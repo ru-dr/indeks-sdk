@@ -13,8 +13,9 @@
   <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
   <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
   <a href="https://github.com/ru-dr/indeks-sdk/releases"><img alt="Release" src="https://shieldcn.dev/github/release/ru-dr/indeks-sdk.svg"></a>
-  <a href="https://www.npmjs.com/package/@useindeks/core"><img alt="@useindeks/core on npm" src="https://shieldcn.dev/npm/@useindeks/core.svg"></a>
-  <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react on npm" src="https://shieldcn.dev/npm/@useindeks/react.svg"></a>
+</p>
+
+<p align="center">
   <a href="https://www.typescriptlang.org/"><img alt="TypeScript" src="https://shieldcn.dev/badge/TypeScript-7-blue.svg?logo=typescript"></a>
   <a href="https://bun.sh"><img alt="Bun" src="https://shieldcn.dev/badge/Bun-latest-black.svg?logo=bun"></a>
   <a href="https://nodejs.org"><img alt="Node.js" src="https://shieldcn.dev/badge/Node-22%2B-green.svg?logo=nodedotjs"></a>
@@ -24,11 +25,11 @@
 
 Privacy-first web analytics SDK for self-hosted [Indeks](https://github.com/ru-dr/indeks). It tracks page views, clicks, scroll depth, forms, errors, performance and more, and sends batched events to your own collector.
 
-| Package | What it is |
-| --- | --- |
-| [`@useindeks/core`](packages/core) | Framework-agnostic tracker (`indeks()`, `IndeksTracker`, script-tag build) |
-| [`@useindeks/react`](packages/react) | `<Indeks>` provider, `useIndeks()` hook and an optional debugger |
-| [`@useindeks/shared`](packages/shared) | Types, config resolution, sanitizers and device parsing used by both |
+| Package | npm | What it is |
+| --- | --- | --- |
+| [`@useindeks/core`](packages/core) | [![@useindeks/core](https://shieldcn.dev/npm/@useindeks/core.svg)](https://www.npmjs.com/package/@useindeks/core) | Framework-agnostic tracker (`indeks()`, `IndeksTracker`, script-tag build) |
+| [`@useindeks/react`](packages/react) | [![@useindeks/react](https://shieldcn.dev/npm/@useindeks/react.svg)](https://www.npmjs.com/package/@useindeks/react) | `<Indeks>` provider, `useIndeks()` hook and an optional debugger |
+| [`@useindeks/shared`](packages/shared) | [![@useindeks/shared](https://shieldcn.dev/npm/@useindeks/shared.svg)](https://www.npmjs.com/package/@useindeks/shared) | Types, config resolution, sanitizers and device parsing used by both |
 
 More documentation: [collector protocol](docs/protocol.md), [event reference](docs/events.md), [changelog](CHANGELOG.md), [contributing](CONTRIBUTING.md), [security policy](SECURITY.md).
 

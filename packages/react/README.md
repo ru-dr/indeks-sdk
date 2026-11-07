@@ -11,6 +11,9 @@
   <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react on npm" src="https://shieldcn.dev/npm/@useindeks/react.svg"></a>
   <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react downloads" src="https://shieldcn.dev/npm/dw/@useindeks/react.svg"></a>
   <a href="https://www.npmjs.com/package/@useindeks/react"><img alt="@useindeks/react types" src="https://shieldcn.dev/npm/types/@useindeks/react.svg"></a>
+</p>
+
+<p align="center">
   <a href="https://github.com/ru-dr/indeks-sdk/blob/main/LICENSE"><img alt="License" src="https://shieldcn.dev/github/license/ru-dr/indeks-sdk.svg"></a>
   <a href="https://github.com/ru-dr/indeks-sdk/actions/workflows/ci.yml"><img alt="CI" src="https://shieldcn.dev/github/ci/ru-dr/indeks-sdk.svg"></a>
 </p>
