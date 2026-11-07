@@ -11,9 +11,9 @@ on:
     branches:
       - main
     paths:
-      - 'packages/*/package.json'
+      - "packages/*/package.json"
     tags-ignore:
-      - '**'
+      - "**"
 
 jobs:
   check-publish:
@@ -25,7 +25,7 @@ jobs:
       version: ${{ steps.extract.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Check if should publish
         id: check
         run: |
@@ -36,7 +36,7 @@ jobs:
           else
             echo "should_publish=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Extract version from package.json
         id: extract
         run: |
@@ -96,7 +96,7 @@ jobs:
               echo "ERROR: README.md missing in packages/$pkg"
               exit 1
             fi
-            echo "✓ README.md found in packages/$pkg"
+            echo "README.md found in packages/$pkg"
           done
 
       - name: Build shared package
@@ -146,7 +146,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           # Check if tag already exists
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
             echo "Tag v$VERSION already exists, skipping tag creation"
